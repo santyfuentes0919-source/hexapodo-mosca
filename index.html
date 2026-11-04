@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hexápodo Mosca · La mosca encapsulada</title>
+<style>
+  :root {
+    --bg: #0a0d0b;
+    --panel: rgba(14, 19, 16, 0.86);
+    --line: rgba(182, 255, 59, 0.18);
+    --lime: #b6ff3b;
+    --text: #e8efe6;
+    --muted: #9aa59a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: radial-gradient(ellipse at 70% 30%, #142016 0%, var(--bg) 60%);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  #escena {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0;
+  }
+  #etiquetas { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+  .etiqueta {
+    position: absolute;
+    transform: translate(-50%, -140%);
+    padding: 3px 10px;
+    border: 1px solid var(--lime);
+    border-radius: 999px;
+    background: rgba(10, 13, 11, 0.85);
+    color: var(--lime);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+  }
+  .etiqueta::after {
+    content: ""; position: absolute; left: 50%; bottom: -9px;
+    width: 1px; height: 8px; background: var(--lime);
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 3;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 32px;
+    background: linear-gradient(rgba(10,13,11,0.9), rgba(10,13,11,0));
+  }
+  nav .marca { font-weight: 800; letter-spacing: 0.5px; }
+  nav .marca span { color: var(--lime); }
+  nav a { color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 14px; }
+  nav a:hover { color: var(--lime); }
+  main { position: relative; z-index: 2; }
+  section { min-height: 100vh; padding: 110px 6vw 60px; display: flex; align-items: center; }
+  section { padding-left: 4vw; }
+  .panel {
+    max-width: min(440px, 36vw);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 30px 32px;
+    backdrop-filter: blur(6px);
+  }
+  .etiqueta-seccion {
+    display: inline-block; color: var(--lime); font-size: 12px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  h1 { font-size: clamp(42px, 7vw, 84px); line-height: 1; font-weight: 900; }
+  h1 span { color: var(--lime); }
+  h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.15; margin-bottom: 14px; }
+  p { color: var(--muted); margin-bottom: 12px; }
+  strong { color: var(--text); }
+  ul { list-style: none; }
+  li { padding: 7px 0 7px 22px; position: relative; color: var(--muted); border-bottom: 1px solid rgba(255,255,255,0.05); }
+  li::before { content: ""; position: absolute; left: 2px; top: 16px; width: 8px; height: 8px; background: var(--lime); border-radius: 2px; }
+  li:last-child { border-bottom: none; }
+  .hero { flex-direction: column; align-items: flex-start; justify-content: center; }
+  .hero .sub { font-size: 20px; color: var(--text); max-width: 440px; margin: 18px 0 8px; }
+  .hero .datos { color: var(--muted); font-size: 15px; }
+  .bajar { margin-top: 40px; color: var(--lime); font-weight: 600; animation: rebote 1.8s infinite; }
+  @keyframes rebote { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+  #desarme { display: block; height: 420vh; padding: 0 4vw; }
+  #escena { transition: opacity 0.4s; }
+  .paso { height: 100vh; display: flex; align-items: center; }
+  .paso:first-child { padding-top: 10vh; }
+  .numero { font-size: 64px; font-weight: 900; color: var(--lime); line-height: 1; margin-bottom: 6px; }
+  .tabla { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .dato { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .dato b { display: block; color: var(--lime); font-size: 22px; }
+  .dato small { color: var(--muted); font-size: 13px; }
+  .galeria-seccion { flex-direction: column; align-items: stretch; }
+  .galeria-seccion .panel { max-width: 760px; }
+  .galeria { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; max-width: 1100px; }
+  .galeria figure {
+    background: #f2f4f8; border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+    cursor: zoom-in; transition: transform 0.2s;
+  }
+  .galeria figure:hover { transform: translateY(-4px); }
+  .galeria img { width: 100%; height: 210px; object-fit: contain; display: block; }
+  .galeria figcaption { background: var(--panel); color: var(--text); padding: 8px 12px; font-size: 14px; }
+  .linea { border-left: 2px solid var(--lime); margin-left: 6px; }
+  .linea div { padding: 6px 0 10px 18px; position: relative; }
+  .linea div::before { content: ""; position: absolute; left: -7px; top: 13px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--lime); }
+  .linea b { color: var(--lime); }
+  .equipo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .persona { border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+  .persona span { display: block; color: var(--lime); font-size: 12px; }
+  .derecha { justify-content: flex-end; }
+  /* ---------- Cerebro de la mosca ---------- */
+  .ancha { flex-direction: column; align-items: stretch; }
+  .ancha > .panel { max-width: 760px; }
+  .cerebro-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 16px; margin-top: 18px; max-width: 1240px; }
+  .caja { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; }
+  .caja h3 { font-size: 15px; color: var(--lime); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  #red { width: 100%; height: auto; display: block; }
+  #red .nodo { cursor: pointer; }
+  #red .nodo circle.fondo { fill: #111813; stroke: #3d5a1c; stroke-width: 2; transition: stroke 0.2s; }
+  #red .nodo:hover circle.fondo, #red .nodo.activo circle.fondo { stroke: var(--lime); stroke-width: 3; }
+  #red .nodo text { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; pointer-events: none; }
+  #red .nodo text.sub { fill: var(--muted); font-size: 10px; font-weight: 500; }
+  #red .arista { fill: none; stroke-width: 2.2; }
+  #red .exc { stroke: rgba(182,255,59,0.55); }
+  #red .inh { stroke: rgba(255,99,99,0.6); stroke-dasharray: 5 4; }
+  .leyenda { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .leyenda span::before { content: ""; display: inline-block; width: 22px; height: 0; margin-right: 6px; vertical-align: middle; border-top: 2px solid rgba(182,255,59,0.7); }
+  .leyenda span.inh::before { border-top: 2px dashed rgba(255,99,99,0.8); }
+  #info h2 { font-size: 24px; margin-bottom: 4px; }
+  #info .tipo { color: var(--lime); font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+  #info h4 { color: var(--text); font-size: 13px; margin: 12px 0 2px; text-transform: uppercase; letter-spacing: 1px; }
+  #info p { font-size: 15px; margin-bottom: 4px; }
+  .prueba-grid { display: grid; grid-template-columns: 1fr 280px 1fr; gap: 16px; margin-top: 16px; max-width: 1240px; align-items: start; }
+  .control { margin-bottom: 14px; }
+  .control label { display: flex; justify-content: space-between; font-size: 14px; color: var(--text); margin-bottom: 4px; }
+  .control label b { color: var(--lime); font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--lime); }
+  .botones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .botones button {
+    background: transparent; color: var(--text); border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 12px; font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .botones button:hover { border-color: var(--lime); color: var(--lime); }
+  #vista { width: 100%; height: auto; background: #0d120e; border-radius: 14px; border: 1px solid var(--line); display: block; }
+  #estado { font-size: 18px; color: var(--text); font-weight: 600; margin-bottom: 8px; }
+  .medidor { display: grid; grid-template-columns: 70px 1fr 42px; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); margin: 5px 0; }
+  .medidor .barra { height: 8px; background: #1b241c; border-radius: 4px; overflow: hidden; }
+  .medidor .barra i { display: block; height: 100%; width: 0; background: var(--lime); border-radius: 4px; }
+  .medidor .barra.roja i { background: #ff6b6b; }
+  .aprendio { margin-top: 16px; max-width: 1240px; }
+  .estudio { margin-top: 16px; max-width: 1240px; }
+  .estudio .galeria { grid-template-columns: 1.5fr 1.2fr 1fr 1fr; max-width: none; margin-top: 12px; }
+  .estudio .galeria img { height: 190px; background: #fff; }
+  .estudio .galeria figcaption { font-size: 13px; line-height: 1.45; color: var(--muted); }
+  .estudio .galeria figcaption b { color: var(--text); display: block; font-size: 14px; margin-bottom: 2px; }
+  .credito { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .credito a { color: var(--lime); }
+  @media (max-width: 1000px) { .estudio .galeria { grid-template-columns: 1fr 1fr; } }
+  .aprendio .tabla { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 1000px) {
+    .cerebro-grid, .prueba-grid { grid-template-columns: 1fr; }
+    .aprendio .tabla { grid-template-columns: 1fr 1fr; }
+  }
+  footer { position: relative; z-index: 2; text-align: center; padding: 30px; color: var(--muted); font-size: 13px; }
+  #visor {
+    position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,0.88);
+    display: none; align-items: center; justify-content: center; cursor: zoom-out;
+  }
+  #visor img { max-width: 92vw; max-height: 88vh; border-radius: 12px; background: #f2f4f8; }
+  #aviso { position: fixed; bottom: 16px; right: 16px; z-index: 4; color: var(--muted); font-size: 13px; display: none; }
+  @media (max-width: 900px) {
+    nav a { display: none; }
+    .panel { max-width: 100%; }
+    .hero h1 { font-size: 48px; }
+    .galeria { grid-template-columns: 1fr; }
+    .derecha { justify-content: flex-start; }
+    #escena { opacity: 0.45; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="escena"></canvas>
+<div id="etiquetas"></div>
+<div id="aviso">No se pudo cargar el modelo 3D: revisa tu conexión a internet.</div>
+
+<nav>
+  <div class="marca">Hexápodo <span>Mosca</span></div>
+  <div>
+    <a href="#desarme">Desarme</a>
+    <a href="#diseno">Diseño 3D</a>
+    <a href="#camina">Cómo camina</a>
+    <a href="#pruebas">Pruebas</a>
+    <a href="#final">Ensamblaje</a>
+    <a href="#cerebro">Cerebro</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero" id="inicio">
+    <span class="etiqueta-seccion">Competencia de Robot Insecto · 2026</span>
+    <h1>Hexápodo<br><span>Mosca</span></h1>
+    <p class="sub">Un robot de 6 patas inspirado en la mosca de la fruta.</p>
+    <p class="datos">Equipo <strong>La mosca encapsulada</strong> · CECyTEQ plantel Corregidora · Grupo 3TMEC-BM</p>
+    <div class="bajar">Baja para desarmarlo ↓</div>
+  </section>
+
+  <section id="desarme">
+    <div class="paso">
+      <div class="panel">
+        <div class="numero">18</div>
+        <h2>Servos MG90S</h2>
+        <p>Cada pata tiene <strong>3 articulaciones</strong>, como la pata de un insecto. En total son 18 motores pequeños y ligeros, con engranes de metal.</p>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="panel">
+        <div class="numero">3</div>
+        <h2>Coxa, fémur y tibia</h2>
+        <p>La <strong>coxa</strong> (cadera, 25 mm) mueve la pata adelante y atrás, el <strong>fémur</strong> (45 mm) la sube y la baja, y la <strong>tibia</strong> (65 mm) dobla la punta. El pie es de TPU flexible para no resbalar en la madera.</p>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="panel">
+        <div class="numero">50×</div>
+        <h2>El cerebro: ESP32</h2>
+        <p>Calcula el ángulo de cada motor <strong>50 veces por segundo</strong> y crea su propia red WiFi. Le manda las órdenes a <strong>2 placas PCA9685</strong>, una por cada lado del robot, con solo 2 cables.</p>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="panel">
+        <div class="numero">7.4 V</div>
+        <h2>La energía</h2>
+        <p>Una pila <strong>LiPo de 2500 mAh</strong>, con fusible e interruptor. Dos reguladores <strong>XL4015</strong> la bajan a 5.8 V para los servos y un <strong>LM7805</strong> alimenta solo a la ESP32, para que no se reinicie cuando los motores jalan corriente.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="reto">
+    <div class="panel">
+      <span class="etiqueta-seccion">El reto</span>
+      <h2>Un robot con patas, sin ruedas</h2>
+      <p>Recorrer una pista de madera de 2 a 3 metros, con zonas rugosas, en menos de 3 minutos.</p>
+      <div class="tabla">
+        <div class="dato"><b>23.9 × 22.9</b><small>cm de pie (límite 25 × 25)</small></div>
+        <div class="dato"><b>12.7 cm</b><small>de alto (límite 25)</small></div>
+        <div class="dato"><b>6 patas</b><small>marcha estable de insecto</small></div>
+        <div class="dato"><b>1.5 kg</b><small>peso máximo permitido</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="galeria-seccion" id="diseno">
+    <div class="panel">
+      <span class="etiqueta-seccion">Diseño 3D</span>
+      <h2>Diseñado en SolidWorks</h2>
+      <p>Todo el cuerpo lo diseñamos nosotros y lo imprimimos en 3D en <strong>PLA+</strong>, que es rígido y aguanta golpes. Las placas miden 112 × 138 mm.</p>
+    </div>
+    <div class="galeria">
+      <figure><img src="hexapodo_isometrica.png" alt="Vista isométrica del ensamble en SolidWorks"><figcaption>Vista isométrica</figcaption></figure>
+      <figure><img src="hexapodo_frontal.png" alt="Vista frontal del ensamble en SolidWorks"><figcaption>Vista frontal</figcaption></figure>
+      <figure><img src="hexapodo_superior.png" alt="Vista superior del ensamble en SolidWorks"><figcaption>Vista superior</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="camina">
+    <div class="panel">
+      <span class="etiqueta-seccion">Cómo camina</span>
+      <h2>Marcha trípode</h2>
+      <p>Las 6 patas se dividen en <strong>dos triángulos</strong>. Mientras uno empuja en el piso, el otro avanza por el aire, y luego cambian. Siempre hay 3 patas apoyadas, así que no se cae.</p>
+      <ul>
+        <li><strong>Cinemática inversa:</strong> decide dónde poner cada pie y calcula los ángulos con la ley de cosenos.</li>
+        <li><strong>Control desde el celular</strong> por WiFi, con una pantalla tipo control de Xbox.</li>
+        <li><strong>4 velocidades</strong> y una marcha lenta de onda, una pata a la vez.</li>
+        <li><strong>Seguridad:</strong> si pierde la señal 0.6 s, se frena solo.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="pruebas">
+    <div class="panel">
+      <span class="etiqueta-seccion">Pruebas y mejoras</span>
+      <h2>Lo que falló y cómo lo resolvimos</h2>
+      <ul>
+        <li>La Raspberry Pi estaba <strong>agotada en México</strong> → cambiamos a ESP32.</li>
+        <li>La compu no encontraba la ESP32 → <strong>puerto y driver</strong> correctos.</li>
+        <li>El pie subía de golpe → lo limitamos a <strong>60 mm por segundo</strong>.</li>
+        <li>Solo se movía un lado → pila con clemas y <strong>un regulador por lado</strong>.</li>
+        <li>La ESP32 se reiniciaba → encendemos las patas <strong>una por una</strong>.</li>
+        <li>Servos descentrados → <strong>tabla de calibración</strong> desde el celular.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="tiempo">
+    <div class="panel">
+      <span class="etiqueta-seccion">Línea de tiempo</span>
+      <h2>Del dibujo al robot caminando</h2>
+      <div class="linea">
+        <div><b>Septiembre</b> · Primer diseño y lectura del reglamento</div>
+        <div><b>3 al 5 de octubre</b> · Planos finales y simulador 3D</div>
+        <div><b>14 de octubre</b> · Pedido de piezas e impresión 3D</div>
+        <div><b>19 de octubre</b> · Cambio a ESP32</div>
+        <div><b>27 de octubre</b> · Primera pata completa</div>
+        <div><b>30 de octubre</b> · Un lado caminando</div>
+        <div><b>31 de octubre</b> · Prueba del robot completo</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sigue">
+    <div class="panel">
+      <span class="etiqueta-seccion">Lo que sigue</span>
+      <h2>Un cerebro de mosca</h2>
+      <p>La versión final usará una <strong>Raspberry Pi</strong> con cámara (ojos), 2 sensores de distancia VL53L0X (tacto) y antenas infrarrojas (olfato). Un cerebro inspirado en el <strong>conectoma de la mosca de la fruta</strong> decidirá solo cómo llegar a la meta. En el simulador ya llegó en las 8 pruebas.</p>
+    </div>
+  </section>
+
+  <section id="final">
+    <div class="panel">
+      <span class="etiqueta-seccion">Ensamblaje final</span>
+      <h2>Así queda armado</h2>
+      <p>Todas las piezas vuelven a su lugar: 6 patas, 18 servos, 2 placas de control, la ESP32 y la pila, en un cuerpo de 24 × 23 cm.</p>
+      <div class="equipo">
+        <div class="persona">Santiago Fuentes Campos<span>Hardware</span></div>
+        <div class="persona">Julián Álvarez<span>Electrónica</span></div>
+        <div class="persona">Christian Espinoza Sánchez<span>Electrónica</span></div>
+        <div class="persona">Daniel Rivera Hernández<span>SolidWorks</span></div>
+        <div class="persona">Alexander Alegría<span>Ensamblaje</span></div>
+        <div class="persona">Nicolás Guevara Montes<span>Ensamblaje</span></div>
+        <div class="persona">Joel Chávez Rea<span>Ensamblaje</span></div>
+      </div>
+    </div>
+  </section>
+  <section class="ancha" id="cerebro">
+    <div class="panel">
+      <span class="etiqueta-seccion">El cerebro de la mosca</span>
+      <h2>Cómo decide hacia dónde caminar</h2>
+      <p>Copiamos un pedacito del cerebro de la mosca de la fruta: las mismas clases de neuronas que usa ella para encontrar comida y esquivar cosas. Son <strong>4 tipos de neuronas</strong> de la mosca (PFL, DNa, DNp y MDN), un reloj que marca el paso y <strong>19 números</strong> que el robot aprendió solo. <strong>Toca cada círculo</strong> para ver qué hace.</p>
+    </div>
+
+    <div class="caja estudio">
+      <h3>El estudio de verdad: el conectoma de la mosca</h3>
+      <p>Los científicos del proyecto <strong>FlyWire</strong> cortaron el cerebro de una mosca en miles de rebanadas finísimas, las fotografiaron con un microscopio electrónico y reconstruyeron cada neurona y cada conexión. A ese mapa completo se le llama <strong>conectoma</strong>. Se publicó en la revista Nature en octubre de 2024: <strong>139,255 neuronas</strong> y <strong>más de 50 millones de conexiones</strong>.</p>
+      <div class="galeria">
+        <figure><img src="mosca_cerebro_completo.png" alt="Las 139,255 neuronas del cerebro de la mosca"><figcaption><b>El cerebro completo</b>Cada color es una neurona. A los lados están los lóbulos ópticos (lo que ve) y en medio el cerebro central (donde decide).</figcaption></figure>
+        <figure><img src="mosca_neurona.png" alt="Una neurona reconstruida con sus sinapsis"><figcaption><b>Una sola neurona</b>Sus ramas la conectan con otras. Los puntos rosas son por donde manda señales y los azules por donde las recibe.</figcaption></figure>
+        <figure><img src="mosca_sinapsis.png" alt="Una sinapsis vista al microscopio electrónico"><figcaption><b>Una sinapsis</b>La neurona rosa le pasa la señal a la azul. Nuestros 19 números imitan qué tan fuerte es cada conexión.</figcaption></figure>
+        <figure><img src="mosca_descendentes.png" alt="Neuronas descendentes de la mosca"><figcaption><b>Neuronas descendentes</b>Unas 1,300 bajan del cerebro al cuerpo y ordenan caminar, girar o retroceder. De aquí salen nuestras DNa, DNp y MDN.</figcaption></figure>
+      </div>
+      <p class="credito">Imágenes: Dorkenwald y colaboradores, «Neuronal wiring diagram of an adult brain», <em>Nature</em> 634 (2024), proyecto FlyWire. Licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es" target="_blank" rel="noopener">CC BY 4.0</a>; las imágenes están recortadas. <a href="https://doi.org/10.1038/s41586-024-07558-y" target="_blank" rel="noopener">Ver el estudio</a>.</p>
+    </div>
+
+    <div class="cerebro-grid">
+      <div class="caja">
+        <h3>El mapa de neuronas</h3>
+        <svg id="red" viewBox="0 0 760 400" role="img" aria-label="Diagrama del cerebro de la mosca"></svg>
+        <div class="leyenda"><span>Activa (empuja)</span><span class="inh">Frena (inhibe)</span><span>Más brillo = más activa</span></div>
+      </div>
+      <div class="caja" id="info"></div>
+    </div>
+
+    <div class="prueba-grid">
+      <div class="caja">
+        <h3>Pruébalo</h3>
+        <div class="control">
+          <label>¿Dónde está la fruta? <b id="t-pos">enfrente</b></label>
+          <input type="range" id="c-pos" min="-1" max="1" step="0.05" value="0">
+        </div>
+        <div class="control">
+          <label>¿Qué tan cerca? <b id="t-cerca">lejos</b></label>
+          <input type="range" id="c-cerca" min="0" max="1" step="0.05" value="0.35">
+        </div>
+        <div class="control">
+          <label>Pared a la izquierda <b id="t-pi">no hay</b></label>
+          <input type="range" id="c-pi" min="0" max="1" step="0.05" value="0">
+        </div>
+        <div class="control">
+          <label>Pared a la derecha <b id="t-pd">no hay</b></label>
+          <input type="range" id="c-pd" min="0" max="1" step="0.05" value="0">
+        </div>
+        <div class="botones">
+          <button data-p="0,0,0,0">Nada a la vista</button>
+          <button data-p="-0.8,0.5,0,0">Fruta a la izquierda</button>
+          <button data-p="0.8,0.5,0,0">Fruta a la derecha</button>
+          <button data-p="0,0.95,0,0">Fruta muy cerca</button>
+          <button data-p="0,0.3,0,0.7">Pared a la derecha</button>
+          <button data-p="0,0.3,1,1">Choque de frente</button>
+        </div>
+      </div>
+      <div class="caja">
+        <h3>Vista desde arriba</h3>
+        <canvas id="vista" width="280" height="280"></canvas>
+      </div>
+      <div class="caja">
+        <h3>Qué está pensando</h3>
+        <div id="estado">Camina derecho</div>
+        <p id="porque" style="font-size:14px"></p>
+        <div id="medidores"></div>
+      </div>
+    </div>
+
+    <div class="caja aprendio">
+      <h3>Cómo aprendió</h3>
+      <p>Nadie le programó los números a mano. En el simulador 3D corrieron <strong>36 cerebros a la vez</strong> en la pista del reglamento; los <strong>7 mejores</strong> se mezclaban y se cambiaban un poquito al azar para formar la siguiente generación, como la evolución. Después de <strong>143 generaciones</strong>, con ruido y sensores con fallas a propósito, quedó el cerebro v4: llega a la meta en el <strong>100 % de las carreras</strong> de las 8 pruebas.</p>
+      <div class="tabla">
+        <div class="dato"><b>26.9 s</b><small>recta de 2 m</small></div>
+        <div class="dato"><b>37.9 s</b><small>recta de 3 m</small></div>
+        <div class="dato"><b>41.5 s</b><small>zona rugosa</small></div>
+        <div class="dato"><b>46.7 s</b><small>circuito completo</small></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Hexápodo Mosca · La mosca encapsulada · CECyTEQ plantel Corregidora · 2026</footer>
+
+<div id="visor"><img alt=""></div>
+
+<script>
+  // Ver las imágenes del diseño en grande
+  const visor = document.getElementById('visor');
+  document.querySelectorAll('.galeria img').forEach(img => {
+    img.addEventListener('click', () => {
+      visor.querySelector('img').src = img.src;
+      visor.style.display = 'flex';
+    });
+  });
+  visor.addEventListener('click', () => { visor.style.display = 'none'; });
+</script>
+
+<script>
+/* ===== Cerebro de la mosca: las mismas ecuaciones que motor4.js / cerebro.py, con los pesos del cerebro v4 ===== */
+(function () {
+  const W = { // cerebro-mosca-v4-competencia.json (generación 143)
+    w_ant_dnp: -1.8785, w_ant_pfl: 0.821, w_vis_pfl: 2.731, w_vis_pfl_x: -0.4062, w_pfl_dna: 0.3257,
+    w_pfl_dna_x: -3, w_mech_mdn: 1.2245, w_mech_dnp: -2.9704, w_mech_dna_x: 2.0785, w_mech_dna: -1.7257,
+    w_mech_pfl: -0.3046, bias_dnp: 2.8811, w_dn_cpg: 4.7712, k_turn: 1.7123,
+    w_coxa: 15, w_femur: 32.4206, w_tibia: 23.6185, w_dna_dnp: -1.8744
+  };
+  const TAU = 0.08, F_MAX = 2.0;
+  const f = x => { const t = Math.tanh(x); return t > 0 ? t : 0; };
+  const e = { pfl_l: 0, pfl_r: 0, dna_l: 0, dna_r: 0, dnp: 0, mdn: 0, fase: 0, frec: 0, s_izq: 0, s_der: 0 };
+  let S = { ant_izq: 0, ant_der: 0, vis_izq: 0, vis_der: 0, mec_izq: 0, mec_der: 0 };
+
+  function paso(dt) {
+    const aL = S.ant_izq, aR = S.ant_der, vL = S.vis_izq, vR = S.vis_der, mL = S.mec_izq, mR = S.mec_der;
+    const mMax = Math.max(mL, mR);
+    const pL = f(W.w_ant_pfl * aL + W.w_vis_pfl * vL + W.w_vis_pfl_x * vR + W.w_mech_pfl * mL);
+    const pR = f(W.w_ant_pfl * aR + W.w_vis_pfl * vR + W.w_vis_pfl_x * vL + W.w_mech_pfl * mR);
+    const dL = f(W.w_pfl_dna * e.pfl_l + W.w_pfl_dna_x * e.pfl_r + W.w_mech_dna * mL + W.w_mech_dna_x * mR);
+    const dR = f(W.w_pfl_dna * e.pfl_r + W.w_pfl_dna_x * e.pfl_l + W.w_mech_dna * mR + W.w_mech_dna_x * mL);
+    const dp = f(W.bias_dnp + W.w_ant_dnp * (aL + aR) / 2 + W.w_mech_dnp * mMax + W.w_dna_dnp * (e.dna_l + e.dna_r));
+    const md = f(W.w_mech_mdn * mMax - 1);
+    const k = Math.min(1, dt / TAU);
+    e.pfl_l += k * (pL - e.pfl_l); e.pfl_r += k * (pR - e.pfl_r);
+    e.dna_l += k * (dL - e.dna_l); e.dna_r += k * (dR - e.dna_r);
+    e.dnp += k * (dp - e.dnp); e.mdn += k * (md - e.mdn);
+    const v = e.dnp * (1 - e.mdn) - e.mdn;
+    const giro = W.k_turn * (e.dna_l - e.dna_r);
+    let sL = v - giro, sR = v + giro;
+    const m = Math.max(1, Math.abs(sL), Math.abs(sR));
+    sL /= m; sR /= m;
+    const impulso = Math.max(Math.abs(sL), Math.abs(sR));
+    e.frec = F_MAX * Math.tanh(Math.max(0, W.w_dn_cpg) * impulso);
+    e.fase = (e.fase + 2 * Math.PI * e.frec * dt) % (2 * Math.PI);
+    e.s_izq = sL; e.s_der = sR;
+    e.v = v; e.impulso = impulso;
+  }
+
+  // ---------- Textos de cada neurona ----------
+  const NODOS = {
+    antenas: {
+      x: 90, y: 75, nombre: 'Antenas', sub: 'olfato', tipo: 'Sentido · entrada',
+      mosca: 'La mosca huele la fruta con sus antenas. Si el olor es más fuerte de un lado, sabe que la comida está de ese lado.',
+      robot: 'Dos fototransistores infrarrojos (940 nm), girados 20° hacia afuera, uno por lado. En la meta hay una «fruta-baliza» que parpadea luz infrarroja de 33 a 45 veces por segundo, y las antenas la «huelen».',
+      como: 'Cada antena da un número de 0 (nada) a 1 (muy fuerte), 4 veces por segundo. Con la fruta a 20 cm marca 0.88; a 1 metro, 0.27. Mandan su señal a las PFL y frenan a la DNp cuando ya está muy cerca.'
+    },
+    ojos: {
+      x: 90, y: 200, nombre: 'Ojos', sub: 'vista', tipo: 'Sentido · entrada',
+      mosca: 'Los ojos compuestos de la mosca ven casi todo a su alrededor y detectan muy rápido dónde está algo que le interesa.',
+      robot: 'Una cámara OV5647 de unos 130° con imagen de 320 × 240. La imagen se parte en dos mitades, izquierda y derecha, y en cada una se busca la mancha verde más grande y redonda: la fruta.',
+      como: 'Revisa 20 veces por segundo. Entre más grande se ve la fruta en una mitad, más cerca de 1 vale ese ojo. La vista es la conexión más fuerte hacia las PFL (peso 2.73).'
+    },
+    tacto: {
+      x: 90, y: 325, nombre: 'Tacto', sub: 'distancia', tipo: 'Sentido · entrada',
+      mosca: 'La mosca tiene pelitos sensibles que le avisan cuando algo la toca o está muy cerca.',
+      robot: 'Dos sensores láser VL53L0X, girados 30° hacia afuera y a 45 mm del piso. Miden la distancia a paredes y obstáculos.',
+      como: 'A 150 mm o más vale 0; a 30 mm vale 1. Lo leen 30 veces por segundo. Hace que gire hacia el lado contrario (DNa), que camine más lento (DNp) y, si el choque es inminente, que retroceda (MDN).'
+    },
+    pfl: {
+      x: 290, y: 140, nombre: 'PFL', sub: 'izq · der', tipo: 'Neurona del complejo central',
+      mosca: 'Las neuronas PFL están en el «complejo central», la brújula del cerebro de la mosca. Comparan hacia dónde va con hacia dónde está su meta.',
+      robot: 'Hay una PFL izquierda y una derecha. Cada una suma lo que huele y lo que ve su lado, y le resta un poco lo que ve el otro lado.',
+      como: 'Si la fruta está a la izquierda, la PFL izquierda se enciende y la derecha casi no. Ese contraste es el que después decide el giro.'
+    },
+    dna: {
+      x: 480, y: 80, nombre: 'DNa', sub: 'girar', tipo: 'Neurona descendente',
+      mosca: 'Las neuronas descendentes bajan del cerebro al cuerpo y llevan órdenes a las patas. En la mosca real, las DNa controlan los giros.',
+      robot: 'Una DNa izquierda y una derecha. Cada una recibe a su PFL y se apaga fuerte con la PFL del otro lado (peso −3): así gana solo el lado donde está la fruta. El tacto del lado contrario también la enciende, para alejarse de las paredes.',
+      como: 'Giro = 1.71 × (DNa izquierda − DNa derecha). Si gana la izquierda, las patas derechas dan pasos más largos que las izquierdas y el robot voltea a la izquierda.'
+    },
+    dnp: {
+      x: 480, y: 205, nombre: 'DNp', sub: 'avanzar', tipo: 'Neurona descendente',
+      mosca: 'Otra neurona descendente que da la orden de «camina hacia adelante».',
+      robot: 'Está casi siempre encendida, porque tiene un empujón propio (2.88): el robot quiere avanzar.',
+      como: 'Se frena con tres cosas: algo enfrente (tacto, −2.97), olor muy fuerte porque ya llegó (antenas, −1.88) y cuando está girando (DNa, −1.87), para no derrapar en las curvas.'
+    },
+    mdn: {
+      x: 480, y: 325, nombre: 'MDN', sub: 'reversa', tipo: 'Neurona descendente',
+      mosca: 'La neurona «moonwalker» (MDN) existe de verdad en la mosca: cuando se activa, la mosca camina hacia atrás, como el paso de baile de Michael Jackson.',
+      robot: 'Solo se enciende cuando el tacto marca más de 0.82, o sea, cuando un obstáculo está a menos de 5 cm.',
+      como: 'Cuando se activa, apaga a la DNp y cambia la dirección: el robot retrocede para despegarse del obstáculo y luego vuelve a intentar.'
+    },
+    cpg: {
+      x: 655, y: 145, nombre: 'CPG', sub: 'ritmo', tipo: 'Generador central de patrones',
+      mosca: 'En la mosca, el ritmo del paso no lo hace el cerebro: lo hacen circuitos en el cuerpo, llamados CPG, que oscilan solos como un reloj.',
+      robot: 'Un reloj que marca el paso: más rápido entre más fuerte es la orden de caminar, hasta 2 pasos por segundo.',
+      como: 'Reparte la marcha trípode: las patas 0, 2 y 4 van juntas, y las 1, 3 y 5 van al revés. Cada lado recibe su velocidad, la del lado izquierdo y la del derecho, por separado.'
+    },
+    patas: {
+      x: 655, y: 300, nombre: 'Patas', sub: '18 servos', tipo: 'Salida · músculos',
+      mosca: 'Los músculos de las 6 patas.',
+      robot: '18 servos MG90S. La coxa mueve la pata adelante y atrás hasta 15°, el fémur la levanta hasta 32° y la tibia dobla la punta hasta 24°.',
+      como: 'Cada servo se mueve máximo 450° por segundo, para no dar tirones. Estos ángulos son los que el cerebro le manda a las placas PCA9685.'
+    }
+  };
+  const ARISTAS = [
+    ['antenas', 'pfl', 'exc'], ['ojos', 'pfl', 'exc'], ['tacto', 'pfl', 'inh'],
+    ['antenas', 'dnp', 'inh'], ['tacto', 'dna', 'exc'], ['tacto', 'dnp', 'inh'], ['tacto', 'mdn', 'exc'],
+    ['pfl', 'dna', 'exc'], ['dna', 'dnp', 'inh'],
+    ['dna', 'cpg', 'exc'], ['dnp', 'cpg', 'exc'], ['mdn', 'cpg', 'inh'], ['cpg', 'patas', 'exc']
+  ];
+
+  const svg = document.getElementById('red');
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, padre) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); (padre || svg).appendChild(n); return n; };
+  const R = 40;
+  for (const [a, b, tipo] of ARISTAS) {
+    const A = NODOS[a], B = NODOS[b];
+    const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy);
+    const x1 = A.x + dx / d * R, y1 = A.y + dy / d * R, x2 = B.x - dx / d * (R + 6), y2 = B.y - dy / d * (R + 6);
+    const mx = (x1 + x2) / 2 + dy / d * 14, my = (y1 + y2) / 2 - dx / d * 14;
+    el('path', { d: `M${x1},${y1} Q${mx},${my} ${x2},${y2}`, class: 'arista ' + tipo, 'marker-end': `url(#flecha-${tipo})` });
+  }
+  const defs = el('defs', {});
+  for (const [id, color] of [['exc', 'rgba(182,255,59,0.8)'], ['inh', 'rgba(255,99,99,0.85)']]) {
+    const m = el('marker', { id: 'flecha-' + id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M0,0 L10,5 L0,10 z', fill: color }, m);
+  }
+  const brillo = {};
+  for (const id in NODOS) {
+    const n = NODOS[id];
+    const g = el('g', { class: 'nodo', 'data-id': id, tabindex: 0 });
+    brillo[id] = el('circle', { cx: n.x, cy: n.y, r: R + 8, fill: '#b6ff3b', opacity: 0 }, g);
+    el('circle', { cx: n.x, cy: n.y, r: R, class: 'fondo' }, g);
+    el('text', { x: n.x, y: n.y - 2 }, g).textContent = n.nombre;
+    el('text', { x: n.x, y: n.y + 13, class: 'sub' }, g).textContent = n.sub;
+    g.addEventListener('click', () => mostrar(id));
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter') mostrar(id); });
+  }
+
+  const info = document.getElementById('info');
+  function mostrar(id) {
+    const n = NODOS[id];
+    svg.querySelectorAll('.nodo').forEach(g => g.classList.toggle('activo', g.dataset.id === id));
+    info.innerHTML = `<h3>Neurona seleccionada</h3><h2>${n.nombre}</h2><div class="tipo">${n.tipo}</div>
+      <h4>En la mosca de verdad</h4><p>${n.mosca}</p>
+      <h4>En nuestro robot</h4><p>${n.robot}</p>
+      <h4>Cómo funciona</h4><p>${n.como}</p>`;
+  }
+  mostrar('antenas');
+
+  // ---------- Controles ----------
+  const $ = id => document.getElementById(id);
+  const ctl = { pos: $('c-pos'), cerca: $('c-cerca'), pi: $('c-pi'), pd: $('c-pd') };
+  function leer() {
+    const pos = +ctl.pos.value, cerca = +ctl.cerca.value, pi = +ctl.pi.value, pd = +ctl.pd.value;
+    // Como en el simulador: cada mitad de la cámara ve solo su lado, y cada antena
+    // apunta 20° hacia afuera (la señal cae rápido si la fruta no está frente a ella).
+    const cl = x => Math.max(0, Math.min(1, x));
+    const ang = -pos * 60; // grados, + = izquierda
+    const antena = eje => cerca * Math.exp(-Math.pow((ang - eje) / 30, 2));
+    S = {
+      vis_izq: cerca * cl(0.5 - pos), vis_der: cerca * cl(0.5 + pos),
+      ant_izq: antena(20), ant_der: antena(-20),
+      mec_izq: pi, mec_der: pd
+    };
+    $('t-pos').textContent = pos < -0.2 ? 'a la izquierda' : pos > 0.2 ? 'a la derecha' : 'enfrente';
+    $('t-cerca').textContent = cerca < 0.05 ? 'no se ve' : cerca < 0.45 ? 'lejos' : cerca < 0.8 ? 'cerca' : 'muy cerca';
+    const pared = v => v < 0.05 ? 'no hay' : v < 0.5 ? 'lejos' : v < 0.82 ? 'cerca' : 'pegada';
+    $('t-pi').textContent = pared(pi);
+    $('t-pd').textContent = pared(pd);
+  }
+  Object.values(ctl).forEach(c => c.addEventListener('input', leer));
+  document.querySelectorAll('.botones button').forEach(b => b.addEventListener('click', () => {
+    const [p, c, i, d] = b.dataset.p.split(',').map(Number);
+    ctl.pos.value = p; ctl.cerca.value = c; ctl.pi.value = i; ctl.pd.value = d; leer();
+  }));
+  leer();
+
+  // ---------- Medidores ----------
+  const MED = [['PFL izq', 'pfl_l'], ['PFL der', 'pfl_r'], ['DNa izq', 'dna_l'], ['DNa der', 'dna_r'], ['DNp', 'dnp'], ['MDN', 'mdn', true]];
+  const med = $('medidores');
+  const barras = MED.map(([nombre, k, roja]) => {
+    const fila = document.createElement('div');
+    fila.className = 'medidor';
+    fila.innerHTML = `<span>${nombre}</span><div class="barra${roja ? ' roja' : ''}"><i></i></div><span>0.00</span>`;
+    med.appendChild(fila);
+    return { k, i: fila.querySelector('i'), n: fila.querySelectorAll('span')[1] };
+  });
+
+  // ---------- Vista desde arriba ----------
+  const cv = $('vista'), cx = cv.getContext('2d');
+  const EJES = [[38, 55], [42, 0], [38, -55], [-38, 55], [-42, 0], [-38, -55]];
+  const ALFA = [45, 0, -45, 135, 180, 225];
+  function dibujar() {
+    const w = cv.width, h = cv.height, c0x = w / 2, c0y = 165, s = 0.75;
+    cx.clearRect(0, 0, w, h);
+    // fruta y paredes según los controles
+    const pos = +ctl.pos.value, cerca = +ctl.cerca.value;
+    if (cerca > 0.04) {
+      const dist = 150 - cerca * 50, ang = pos * 60 * Math.PI / 180;
+      const fx = c0x + Math.sin(ang) * dist, fy = Math.max(16, c0y - Math.cos(ang) * dist);
+      cx.fillStyle = '#7CFC4A'; cx.beginPath(); cx.arc(fx, fy, 9, 0, 7); cx.fill();
+      cx.fillStyle = '#9aa59a'; cx.font = '11px Segoe UI'; cx.textAlign = 'center';
+      cx.fillText('fruta', fx, fy + 22);
+    }
+    // Los dos sensores de tacto apuntan 30° hacia afuera: si los dos ven lo mismo, el obstáculo está enfrente
+    const pi = +ctl.pi.value, pd = +ctl.pd.value, frente = Math.min(pi, pd);
+    cx.fillStyle = '#ff6b6b';
+    if (frente > 0.04) cx.fillRect(c0x - 80, c0y - 150 + frente * 50, 160, 6);
+    if (pi - frente > 0.04) cx.fillRect(c0x - 134 + pi * 40, c0y - 95, 6, 150);
+    if (pd - frente > 0.04) cx.fillRect(c0x + 128 - pd * 40, c0y - 95, 6, 150);
+    // patas
+    for (let i = 0; i < 6; i++) {
+      const sg = i < 3 ? 1 : -1;
+      const psi = e.fase + (i % 2 === 1 ? Math.PI : 0);
+      const lado = i < 3 ? e.s_der : e.s_izq;
+      const alto = Math.min(1, 10 * (e.impulso || 0));
+      const enAire = Math.max(0, -Math.sin(psi)) * alto > 0.05;
+      const coxa = W.w_coxa * lado * Math.cos(psi);
+      const th = (ALFA[i] + sg * coxa) * Math.PI / 180;
+      const mx = c0x + EJES[i][0] * s, my = c0y - EJES[i][1] * s;
+      const px = mx + 68.5 * s * Math.cos(th), py = my - 68.5 * s * Math.sin(th);
+      cx.strokeStyle = '#4a6cf7'; cx.lineWidth = 4; cx.lineCap = 'round';
+      cx.beginPath(); cx.moveTo(mx, my); cx.lineTo(px, py); cx.stroke();
+      cx.beginPath(); cx.arc(px, py, 5, 0, 7);
+      if (enAire) { cx.strokeStyle = '#b6ff3b'; cx.lineWidth = 2; cx.stroke(); }
+      else { cx.fillStyle = '#b6ff3b'; cx.fill(); }
+    }
+    // cuerpo
+    cx.fillStyle = '#3653d4';
+    cx.fillRect(c0x - 46 * s, c0y - 62 * s, 92 * s, 124 * s);
+    cx.fillStyle = '#0d120e'; cx.fillRect(c0x - 8, c0y - 62 * s + 4, 16, 6);
+    // flecha de movimiento
+    const v = e.v || 0, giro = (e.s_der - e.s_izq);
+    const largo = Math.min(1, Math.abs(v) + Math.abs(giro) * 0.3) * 45;
+    if (largo > 4) {
+      const a = giro * 0.9 * (v < 0 ? -1 : 1);
+      const dir = v < 0 ? 1 : -1;
+      const x0 = c0x, y0 = c0y + dir * 52;
+      const x1 = x0 - Math.sin(a) * largo, y1 = y0 + dir * Math.cos(a) * largo;
+      cx.strokeStyle = v < 0 ? '#ff6b6b' : '#e8efe6'; cx.fillStyle = cx.strokeStyle; cx.lineWidth = 4;
+      cx.beginPath(); cx.moveTo(x0, y0); cx.quadraticCurveTo(x0, y0 + dir * largo * 0.6, x1, y1); cx.stroke();
+      const ang = Math.atan2(y1 - (y0 + dir * largo * 0.6), x1 - x0);
+      cx.beginPath(); cx.moveTo(x1 + Math.cos(ang) * 10, y1 + Math.sin(ang) * 10);
+      cx.lineTo(x1 + Math.cos(ang + 2.3) * 10, y1 + Math.sin(ang + 2.3) * 10);
+      cx.lineTo(x1 + Math.cos(ang - 2.3) * 10, y1 + Math.sin(ang - 2.3) * 10); cx.fill();
+    }
+    // leyenda de pies
+    cx.font = '11px Segoe UI'; cx.textAlign = 'left'; cx.fillStyle = '#9aa59a';
+    cx.fillText('● pie apoyado   ○ pie en el aire', 8, h - 8);
+  }
+
+  // ---------- Texto de lo que hace ----------
+  function explicar() {
+    const v = e.v, giro = e.s_der - e.s_izq;
+    const pi = +ctl.pi.value, pd = +ctl.pd.value, cerca = +ctl.cerca.value;
+    let estado, porque;
+    if (e.mdn > 0.1 && v < -0.05) {
+      estado = 'Retrocede';
+      porque = 'La neurona MDN («moonwalker») se encendió porque algo está pegado. Apaga a la DNp y lo hace caminar hacia atrás.';
+    } else if (Math.abs(v) < 0.2 && Math.abs(giro) < 0.2) {
+      estado = 'Casi se detiene';
+      porque = 'Las señales que frenan a la DNp son tan fuertes como su empujón propio.';
+    } else {
+      const lado = giro > 0.12 ? 'izquierda' : giro < -0.12 ? 'derecha' : null;
+      estado = lado ? `Camina y gira a la ${lado}` : 'Camina derecho';
+      if (lado && Math.max(pi, pd) > 0.15 && ((lado === 'izquierda' && pd > pi) || (lado === 'derecha' && pi > pd)))
+        porque = `El sensor de tacto ${pd > pi ? 'derecho' : 'izquierdo'} enciende la DNa del otro lado: se aleja de la pared.`;
+      else if (lado && cerca > 0.04)
+        porque = `La fruta se ve más del lado ${lado}: gana la PFL ${lado === 'izquierda' ? 'izquierda' : 'derecha'}, enciende su DNa y apaga a la otra. Las patas del lado contrario dan pasos más largos.`;
+      else if (cerca > 0.85)
+        porque = 'La fruta está enfrente y muy cerca: el olor fuerte frena un poco a la DNp para llegar despacio.';
+      else if (cerca > 0.04)
+        porque = 'La fruta está enfrente: las dos PFL están igual, ninguna DNa gana y sigue derecho.';
+      else
+        porque = 'No ve ni huele nada: la DNp, con su empujón propio, lo hace explorar hacia adelante.';
+    }
+    $('estado').textContent = estado;
+    $('porque').textContent = porque + ` Ritmo: ${e.frec.toFixed(1)} pasos por segundo.`;
+  }
+
+  // ---------- Animación (solo cuando la sección se ve) ----------
+  let visible = false, ultimo = performance.now(), cuenta = 0;
+  new IntersectionObserver(ent => { visible = ent[0].isIntersecting; }, { threshold: 0.05 }).observe(document.getElementById('cerebro'));
+  for (let i = 0; i < 60; i++) paso(1 / 60);
+  function cuadro(t) {
+    const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
+    if (visible) {
+      paso(dt);
+      const act = {
+        antenas: Math.max(S.ant_izq, S.ant_der), ojos: Math.max(S.vis_izq, S.vis_der), tacto: Math.max(S.mec_izq, S.mec_der),
+        pfl: Math.max(e.pfl_l, e.pfl_r), dna: Math.max(e.dna_l, e.dna_r), dnp: e.dnp, mdn: e.mdn,
+        cpg: e.frec / F_MAX, patas: (e.frec / F_MAX) * (0.5 + 0.5 * Math.abs(Math.sin(e.fase)))
+      };
+      for (const id in brillo) brillo[id].setAttribute('opacity', (0.05 + 0.35 * act[id]).toFixed(2));
+      for (const b of barras) { const x = Math.max(0, Math.min(1, e[b.k])); b.i.style.width = (x * 100).toFixed(0) + '%'; b.n.textContent = x.toFixed(2); }
+      dibujar();
+      if (++cuenta % 10 === 0) explicar();
+    }
+    requestAnimationFrame(cuadro);
+  }
+  explicar();
+  requestAnimationFrame(cuadro);
+})();
+</script>
+
+<script type="module">
+let THREE;
+try {
+  THREE = await import('https://unpkg.com/three@0.160.0/build/three.module.js');
+} catch (e) {
+  document.getElementById('aviso').style.display = 'block';
+  throw e;
+}
+
+const canvas = document.getElementById('escena');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+
+scene.add(new THREE.HemisphereLight(0xdfffd0, 0x0a0d0b, 1.1));
+const sol = new THREE.DirectionalLight(0xffffff, 1.6);
+sol.position.set(3, 6, 4);
+scene.add(sol);
+const contra = new THREE.DirectionalLight(0xb6ff3b, 0.6);
+contra.position.set(-4, 2, -3);
+scene.add(contra);
+
+// Medidas en milímetros; el robot se escala a 1 unidad = 100 mm
+const robot = new THREE.Group();
+robot.scale.setScalar(0.01);
+scene.add(robot);
+
+const grid = new THREE.GridHelper(900, 30, 0x5a7d1e, 0x1d2a1a);
+grid.position.y = -24;
+grid.material.transparent = true;
+grid.material.opacity = 0.35;
+robot.add(grid);
+
+const mat = {
+  pla:   new THREE.MeshStandardMaterial({ color: 0x4a6cf7, roughness: 0.55, metalness: 0.05 }),
+  pla2:  new THREE.MeshStandardMaterial({ color: 0x3653d4, roughness: 0.55, metalness: 0.05 }),
+  servo: new THREE.MeshStandardMaterial({ color: 0x1b1b1e, roughness: 0.6 }),
+  tpu:   new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.9 }),
+  pcb:   new THREE.MeshStandardMaterial({ color: 0x0f6b3a, roughness: 0.5 }),
+  esp:   new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: 0.4 }),
+  metal: new THREE.MeshStandardMaterial({ color: 0xc9ced6, roughness: 0.3, metalness: 0.8 }),
+  bat:   new THREE.MeshStandardMaterial({ color: 0xd8dce2, roughness: 0.35, metalness: 0.4 }),
+  xl:    new THREE.MeshStandardMaterial({ color: 0x1565c0, roughness: 0.5 }),
+};
+
+const piezas = [];   // { obj, base, off, giro }
+const etiquetas = []; // { obj, el }
+
+function pieza(padre, geo, material, pos, off, giroBase = [0, 0, 0], giroExtra = [0, 0, 0]) {
+  const m = new THREE.Mesh(geo, material);
+  m.position.set(...pos);
+  m.rotation.set(...giroBase);
+  padre.add(m);
+  piezas.push({
+    obj: m,
+    base: new THREE.Vector3(...pos),
+    off: new THREE.Vector3(...off),
+    giro0: new THREE.Euler(...giroBase),
+    giroX: new THREE.Vector3(...giroExtra),
+  });
+  return m;
+}
+function etiqueta(obj, texto) {
+  const el = document.createElement('div');
+  el.className = 'etiqueta';
+  el.textContent = texto;
+  document.getElementById('etiquetas').appendChild(el);
+  etiquetas.push({ obj, el });
+}
+const caja = (x, y, z) => new THREE.BoxGeometry(x, y, z);
+
+// ---------- Cuerpo ----------
+const placaInf = pieza(robot, caja(112, 3, 138), mat.pla2, [0, 20, 0], [0, -120, 0], [0, 0, 0], [0.15, 0, 0]);
+const placaSup = pieza(robot, caja(112, 3, 138), mat.pla2, [0, 50, 0], [0, 55, 0], [0, 0, 0], [-0.1, 0, 0]);
+const cubierta = pieza(robot, caja(70, 2.5, 100), mat.pla, [0, 80, 0], [0, 175, 0], [0, 0, 0], [0, 0.4, 0]);
+const bateria  = pieza(robot, caja(70, 18, 36), mat.bat, [0, 32, -14], [0, -60, -20], [0, 0, 0], [0, -0.3, 0]);
+const xlD = pieza(robot, caja(22, 9, 42), mat.xl, [28, 27, 42], [55, -55, 20]);
+const xlI = pieza(robot, caja(22, 9, 42), mat.xl, [-28, 27, 42], [-55, -55, 20]);
+const esp32 = pieza(robot, caja(28, 4, 52), mat.esp, [0, 55, 12], [0, 130, 0], [0, 0, 0], [0, 0.6, 0]);
+pieza(robot, caja(18, 3, 25), mat.metal, [0, 58, 0], [0, 133, -12]); // módulo WROOM
+const pcaD = pieza(robot, caja(25, 3, 62), mat.pcb, [37, 54, -8], [45, 90, 0], [0, 0, 0], [0, 0, -0.3]);
+const pcaI = pieza(robot, caja(25, 3, 62), mat.pcb, [-37, 54, -8], [-45, 90, 0], [0, 0, 0], [0, 0, 0.3]);
+
+etiqueta(cubierta, 'Cubierta · PLA+');
+etiqueta(esp32, 'ESP32 · el cerebro');
+etiqueta(pcaD, 'PCA9685 · lado derecho');
+etiqueta(placaSup, 'Placa superior');
+etiqueta(bateria, 'Pila LiPo 7.4 V');
+etiqueta(xlI, 'Regulador XL4015');
+etiqueta(placaInf, 'Placa inferior');
+
+// ---------- Patas ----------
+const deg = Math.PI / 180;
+const montajes = [
+  { lado: 1, z: -50, ang: 35 }, { lado: 1, z: 0, ang: 0 }, { lado: 1, z: 50, ang: -35 },
+  { lado: -1, z: -50, ang: 35 }, { lado: -1, z: 0, ang: 0 }, { lado: -1, z: 50, ang: -35 },
+];
+montajes.forEach((m, i) => {
+  const pata = new THREE.Group();
+  pata.position.set(m.lado * 56, 35, m.z);
+  pata.rotation.y = m.lado === 1 ? m.ang * deg : Math.PI - m.ang * deg;
+  robot.add(pata);
+
+  const s1 = pieza(pata, caja(12, 22, 23), mat.servo, [8, 0, 0], [18, 0, 0]);
+  const coxa = pieza(pata, caja(30, 4, 14), mat.pla, [24, 13, 0], [45, 22, 0], [0, 0, 0], [0, 0, 0.3]);
+  const s2 = pieza(pata, caja(23, 12, 22), mat.servo, [40, 0, 0], [75, 0, 0]);
+  const femur = pieza(pata, caja(46, 5, 12), mat.pla, [60, 6, 0], [110, 26, 0], [0, 0, 0.24], [0, 0, 0.3]);
+  const s3 = pieza(pata, caja(12, 23, 22), mat.servo, [80, 10, 0], [145, 8, 0]);
+  const tibia = pieza(pata, caja(9, 62, 15), mat.pla, [85, -18, 0], [180, -14, 0], [0, 0, -0.08], [0, 0, -0.3]);
+  const pie = pieza(pata, new THREE.SphereGeometry(7, 16, 12), mat.tpu, [86, -52, 0], [210, -42, 0]);
+
+  if (i === 1) {
+    etiqueta(s1, 'Servo MG90S');
+    etiqueta(coxa, 'Coxa · 25 mm');
+    etiqueta(femur, 'Fémur · 45 mm');
+    etiqueta(tibia, 'Tibia · 65 mm');
+    etiqueta(pie, 'Pie de TPU');
+  }
+});
+
+// ---------- Scroll ----------
+const clamp = (v) => Math.min(1, Math.max(0, v));
+const suave = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+
+function avanceDesarme() {
+  const y = window.scrollY, h = window.innerHeight;
+  const d = document.getElementById('desarme');
+  const f = document.getElementById('final');
+  const inicio = d.offsetTop - h * 0.5;
+  const fin = d.offsetTop + d.offsetHeight - h * 1.2;
+  const desarmar = clamp((y - inicio) / (fin - inicio));
+  const armar = clamp((y - (f.offsetTop - h)) / (h * 0.8));
+  return suave(0, 1, desarmar) * (1 - suave(0, 1, armar));
+}
+
+function ajustar() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', ajustar);
+ajustar();
+
+const v = new THREE.Vector3();
+const reloj = new THREE.Clock();
+let t = 0;
+
+function cuadro() {
+  const tiempo = reloj.getElapsedTime();
+  const objetivo = avanceDesarme();
+  t += (objetivo - t) * 0.08; // movimiento suave
+
+  for (const p of piezas) {
+    p.obj.position.copy(p.base).addScaledVector(p.off, t);
+    p.obj.rotation.set(p.giro0.x + p.giroX.x * t, p.giro0.y + p.giroX.y * t, p.giro0.z + p.giroX.z * t);
+  }
+
+  const ancho = window.innerWidth > 900;
+  // El robot vive en la parte derecha de la pantalla; los textos, en la izquierda
+  robot.position.x = ancho ? 2.0 + 0.5 * t : 0;
+  robot.position.y = Math.sin(tiempo * 1.2) * 0.03 * (1 - t);
+  robot.rotation.y = tiempo * 0.18 + window.scrollY * 0.0006;
+
+  const dist = 6.4 + 4.2 * t;
+  camera.position.set(0, 2.3 + 1.5 * t, dist);
+  camera.lookAt(0, 0.25 + 0.1 * t, 0);
+
+  // En la galería y en el cerebro el contenido ocupa todo el ancho: el robot se desvanece para no estorbar
+  let enAncha = false;
+  for (const id of ['diseno', 'cerebro']) {
+    const r = document.getElementById(id).getBoundingClientRect();
+    if (r.top < window.innerHeight * 0.6 && r.bottom > window.innerHeight * 0.4) enAncha = true;
+  }
+  canvas.style.opacity = enAncha ? '0.06' : '';
+  document.getElementById('etiquetas').style.opacity = enAncha ? '0' : '1';
+
+  renderer.render(scene, camera);
+
+  const visible = suave(0.55, 0.9, t);
+  const w = window.innerWidth, h = window.innerHeight;
+  for (const e of etiquetas) {
+    e.obj.getWorldPosition(v).project(camera);
+    e.el.style.left = ((v.x + 1) / 2 * w) + 'px';
+    e.el.style.top = ((1 - v.y) / 2 * h) + 'px';
+    e.el.style.opacity = (v.z < 1 ? visible : 0).toFixed(2);
+  }
+  requestAnimationFrame(cuadro);
+}
+cuadro();
+</script>
+</body>
+</html>
