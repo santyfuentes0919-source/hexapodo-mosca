@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Páginas del proyecto</title>
+<style>
+  :root {
+    --bg: #0a0d0b;
+    --panel: rgba(14, 19, 16, 0.86);
+    --line: rgba(182, 255, 59, 0.18);
+    --lime: #b6ff3b;
+    --text: #e8efe6;
+    --muted: #9aa59a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    background: radial-gradient(ellipse at 70% 30%, #142016 0%, var(--bg) 60%);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 32px 16px 56px;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  .volver { color: var(--muted); text-decoration: none; font-size: 14px; }
+  .volver:hover { color: var(--lime); }
+  h1 { font-size: 36px; line-height: 1.15; margin: 18px 0 8px; }
+  h1 span { color: var(--lime); }
+  .intro { color: var(--muted); margin-bottom: 28px; }
+  h2 { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--lime); margin: 30px 0 12px; }
+  .lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  a.tarjeta {
+    display: block; padding: 16px 18px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    color: var(--text); text-decoration: none;
+    transition: border-color .15s, transform .15s;
+  }
+  a.tarjeta:hover { border-color: var(--lime); transform: translateY(-2px); }
+  .tarjeta b { display: block; font-size: 16px; margin-bottom: 4px; }
+  .tarjeta small { color: var(--muted); font-size: 13.5px; }
+  .nota { color: var(--muted); font-size: 13px; margin-top: 32px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="volver" href="../">← Volver al inicio</a>
+  <h1>Páginas del <span>proyecto</span></h1>
+  <p class="intro">Todo lo que hicimos para el hexápodo con cerebro de mosca: simuladores, modelo 3D, guías y los controles de la ESP32.</p>
+
+  <h2>Para entender el proyecto</h2>
+  <div class="lista">
+    <a class="tarjeta" href="guia.html"><b>Guía del proyecto</b><small>Electrónica, sentidos, ensamblaje, programación y cerebro, explicado paso a paso.</small></a>
+    <a class="tarjeta" href="modelo-3d.html"><b>Modelo 3D del hexápodo</b><small>El robot terminado con sensores y fruta-baliza. Se puede girar y acercar.</small></a>
+  </div>
+
+  <h2>Simuladores del cerebro de mosca</h2>
+  <div class="lista">
+    <a class="tarjeta" href="simulador-v4.html"><b>Simulador v4</b><small>Cuerpo final en 3D, neuronas en 3D, pistas del reglamento y entrenamiento.</small></a>
+    <a class="tarjeta" href="simulador-v3.html"><b>Simulador v3</b><small>Carril real y sensores reales. Funciona sin internet.</small></a>
+    <a class="tarjeta" href="simulador-v2.html"><b>Simulador v2</b><small>Obstáculos, castigo y cerebros guardados.</small></a>
+  </div>
+
+  <h2>Robot real</h2>
+  <div class="lista">
+    <a class="tarjeta" href="control-xbox.html"><b>Control tipo Xbox</b><small>Modo demostración: la araña dibujada camina con las palancas o con un control real.</small></a>
+    <a class="tarjeta" href="prueba-patas.html"><b>Prueba de patas</b><small>Pantalla para revisar cada pata. Solo funciona conectados al WiFi de la araña.</small></a>
+    <a class="tarjeta" href="instalar-raspberry.html"><b>Instalar en la Raspberry</b><small>Grabar la microSD, pasar el código y dejar el arranque automático.</small></a>
+  </div>
+
+  <p class="nota">Los cerebros que se guardan en los simuladores se quedan en este navegador. Las páginas en 3D necesitan internet para cargar la librería.</p>
+</main>
+</body>
+</html>

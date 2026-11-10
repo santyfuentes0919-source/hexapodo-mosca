@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mosca en la Raspberry</title>
+<meta name="description" content="Paso a paso para grabar la microSD, conectarse por SSH, pasar el código del hexápodo mosca a la Raspberry Pi Zero 2 W, probarlo por partes y dejarlo arrancando solo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: una columna de lectura con fases numeradas (es una secuencia real) y bloques de terminal copiables. Misma identidad que la Guía del Hexápodo. */
+:root{
+  --papel:#f3f6f8; --hoja:#ffffff; --tinta:#14202b; --tenue:#566572; --linea:#d4dde4;
+  --acento:#d97a06; --acento-suave:#fdf0de;
+  --term-bg:#14202b; --term-tinta:#e4ebf0; --term-tenue:#8fa1af; --term-prompt:#f29b2c;
+  --rojo:#c8372a; --rojo-suave:#fbe7e4; --verde:#1f8a4c; --verde-suave:#e2f4ea; --azul:#2563c9;
+  --f-titulo:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-texto:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --papel:#0f161c; --hoja:#16212a; --tinta:#e4ebf0; --tenue:#98a7b3; --linea:#2a3843;
+  --acento:#f29b2c; --acento-suave:#33240f;
+  --term-bg:#0a1015; --term-tinta:#e4ebf0; --term-tenue:#7d8f9c; --term-prompt:#f29b2c;
+  --rojo:#ff7a6b; --rojo-suave:#3a1b17; --verde:#4fd08a; --verde-suave:#15301f; --azul:#6aa0ff;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --papel:#0f161c; --hoja:#16212a; --tinta:#e4ebf0; --tenue:#98a7b3; --linea:#2a3843;
+  --acento:#f29b2c; --acento-suave:#33240f;
+  --term-bg:#0a1015; --term-tinta:#e4ebf0; --term-tenue:#7d8f9c; --term-prompt:#f29b2c;
+  --rojo:#ff7a6b; --rojo-suave:#3a1b17; --verde:#4fd08a; --verde-suave:#15301f; --azul:#6aa0ff;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--papel);color:var(--tinta);font-family:var(--f-texto);font-size:17px;line-height:1.6;margin:0}
+a{color:var(--azul)}
+.envoltura{max-width:820px;margin:0 auto;padding-inline:20px;padding-block:28px 80px}
+nav.fases{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--papel);border-bottom:1px solid var(--linea)}
+nav.fases div{max-width:820px;margin:0 auto;padding:10px 20px;display:flex;gap:8px;overflow-x:auto}
+nav.fases a{flex:none;font-family:var(--f-titulo);font-weight:500;font-size:14px;color:var(--tenue);text-decoration:none;padding:5px 11px;border-radius:999px;border:1px solid var(--linea);background:var(--hoja)}
+nav.fases a:hover,nav.fases a:focus-visible{color:var(--tinta);border-color:var(--acento);outline:none}
+.eti{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--acento);font-weight:600}
+h1{font-family:var(--f-titulo);font-weight:800;font-size:clamp(34px,6vw,50px);line-height:1.05;margin:8px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--f-titulo);font-weight:800;font-size:clamp(25px,4vw,32px);line-height:1.15;margin:0 0 8px;text-wrap:balance}
+h3{font-family:var(--f-titulo);font-weight:700;font-size:20px;margin:30px 0 6px;text-wrap:balance}
+.entrada{font-size:19px;color:var(--tenue);max-width:62ch;margin:0}
+section{padding-top:56px}
+p,li{max-width:68ch}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--acento-suave);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.term{position:relative;background:var(--term-bg);color:var(--term-tinta);border-radius:10px;margin:12px 0 8px}
+.term pre{margin:0;padding:14px 16px;padding-right:86px;overflow-x:auto;font-family:var(--f-mono);font-size:13.5px;line-height:1.6;white-space:pre}
+.term .lugar{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--term-tenue);padding:10px 16px 0}
+.term .p{color:var(--term-prompt);user-select:none}
+.term .c{color:var(--term-tenue)}
+.copiar{position:absolute;top:8px;right:8px;font-family:var(--f-titulo);font-size:13px;font-weight:500;background:transparent;color:var(--term-tinta);border:1px solid var(--term-tenue);border-radius:6px;padding:3px 10px;cursor:pointer}
+.copiar:hover,.copiar:focus-visible{border-color:var(--term-prompt);color:var(--term-prompt);outline:none}
+.salida{background:var(--hoja);border:1px dashed var(--linea);border-radius:10px;margin:8px 0 12px}
+.salida .lugar{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tenue);padding:10px 16px 0}
+.salida pre{margin:0;padding:8px 16px 14px;overflow-x:auto;font-family:var(--f-mono);font-size:13px;line-height:1.5}
+.salida mark{background:var(--acento-suave);color:var(--tinta);font-weight:600;border-radius:3px;padding:0 2px}
+.porque{border-left:3px solid var(--acento);padding:4px 0 4px 14px;margin:12px 0;color:var(--tinta)}
+.porque b{font-family:var(--f-titulo)}
+.alerta{background:var(--rojo-suave);border-radius:10px;padding:12px 16px;margin:14px 0}
+.alerta b{color:var(--rojo);font-family:var(--f-titulo)}
+.bien{background:var(--verde-suave);border-radius:10px;padding:12px 16px;margin:14px 0}
+.bien b{color:var(--verde);font-family:var(--f-titulo)}
+ol.pasos{padding-left:22px}
+ol.pasos li{margin:6px 0}
+.figura{background:var(--hoja);border:1px solid var(--linea);border-radius:12px;padding:16px;margin:18px 0;overflow-x:auto}
+.figura svg{display:block;width:100%;min-width:560px;height:auto}
+.figura figcaption{font-size:14px;color:var(--tenue);margin-top:8px}
+svg .caja{fill:var(--hoja);stroke:var(--linea);stroke-width:2}
+svg .caja-ac{fill:var(--acento-suave);stroke:var(--acento);stroke-width:2}
+svg .t{fill:var(--tinta);font-family:var(--f-titulo);font-weight:700;font-size:17px}
+svg .tc{fill:var(--tenue);font-family:var(--f-texto);font-size:13px}
+svg .linea{stroke:var(--acento);stroke-width:2.5;fill:none}
+svg .linea2{stroke:var(--tenue);stroke-width:2;fill:none;stroke-dasharray:6 5}
+svg .flecha{fill:var(--acento)}
+svg .flecha2{fill:var(--tenue)}
+.tabla{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:15.5px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--linea)}
+th{font-family:var(--f-titulo);font-weight:700;font-size:14px;color:var(--tenue)}
+td:first-child{font-family:var(--f-mono);font-size:13px;min-width:180px}
+.lista-check{list-style:none;padding:0}
+.lista-check li{padding-left:28px;position:relative;margin:6px 0}
+.lista-check li::before{content:"";position:absolute;left:4px;top:.45em;width:12px;height:12px;border:2px solid var(--acento);border-radius:3px}
+dl.teclas{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:12px 0}
+dl.teclas dt{font-family:var(--f-mono);font-size:14px;font-weight:600}
+dl.teclas dd{margin:0;min-width:0}
+.pie{margin-top:60px;color:var(--tenue);font-size:15px;border-top:1px solid var(--linea);padding-top:16px}
+@media (max-width:520px){
+  body{font-size:16px}
+  .term pre{font-size:12.5px}
+  dl.teclas{grid-template-columns:1fr}
+  dl.teclas dd{margin-bottom:8px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<nav class="fases" aria-label="Fases"><div>
+  <a href="#mapa">Mapa</a><a href="#f1">1 microSD</a><a href="#f2">2 SSH</a><a href="#f3">3 Preparar</a><a href="#f4">4 Archivos</a><a href="#f5">5 Pruebas</a><a href="#f6">6 Arranque solo</a><a href="#f7">7 Día a día</a><a href="#fallas">Si algo falla</a>
+</div></nav>
+
+<main class="envoltura">
+<header>
+  <div class="eti">Hexápodo mosca · Raspberry Pi Zero 2 W</div>
+  <h1>Poner el código en la Raspberry</h1>
+  <p class="entrada">Desde una microSD vacía hasta el robot que arranca solo al prenderlo. Siete fases, en orden. Cada comando trae su explicación, para que sepas qué está pasando y no solo lo copies.</p>
+  <p>Esta página es solo la parte de software. Cómo se conectan los cables, cómo se arma y qué hace cada archivo por dentro está en la <a href="https://claude.ai/artifact/EXSqwySv8bwMGbBrwNPrkb" target="_blank" rel="noopener">Guía del Hexápodo</a>.</p>
+</header>
+
+<section id="mapa">
+  <div class="eti">Antes de empezar</div>
+  <h2>El mapa: tres caminos entre tu compu y la Pi</h2>
+  <p>La Raspberry Pi Zero 2 W es una computadora completa del tamaño de un chicle, pero no le vamos a conectar pantalla ni teclado. Todo se hace desde tu computadora:</p>
+  <figure class="figura">
+    <svg viewBox="0 0 760 250" role="img" aria-label="La computadora graba la microSD, luego se comunica con la Pi por WiFi usando SSH para escribir comandos y scp para copiar archivos">
+      <rect class="caja" x="10" y="70" width="200" height="110" rx="12"/>
+      <text class="t" x="110" y="115" text-anchor="middle">Tu computadora</text>
+      <text class="tc" x="110" y="138" text-anchor="middle">Windows · PowerShell</text>
+      <rect class="caja-ac" x="550" y="70" width="200" height="110" rx="12"/>
+      <text class="t" x="650" y="115" text-anchor="middle">Raspberry Pi</text>
+      <text class="tc" x="650" y="138" text-anchor="middle">nombre: mosca.local</text>
+      <path class="linea2" d="M110 70 C110 20 650 20 650 64"/>
+      <polygon class="flecha2" points="644,58 656,58 650,70"/>
+      <text class="tc" x="380" y="30" text-anchor="middle">① microSD: se graba una vez con Raspberry Pi Imager</text>
+      <path class="linea" d="M210 110 H540"/>
+      <polygon class="flecha" points="540,104 552,110 540,116"/>
+      <text class="tc" x="380" y="100" text-anchor="middle">② SSH: escribes comandos y la Pi los ejecuta</text>
+      <path class="linea" d="M210 150 H540"/>
+      <polygon class="flecha" points="540,144 552,150 540,156"/>
+      <text class="tc" x="380" y="172" text-anchor="middle">③ scp: copias archivos por el WiFi</text>
+      <text class="tc" x="380" y="230" text-anchor="middle">Al final ya no necesita la compu: al prenderlo, el robot arranca solo.</text>
+    </svg>
+    <figcaption>Los dos (compu y Pi) deben estar en la misma red WiFi de 2.4 GHz.</figcaption>
+  </figure>
+
+  <h3>Qué necesitas tener a la mano</h3>
+  <ul class="lista-check">
+    <li>MicroSD de 16 o 32 GB (clase 10 / A1) y un lector de microSD para tu compu.</li>
+    <li>Un cargador de celular con cable micro USB, para prender la Pi en la mesa mientras la preparas.</li>
+    <li>El nombre y la contraseña de una red WiFi de <b>2.4 GHz</b>. La Zero 2 W no ve las redes de 5 GHz.</li>
+    <li>El paquete <code>mosca-para-raspberry.zip</code> (está en los archivos del proyecto, carpeta <code>entregables/11-raspberry/</code>). Trae los 9 archivos que van en la Pi.</li>
+  </ul>
+  <div class="porque"><b>Qué trae el paquete.</b> <code>main.py</code> (el programa de carrera), <code>cerebro.py</code>, <code>sentidos.py</code>, <code>servos.py</code>, <code>mosca.service</code> (arranque automático), <code>prueba_servo.py</code> (nuevo: prueba un solo servo), y dos cerebros: <code>cerebro-mosca-v4-competencia.json</code> (el más nuevo, el que usa <code>main.py</code>) y <code>cerebro-mosca-v3.json</code> (de respaldo).</div>
+</section>
+
+<section id="f1">
+  <div class="eti">Fase 1 · en tu compu</div>
+  <h2>Grabar el sistema en la microSD</h2>
+  <p>La Pi no tiene disco duro: su "disco" es la microSD. Ahí vamos a poner <b>Raspberry Pi OS Lite de 64 bits</b>, que es Linux sin escritorio.</p>
+  <div class="porque"><b>¿Por qué sin escritorio?</b> La Zero 2 W solo tiene 512 MB de memoria. Si gasta memoria y procesador dibujando ventanas que nadie ve, le queda menos para el cerebro, la cámara y los sensores. Además arranca más rápido.</div>
+  <ol class="pasos">
+    <li>Descarga e instala <b>Raspberry Pi Imager</b> desde <a href="https://www.raspberrypi.com/software/" target="_blank" rel="noopener">raspberrypi.com/software</a>.</li>
+    <li>Mete la microSD en tu compu y abre Imager.</li>
+    <li><b>Dispositivo:</b> Raspberry Pi Zero 2 W.</li>
+    <li><b>Sistema operativo:</b> Raspberry Pi OS (other) → <b>Raspberry Pi OS Lite (64-bit)</b>.</li>
+    <li><b>Almacenamiento:</b> tu microSD. Fíjate bien que sea la microSD y no otra memoria, porque se borra completa.</li>
+    <li>Cuando Imager pregunte si quieres <b>personalizar</b> el sistema, di que sí y llena esto:
+      <ul>
+        <li>Nombre del equipo (hostname): <code>mosca</code></li>
+        <li>Usuario: <code>pi</code> y una contraseña que no olvides.</li>
+        <li>WiFi: nombre y contraseña de tu red de 2.4 GHz, país <b>MX</b>.</li>
+        <li>Zona horaria: America/Mexico_City.</li>
+        <li><b>Activar SSH</b> con contraseña.</li>
+      </ul>
+    </li>
+    <li>Graba. Cuando termine, saca la microSD.</li>
+  </ol>
+  <div class="porque"><b>¿Por qué el usuario tiene que ser <code>pi</code>?</b> El archivo <code>mosca.service</code> busca el programa en <code>/home/pi/mosca</code>. Si usas otro nombre, tendrías que cambiar esa ruta. Con <code>pi</code> todo coincide sin tocar nada.</div>
+  <p>Los nombres de los menús de Imager cambian un poco entre versiones, pero siempre están estas mismas opciones.</p>
+</section>
+
+<section id="f2">
+  <div class="eti">Fase 2 · primera conexión</div>
+  <h2>Prender la Pi y entrar por SSH</h2>
+  <p>Mete la microSD en la Pi y conéctale el cargador al puerto micro USB que dice <b>PWR</b> (el de la orilla). Todavía no conectes la batería del robot. Espera unos 3 minutos: la primera vez tarda porque se configura sola.</p>
+  <p>En tu compu abre <b>PowerShell</b> (botón de Inicio, escribe "PowerShell"). Escribe:</p>
+  <div class="term"><span class="lugar">En tu compu</span><pre><span class="p">PS&gt; </span>ssh pi@mosca.local</pre></div>
+  <ul>
+    <li>La primera vez te pregunta <code>Are you sure you want to continue connecting?</code>. Escribe <code>yes</code> y Enter.</li>
+    <li>Luego pide la contraseña. <b>Mientras la escribes no aparece nada</b>, ni asteriscos. Es normal: escríbela y da Enter.</li>
+  </ul>
+  <div class="bien"><b>Ya estás dentro</b> cuando la línea cambia a <code>pi@mosca:~ $</code>. Desde ahora, lo que escribas se ejecuta en la Pi, no en tu compu.</div>
+  <div class="porque"><b>¿Qué es SSH?</b> Es un "control remoto" de texto, cifrado. Tu teclado escribe y la Pi obedece. <code>pi@mosca.local</code> quiere decir "entra como el usuario pi a la computadora llamada mosca en esta red".</div>
+  <p>En Mac es igual: abre la app <b>Terminal</b> y escribe el mismo comando.</p>
+
+  <h3>Cuatro teclas que vas a usar todo el tiempo</h3>
+  <dl class="teclas">
+    <dt>Ctrl + C</dt><dd>Detiene el programa que está corriendo. Si algo se traba o quieres salir de una prueba, esto.</dd>
+    <dt>Flecha ↑</dt><dd>Repite el comando anterior, para no volver a escribirlo.</dd>
+    <dt>Tab</dt><dd>Completa nombres de archivos. Escribe <code>sen</code> + Tab y aparece <code>sentidos.py</code>.</dd>
+    <dt>Clic derecho</dt><dd>En PowerShell pega lo que copiaste con los botones "Copiar" de esta página.</dd>
+  </dl>
+</section>
+
+<section id="f3">
+  <div class="eti">Fase 3 · en la Pi</div>
+  <h2>Preparar el sistema</h2>
+  <h3>3.1 Actualizar</h3>
+  <div class="term"><span class="lugar">En la Pi (por SSH)</span><pre><span class="p">$ </span>sudo apt update
+<span class="p">$ </span>sudo apt full-upgrade -y</pre></div>
+  <div class="porque"><b>Por qué.</b> <code>apt</code> es la "tienda de apps" de Linux. <code>update</code> descarga la lista de lo más nuevo y <code>full-upgrade</code> lo instala. <code>sudo</code> significa "hazlo como administrador", porque cambiar el sistema necesita permiso. En la Zero 2 W esto puede tardar un buen rato; déjala trabajar.</div>
+
+  <h3>3.2 Encender I2C a 400 kHz</h3>
+  <p>I2C es el bus de 2 cables por donde la Pi habla con los 2 PCA9685, el ADS1115 y los 2 VL53L0X. Viene apagado de fábrica.</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>sudo raspi-config nonint do_i2c 0
+<span class="p">$ </span>echo "dtparam=i2c_arm_baudrate=400000" | sudo tee -a /boot/firmware/config.txt
+<span class="p">$ </span>sudo reboot</pre></div>
+  <div class="porque"><b>Por qué cada línea.</b> La primera enciende I2C (en <code>raspi-config</code> el <code>0</code> significa "sí"). La segunda agrega una línea al archivo de configuración de arranque para que el bus vaya a 400 kHz en vez de 100 kHz: cada ciclo de 20 ms la Pi manda ángulos a 18 servos y lee sensores, y a 100 kHz no alcanza a mandarlo todo a tiempo. La tercera reinicia para que se aplique. La cámara no necesita nada: el sistema la detecta solo.</div>
+  <p>Al reiniciar se corta el SSH. Espera un minuto y vuelve a entrar con <code>ssh pi@mosca.local</code>.</p>
+
+  <h3>3.3 Instalar las librerías que usa el código</h3>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>sudo apt install -y python3-pip python3-dev build-essential i2c-tools python3-gpiozero python3-picamera2 python3-opencv
+<span class="p">$ </span>sudo pip3 install --break-system-packages adafruit-circuitpython-servokit adafruit-circuitpython-ads1x15 adafruit-circuitpython-vl53l0x</pre></div>
+  <div class="porque"><b>Qué es cada cosa.</b> <code>gpiozero</code> maneja botones y LED. <code>picamera2</code> y <code>opencv</code> son los ojos (cámara y detección del verde). <code>i2c-tools</code> sirve para revisar el bus. Las tres <code>adafruit-…</code> son los "traductores" de cada chip: PCA9685 (servos), ADS1115 (antenas y batería) y VL53L0X (tacto). Esas tres no están en <code>apt</code>, por eso van con <code>pip</code>, la tienda de Python.</div>
+  <div class="alerta"><b>Importante: el <code>sudo</code> en el pip.</b> El robot, al arrancar solo, corre como administrador (root). Si instalas con <code>pip</code> sin <code>sudo</code>, las librerías quedan solo para el usuario pi y el arranque automático no las encuentra. Con <code>sudo</code> quedan para todos. <code>--break-system-packages</code> le da permiso a pip de instalar fuera de <code>apt</code>; aquí no rompe nada porque son librerías que <code>apt</code> no tiene.</div>
+  <p>Comprueba que todo quedó:</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>python3 -c "import board, adafruit_servokit, adafruit_ads1x15, adafruit_vl53l0x, cv2, picamera2, gpiozero; print('todo instalado')"</pre></div>
+  <div class="bien"><b>Bien</b> si responde <code>todo instalado</code>. Si sale <code>ModuleNotFoundError</code>, el nombre que aparece te dice qué librería faltó; repite su línea de instalación.</div>
+</section>
+
+<section id="f4">
+  <div class="eti">Fase 4 · de tu compu a la Pi</div>
+  <h2>Pasar los archivos</h2>
+  <ol class="pasos">
+    <li>Descarga <code>mosca-para-raspberry.zip</code>, clic derecho → <b>Extraer todo</b>.</li>
+    <li>Abre la carpeta que se creó hasta que veas adentro la carpeta <code>mosca</code>.</li>
+    <li>Haz clic en la <b>barra de dirección</b> del explorador (donde dice la ruta), escribe <code>powershell</code> y Enter. Se abre una PowerShell nueva justo en esa carpeta.</li>
+    <li>En esa ventana nueva escribe:</li>
+  </ol>
+  <div class="term"><span class="lugar">En tu compu (PowerShell nueva, no la del SSH)</span><pre><span class="p">PS&gt; </span>scp -r mosca pi@mosca.local:/home/pi/</pre></div>
+  <div class="porque"><b>Por qué así.</b> <code>scp</code> es "copiar por SSH": usa la misma conexión segura y la misma contraseña. <code>-r</code> copia la carpeta con todo lo de adentro. El truco de escribir <code>powershell</code> en la barra de dirección evita escribir rutas largas (y evita líos si tu Escritorio está dentro de OneDrive). En Mac: abre Terminal, escribe <code>cd </code> con espacio, arrastra la carpeta de afuera a la ventana, Enter, y luego el mismo <code>scp</code>.</div>
+  <p>Revisa en la ventana del SSH que llegaron:</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>cd ~/mosca
+<span class="p">$ </span>ls</pre></div>
+  <div class="salida"><span class="lugar">Debe salir</span><pre>cerebro-mosca-v3.json  cerebro-mosca-v4-competencia.json  cerebro.py  main.py  mosca.service  prueba_servo.py  sentidos.py  servos.py</pre></div>
+  <p><code>cd</code> quiere decir "entra a esta carpeta" (la <code>~</code> es tu carpeta personal, <code>/home/pi</code>) y <code>ls</code> "enséñame lo que hay". Desde aquí, todos los comandos de las pruebas se escriben estando dentro de <code>~/mosca</code>.</p>
+</section>
+
+<section id="f5">
+  <div class="eti">Fase 5 · en la Pi, de lo simple a lo completo</div>
+  <h2>Probar por partes</h2>
+  <p>Nunca sueltes el robot completo a la primera. Se prueba una pieza a la vez: si algo falla, sabes que el problema está en lo último que agregaste y no en las 30 cosas juntas.</p>
+
+  <h3>5.1 El cerebro solo (no necesita nada conectado)</h3>
+  <div class="term"><span class="lugar">En la Pi, dentro de ~/mosca</span><pre><span class="p">$ </span>python3 cerebro.py cerebro-mosca-v4-competencia.json</pre></div>
+  <div class="salida"><span class="lugar">Debe terminar parecido a esto</span><pre>t=1.40s frec=<mark>2.00Hz</mark> pata0=[7.3, 28.3, 20.6]
+t=1.60s frec=<mark>2.00Hz</mark> pata0=[1.8, 0.0, 0.0]
+t=1.80s frec=<mark>2.00Hz</mark> pata0=[-10.1, 23.7, 17.3]</pre></div>
+  <div class="porque"><b>Qué prueba.</b> Que Python lee el cerebro v4 y que sus matemáticas dan pasos: la frecuencia sube a 2 pasos por segundo y los ángulos de la pata 0 cambian. Son los mismos números que da el Simulador v4.</div>
+
+  <h3>5.2 ¿La Pi ve los chips? (I2C)</h3>
+  <p>Apaga la Pi (<code>sudo shutdown -h now</code>, espera a que se apague el LED verde, desconecta), conecta SDA, SCL, 3.3 V y GND a los chips como dice la <a href="https://claude.ai/artifact/EXSqwySv8bwMGbBrwNPrkb" target="_blank" rel="noopener">guía</a>, prende y entra otra vez.</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>i2cdetect -y 1</pre></div>
+  <div class="salida"><span class="lugar">Con todo conectado debe salir</span><pre>     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- --
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+20: -- -- -- -- -- -- -- -- -- <mark>29</mark> -- -- -- -- -- --
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+40: <mark>40</mark> <mark>41</mark> -- -- -- -- -- -- <mark>48</mark> -- -- -- -- -- -- --
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+70: <mark>70</mark> -- -- -- -- -- -- --</pre></div>
+  <div class="tabla"><table>
+    <tr><th>Dirección</th><th>Quién es</th></tr>
+    <tr><td>40</td><td>PCA9685 del lado derecho (patas 0, 1, 2)</td></tr>
+    <tr><td>41</td><td>PCA9685 del lado izquierdo (patas 3, 4, 5). Si no sale, falta soldar el puente A0 de esa placa.</td></tr>
+    <tr><td>48</td><td>ADS1115 (antenas y batería)</td></tr>
+    <tr><td>29</td><td>Los dos VL53L0X. Salen de fábrica con la misma dirección, por eso aparece uno solo. <code>sentidos.py</code> los separa al arrancar en 30 y 31.</td></tr>
+    <tr><td>70</td><td>No es otro chip: es la dirección "a todos" de los PCA9685. Es normal que aparezca.</td></tr>
+  </table></div>
+
+  <h3>5.3 Un solo servo</h3>
+  <p>Ahora sí conecta la batería y el UBEC a la entrada de potencia (V+) de los PCA9685. Conecta un servo <b>sin horn</b> o con la pata al aire en el canal 0 de la placa 0x40.</p>
+  <div class="alerta"><b>Nunca</b> alimentes los servos desde los pines de 5 V de la Pi. 18 servos piden varios amperes; la Pi se reinicia o se daña. La Pi y los servos solo comparten la tierra (GND).</div>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>python3 prueba_servo.py 0x40 0</pre></div>
+  <p>El servo debe ir a 90°, 60°, 90°, 120°, 90° y quedar suelto. Cambia el número del final (0 a 8) y el de la placa (<code>0x41</code>) para revisar cada canal antes de cerrar el robot.</p>
+  <div class="porque"><b>Por qué uno solo.</b> Si un servo tiembla o no se mueve, aquí sabes que es ese cable o ese canal. Con 18 moviéndose a la vez sería imposible saber cuál.</div>
+
+  <h3>5.4 Las 18 patas y calibrar</h3>
+  <p>Con el robot armado <b>sobre una caja</b> (las patas no tocan nada):</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>python3 servos.py --calibrar</pre></div>
+  <p>Te enseña los comandos (<code>p 0</code> elige pata, <code>a 1</code> elige articulación, <code>+</code>/<code>-</code> mueve el centro, <code>t</code> prueba, <code>d</code> invierte, <code>g</code> guarda, <code>q</code> sale). Ajusta cada articulación hasta que la pata quede derecha en postura de pie y la prueba <code>t</code> vaya adelante / arriba / hacia el cuerpo. Guarda con <code>g</code>: se crea <code>servos_calibracion.json</code>, y <code>main.py</code> lo usa solo.</p>
+  <div class="porque"><b>Por qué calibrar.</b> Cada servo queda montado unos grados chueco porque el horn tiene dientes. Sin calibrar, el cerebro pide "0°" y cada pata hace algo distinto, y el robot camina chueco aunque el cerebro esté perfecto.</div>
+
+  <h3>5.5 La cámara</h3>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>rpicam-hello --list-cameras
+<span class="p">$ </span>rpicam-still -n -o ~/foto.jpg</pre></div>
+  <p>La primera línea debe nombrar la cámara (ov5647). La segunda toma una foto. Para verla, en una PowerShell de tu compu:</p>
+  <div class="term"><span class="lugar">En tu compu</span><pre><span class="p">PS&gt; </span>scp pi@mosca.local:/home/pi/foto.jpg .</pre></div>
+  <p>El punto final quiere decir "aquí, en la carpeta donde estoy". Ábrela y revisa que no salga de cabeza (si sale, pon <code>CAMARA_INVERTIDA = True</code> en <code>sentidos.py</code>).</p>
+
+  <h3>5.6 Los seis sentidos</h3>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>python3 sentidos.py</pre></div>
+  <div class="salida"><span class="lugar">Cada medio segundo imprime algo así</span><pre>ant_izq=0.00  ant_der=0.00  vis_izq=0.00  vis_der=0.00  mec_izq=0.42  mec_der=0.00  congelados: <mark>ninguno</mark></pre></div>
+  <p>Acerca la mano a un VL53L0X: su <code>mec</code> debe subir hacia 1. Pon la fruta-baliza encendida enfrente: suben <code>ant</code> y <code>vis</code>. Sal con Ctrl + C. Después haz la calibración completa:</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>python3 sentidos.py --calibrar</pre></div>
+  <p>Anota la amplitud con la fruta a 20 cm (será <code>AMP_CERCA</code>) y con la fruta apagada (<code>AMP_FONDO</code>), y los valores de cámara que imprime. Escríbelos al inicio de <code>sentidos.py</code> con el editor <code>nano</code>:</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>nano sentidos.py</pre></div>
+  <p>Te mueves con las flechas, cambias el número, guardas con <b>Ctrl + O</b> y Enter, y sales con <b>Ctrl + X</b>. Pon los mismos números en Ajustes del Simulador v4, para que la mosca virtual sienta igual que la real.</p>
+  <div class="porque"><b>Por qué medir.</b> Cada fototransistor, cada LED y cada salón con distinta luz dan otros voltajes. Los valores que vienen en el código son de ejemplo; con los tuyos, el cerebro recibe lo mismo que recibía en el simulador donde se entrenó.</div>
+
+  <h3>5.7 Caminar en el aire</h3>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>python3 main.py --en-el-aire</pre></div>
+  <p>Debe decir <code>Listo. Boton de arranque = 5 s y corre.</code> y el LED parpadea lento. Presiona el botón de arranque: parpadea rápido 5 segundos y luego las patas hacen el trípode. Los valores de tacto que imprime deben quedarse en 0. Para detenerlo, presiona otra vez el botón; para cerrar el programa, Ctrl + C.</p>
+
+  <h3>5.8 En el piso, a ciegas y luego completo</h3>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>python3 main.py --a-ciegas
+<span class="p">$ </span>python3 main.py</pre></div>
+  <p><code>--a-ciegas</code> ignora los sensores y camina recto: sirve para revisar que la calibración está bien (si se desvía, corrige el centro de las coxas). Sin nada al final es la carrera real, con los sentidos y el cerebro v4. Cada carrera guarda un archivo en <code>registros/</code> con todo lo que sintió y pensó.</p>
+</section>
+
+<section id="f6">
+  <div class="eti">Fase 6 · en la Pi, una sola vez</div>
+  <h2>Que arranque solo al prenderlo</h2>
+  <p>En la competencia no vas a tener compu. El robot tiene que prender, esperar el botón y correr. De eso se encarga <code>mosca.service</code>.</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>sudo cp ~/mosca/mosca.service /etc/systemd/system/
+<span class="p">$ </span>sudo systemctl daemon-reload
+<span class="p">$ </span>sudo systemctl enable --now mosca.service
+<span class="p">$ </span>systemctl status mosca</pre></div>
+  <div class="bien"><b>Bien</b> si el status dice <code>active (running)</code> en verde y el LED parpadea lento. Sal de esa vista con la tecla <b>q</b>.</div>
+  <div class="porque"><b>Qué hace cada línea.</b> <code>cp</code> copia el archivo a donde Linux guarda los servicios. <code>daemon-reload</code> le dice a <code>systemd</code> (el programa que arranca todo al prender) que lea los servicios otra vez. <code>enable</code> lo deja activado para cada arranque y <code>--now</code> lo prende de una vez. Si el programa truena, <code>systemd</code> lo vuelve a levantar en 2 segundos.</div>
+  <p>La prueba de verdad: <code>sudo reboot</code>, cierra todo en tu compu y espera. Si el LED vuelve a parpadear lento sin que hayas hecho nada, el robot ya es independiente.</p>
+  <p>Para ver qué está imprimiendo el programa mientras corre (Ctrl + C cierra la vista, no el robot):</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>journalctl -u mosca -f</pre></div>
+  <div class="alerta"><b>Ojo.</b> Con el servicio prendido, no corras <code>python3 main.py</code> a mano: serían dos programas peleándose por los servos y la cámara. Antes de una prueba manual, deténlo con <code>sudo systemctl stop mosca</code> (vuelve solo en el siguiente arranque).</div>
+</section>
+
+<section id="f7">
+  <div class="eti">Fase 7 · lo que vas a hacer seguido</div>
+  <h2>El día a día</h2>
+  <h3>Cambiar un archivo o poner un cerebro nuevo</h3>
+  <p>Si entrenas un cerebro nuevo en el simulador, guárdalo como <code>.json</code>, cópialo a la Pi y dile a <code>main.py</code> que lo use:</p>
+  <div class="term"><span class="lugar">En tu compu, en la carpeta del archivo</span><pre><span class="p">PS&gt; </span>scp cerebro-nuevo.json pi@mosca.local:/home/pi/mosca/</pre></div>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>nano ~/mosca/main.py         <span class="c"># cambia el nombre en la línea ARCHIVO_CEREBRO</span>
+<span class="p">$ </span>sudo systemctl restart mosca</pre></div>
+  <p>Para cambiar cualquier <code>.py</code> es igual: <code>scp</code> el archivo a <code>/home/pi/mosca/</code> y <code>restart</code>. El reinicio hace falta porque el programa ya está corriendo con la versión vieja en memoria.</p>
+
+  <h3>Bajar los registros de las carreras</h3>
+  <div class="term"><span class="lugar">En tu compu</span><pre><span class="p">PS&gt; </span>scp -r pi@mosca.local:/home/pi/mosca/registros .</pre></div>
+  <p>Son archivos CSV que abres en Excel. Las gráficas de neuronas y sensores se ven muy bien en el informe técnico.</p>
+
+  <h3>Respaldar la calibración</h3>
+  <div class="term"><span class="lugar">En tu compu</span><pre><span class="p">PS&gt; </span>scp pi@mosca.local:/home/pi/mosca/servos_calibracion.json .</pre></div>
+  <p>Si un día la microSD se daña, grabas otra, repites las fases 1 a 4, regresas este archivo con <code>scp</code> y te ahorras calibrar 18 servos otra vez.</p>
+
+  <h3>Apagar bien</h3>
+  <p>Mantén 2 segundos el botón de apagado (o escribe <code>sudo shutdown -h now</code>) y espera a que el LED verde de la Pi deje de parpadear antes de quitar la batería. Desconectar de golpe mientras escribe puede dañar la microSD.</p>
+
+  <h3>Conectarte sin el WiFi de tu casa</h3>
+  <p>En la escuela o en la competencia puedes usar el hotspot de tu celular (en 2.4 GHz). Agrégalo una vez mientras estás en casa:</p>
+  <div class="term"><span class="lugar">En la Pi</span><pre><span class="p">$ </span>sudo nmcli dev wifi connect "NombreDelHotspot" password "contraseña"</pre></div>
+  <p>La Pi recuerda las dos redes y se conecta a la que encuentre. Tu compu tiene que estar en la misma red para que funcione <code>mosca.local</code>.</p>
+</section>
+
+<section id="fallas">
+  <div class="eti">Si algo falla</div>
+  <h2>Mensajes comunes y qué hacer</h2>
+  <div class="tabla"><table>
+    <tr><th>Lo que ves</th><th>Qué pasa y qué hacer</th></tr>
+    <tr><td>Could not resolve hostname mosca.local</td><td>La Pi aún no termina de arrancar (espera 3 min), está en otra red, o tu WiFi es de 5 GHz. Si sigue, busca la IP de "mosca" en la página de tu módem o en la app del hotspot y usa <code>ssh pi@192.168.x.x</code>.</td></tr>
+    <tr><td>REMOTE HOST IDENTIFICATION HAS CHANGED</td><td>Pasa después de grabar otra microSD: tu compu recuerda la Pi anterior. En tu compu: <code>ssh-keygen -R mosca.local</code> y vuelve a entrar.</td></tr>
+    <tr><td>Permission denied (password)</td><td>Contraseña mal escrita (recuerda que no se ve). Si no la recuerdas, vuelve a grabar la microSD.</td></tr>
+    <tr><td>error: externally-managed-environment</td><td>Faltó <code>--break-system-packages</code> en el <code>pip</code>.</td></tr>
+    <tr><td>ModuleNotFoundError: No module named 'adafruit_servokit'</td><td>No se instaló, o se instaló sin <code>sudo</code>. Repite la línea de <code>sudo pip3 install</code> de la fase 3.3.</td></tr>
+    <tr><td>i2cdetect sale todo con --</td><td>I2C apagado (repite 3.2), SDA y SCL al revés, o los chips sin 3.3 V / GND. Revisa que todos compartan la misma tierra.</td></tr>
+    <tr><td>ValueError: No I2C device at address: 0x41</td><td>La segunda PCA9685 no tiene soldado el puente A0, o no está conectada. <code>servos.py</code> y <code>main.py</code> necesitan las dos placas.</td></tr>
+    <tr><td>Error al iniciar sentidos.py (ADS1115, VL53L0X o cámara)</td><td><code>sentidos.py</code> necesita todos los sentidos conectados para arrancar. El mensaje dice cuál falló: revisa ese cable con <code>i2cdetect</code> o <code>rpicam-hello --list-cameras</code>.</td></tr>
+    <tr><td>No cameras available</td><td>El cable plano está volteado o flojo. En la Zero se usa el cable de 22 a 15 pines; apaga la Pi antes de moverlo.</td></tr>
+    <tr><td>Servos tiemblan o la Pi se reinicia sola al moverlos</td><td>Problema de energía: batería baja, UBEC débil o servos alimentados desde la Pi. Los servos van al UBEC; la Pi y los PCA9685 solo comparten GND.</td></tr>
+    <tr><td>status dice failed</td><td>Lee el error con <code>journalctl -u mosca -n 50</code>. Casi siempre es una librería instalada sin <code>sudo</code> o un archivo con otro nombre.</td></tr>
+    <tr><td>El robot no hace caso al botón</td><td>¿El LED parpadea lento? Si no, el programa no está corriendo: revisa el status. Si sí, revisa el cable del botón al pin 11 (GPIO17) y a GND.</td></tr>
+  </table></div>
+  <p>Si algo no está aquí, copia el mensaje de error completo (las últimas 10 líneas) y pégalo en el proyecto. Con el texto exacto se encuentra la causa rápido.</p>
+</section>
+
+<p class="pie">Hexápodo mosca · CECyTEQ Corregidora · octubre de 2026. Comandos revisados contra <code>main.py</code>, <code>cerebro.py</code>, <code>sentidos.py</code>, <code>servos.py</code> y <code>mosca.service</code> del proyecto.</p>
+</main>
+
+<script>
+document.querySelectorAll('.term').forEach(function (t) {
+  var b = document.createElement('button');
+  b.className = 'copiar'; b.type = 'button'; b.textContent = 'Copiar';
+  b.addEventListener('click', function () {
+    var pre = t.querySelector('pre').cloneNode(true);
+    pre.querySelectorAll('.p, .c').forEach(function (x) { x.remove(); });
+    var txt = pre.textContent.split('\n').map(function (l) { return l.replace(/\s+$/, ''); }).join('\n').trim();
+    function ok() { b.textContent = 'Copiado'; setTimeout(function () { b.textContent = 'Copiar'; }, 1500); }
+    function manual() {
+      var r = document.createRange(); r.selectNodeContents(t.querySelector('pre'));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      b.textContent = 'Selecciona y copia';
+    }
+    try { navigator.clipboard.writeText(txt).then(ok, manual); } catch (e) { manual(); }
+  });
+  t.appendChild(b);
+});
+</script>

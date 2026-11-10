@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba de patas</title>
+<style>
+/* Banco de pruebas: arriba las placas, luego el robot visto desde arriba para elegir la pata,
+   y abajo los controles de esa pata. Mismo tema oscuro que el control. Sin fuentes externas
+   porque la ESP32 no tiene internet. */
+:root {
+  --fondo: #161a19;
+  --panel: #212625;
+  --borde: #343b39;
+  --texto: #e8ecea;
+  --tenue: #9aa5a1;
+  --verde: #5dbb4a;
+  --rojo: #e5534b;
+  --amarillo: #f2c230;
+  --cara: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.45 var(--cara);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--amarillo); outline-offset: 2px; }
+main { max-width: 620px; margin: 0 auto; padding-block: 14px 40px; display: grid; gap: 14px; }
+h1 { font-size: 19px; margin: 0; }
+h2 { font-size: 15px; margin: 0; }
+p { margin: 0; }
+.tenue { color: var(--tenue); font-size: 13.5px; }
+.fila { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--borde); background: var(--panel); white-space: nowrap; }
+.pill.ok { color: var(--verde); border-color: color-mix(in srgb, var(--verde) 50%, var(--borde)); }
+.pill.mal { color: var(--rojo); border-color: color-mix(in srgb, var(--rojo) 50%, var(--borde)); }
+.caja { background: var(--panel); border: 1px solid var(--borde); border-radius: 14px; padding: 14px; display: grid; gap: 12px; }
+.btn { background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px; padding: 9px 13px; }
+.btn.fuerte { background: var(--verde); border-color: var(--verde); color: #0d1a0b; font-weight: 600; }
+.btn.peligro { color: var(--rojo); }
+.btn.chico { padding: 4px 9px; font-size: 12.5px; border-radius: 8px; }
+#msg { min-height: 1.5em; color: var(--amarillo); font-size: 14px; }
+
+/* Robot visto desde arriba */
+.robot { display: grid; grid-template-columns: 1fr 74px 1fr; grid-template-rows: repeat(3, auto); gap: 8px; }
+.cuerpo { grid-column: 2; grid-row: 1 / 4; border: 2px solid var(--borde); border-radius: 16px; display: grid; place-items: start center; padding-top: 8px; color: var(--tenue); font-size: 12px; text-align: center; }
+.pata { background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 6px; font-size: 13.5px; }
+.pata[aria-pressed="true"] { border-color: var(--verde); background: color-mix(in srgb, var(--verde) 18%, var(--fondo)); font-weight: 600; }
+
+/* Articulaciones */
+.art { display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid var(--borde); }
+.art:first-of-type { border-top: 0; padding-top: 0; }
+.art .fila { justify-content: space-between; }
+.valor { font: 600 15px var(--mono); font-variant-numeric: tabular-nums; }
+.dif { font: 12.5px var(--mono); color: var(--tenue); }
+input[type="range"] { width: 100%; accent-color: var(--verde); height: 28px; }
+label.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; color: var(--tenue); }
+</style>
+
+<main>
+  <div class="fila"><h1>Prueba de patas</h1><span style="flex:1"></span>
+    <span class="pill" id="placa0">Derecha 0x40</span><span class="pill" id="placa1">Izquierda 0x41</span>
+    <button class="btn chico" data-op="escanear" type="button">Buscar placas</button>
+  </div>
+  <p id="msg" aria-live="polite">Conectando con la ESP32…</p>
+
+  <section class="caja">
+    <h2>1. Elige la pata</h2>
+    <p class="tenue">Solo la pata elegida recibe pulso; las demás quedan sueltas. Al elegirla se va a su postura de pie.</p>
+    <div class="robot">
+      <button class="pata" data-p="3" type="button" style="grid-area:1/1">Delantera izq</button>
+      <button class="pata" data-p="4" type="button" style="grid-area:2/1">Media izq</button>
+      <button class="pata" data-p="5" type="button" style="grid-area:3/1">Trasera izq</button>
+      <div class="cuerpo">▲<br>frente</div>
+      <button class="pata" data-p="0" type="button" style="grid-area:1/3">Delantera der</button>
+      <button class="pata" data-p="1" type="button" style="grid-area:2/3">Media der</button>
+      <button class="pata" data-p="2" type="button" style="grid-area:3/3">Trasera der</button>
+    </div>
+  </section>
+
+  <section class="caja" id="panelPata" hidden>
+    <div><h2 id="tituloPata">Pata</h2><p class="tenue" id="cables"></p></div>
+    <div class="art" data-j="0">
+      <div class="fila"><span>Coxa <span class="tenue" data-canal></span></span><span><span class="valor">90°</span> <span class="dif"></span></span></div>
+      <input type="range" min="0" max="180" step="1" value="90" aria-label="Coxa">
+      <div class="fila"><span class="tenue">+ = la pata va hacia adelante</span><button class="btn chico" data-inv type="button">Invertir</button></div>
+    </div>
+    <div class="art" data-j="1">
+      <div class="fila"><span>Fémur <span class="tenue" data-canal></span></span><span><span class="valor">90°</span> <span class="dif"></span></span></div>
+      <input type="range" min="0" max="180" step="1" value="90" aria-label="Fémur">
+      <div class="fila"><span class="tenue">+ = la pata sube</span><button class="btn chico" data-inv type="button">Invertir</button></div>
+    </div>
+    <div class="art" data-j="2">
+      <div class="fila"><span>Tibia <span class="tenue" data-canal></span></span><span><span class="valor">90°</span> <span class="dif"></span></span></div>
+      <input type="range" min="0" max="180" step="1" value="90" aria-label="Tibia">
+      <div class="fila"><span class="tenue">+ = la punta va hacia el cuerpo</span><button class="btn chico" data-inv type="button">Invertir</button></div>
+    </div>
+    <label class="check"><input type="checkbox" id="completo"> Rango completo 0–180° (solo con la pata sin armar, puede chocar)</label>
+    <div class="fila">
+      <button class="btn" data-op="pie" type="button">Postura de pie</button>
+      <button class="btn fuerte" data-op="guardar" type="button">Guardar como postura de pie</button>
+    </div>
+    <div class="fila">
+      <button class="btn" data-op="revisar" type="button">Revisar esta pata</button>
+      <button class="btn" data-op="paso" type="button">Paso en el aire</button>
+    </div>
+    <p class="tenue">«Revisar» mueve cada articulación hacia los dos lados y arriba dice qué deberías ver. Si alguna va al revés, toca «Invertir» en esa articulación. Para «Paso en el aire» pon el robot sobre una caja.</p>
+  </section>
+
+  <section class="caja">
+    <h2>2. Todas las patas</h2>
+    <p class="tenue">Con el robot sobre una caja y las patas al aire.</p>
+    <div class="fila"><button class="btn" data-op="todas" type="button">Todas caminando en el aire</button><button class="btn peligro" data-op="soltar" type="button">Soltar todo</button></div>
+  </section>
+
+  <section class="caja">
+    <h2>3. Probar un servo suelto</h2>
+    <p class="tenue">Para revisar servos antes de atornillarlos. Va a 90, 60, 90, 120 y 90 grados, un segundo cada uno, y luego lo suelta.</p>
+    <div class="fila">
+      <select id="sPlaca" aria-label="Placa"><option value="0">Placa derecha 0x40</option><option value="1">Placa izquierda 0x41</option></select>
+      <select id="sCanal" aria-label="Canal"></select>
+      <button class="btn fuerte" id="probarServo" type="button">Probar</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const LIM = [[-20, 20], [-45, 60], [-45, 45]];
+  const NOMBRE = ['Delantera derecha', 'Media derecha', 'Trasera derecha', 'Delantera izquierda', 'Media izquierda', 'Trasera izquierda'];
+  let st = null, arrastrando = -1, ultimo = 0, pendiente = null;
+
+  for (let c = 0; c < 16; c++) $('#sCanal').insertAdjacentHTML('beforeend', `<option value="${c}">Canal ${c}</option>`);
+
+  async function pedir(url) {
+    const ac = new AbortController(), t = setTimeout(() => ac.abort(), 1500);
+    try {
+      const r = await fetch(url, { signal: ac.signal, cache: 'no-store' });
+      if (!r.ok) throw new Error(r.status);
+      st = await r.json();
+      pintar();
+      return st;
+    } catch (e) {
+      $('#msg').textContent = 'Sin conexión con la ESP32. Revisa que estés en la red Mosca-ESP32.';
+      return null;
+    } finally { clearTimeout(t); }
+  }
+
+  function rango(j) {
+    if ($('#completo').checked) return [0, 180];
+    const a = st.centro[j] + st.dir[j] * LIM[j][0], b = st.centro[j] + st.dir[j] * LIM[j][1];
+    return [Math.max(0, Math.min(a, b)), Math.min(180, Math.max(a, b))];
+  }
+
+  function pintar() {
+    if (!st) return;
+    st.placas.forEach((ok, i) => {
+      const el = $('#placa' + i);
+      el.className = 'pill ' + (ok ? 'ok' : 'mal');
+      el.textContent = (i ? 'Izquierda 0x41 ' : 'Derecha 0x40 ') + (ok ? '✓' : '✗ no está');
+    });
+    let m = st.msg;
+    if (!m) m = st.modo === 'suelto' ? 'Todo suelto. Elige una pata para empezar.' : '';
+    $('#msg').textContent = m;
+    const elegida = st.modo !== 'suelto' && st.modo !== 'servo' && st.modo !== 'todas';
+    $$('.pata').forEach(b => b.setAttribute('aria-pressed', elegida && +b.dataset.p === st.pata ? 'true' : 'false'));
+    $('#panelPata').hidden = !elegida;
+    $('#tituloPata').textContent = NOMBRE[st.pata];
+    $('#cables').textContent = `Placa ${st.placa ? 'izquierda (0x41)' : 'derecha (0x40)'}, canales ${st.canales.join(', ')} para coxa, fémur y tibia.`;
+    $$('.art').forEach(div => {
+      const j = +div.dataset.j, barra = div.querySelector('input');
+      const [lo, hi] = rango(j);
+      barra.min = Math.floor(lo); barra.max = Math.ceil(hi);
+      if (arrastrando !== j) barra.value = st.crudo[j];
+      const v = arrastrando === j ? +barra.value : st.crudo[j];
+      div.querySelector('[data-canal]').textContent = '· canal ' + st.canales[j];
+      div.querySelector('.valor').textContent = Math.round(v) + '°';
+      const rel = Math.round((v - st.centro[j]) * st.dir[j]);
+      div.querySelector('.dif').textContent = rel === 0 ? '(postura de pie)' : `(${rel > 0 ? '+' : ''}${rel}° de la postura de pie)`;
+    });
+  }
+
+  // Mandar la barra sin saturar a la ESP32: como máximo cada 60 ms, y siempre el último valor
+  function mandarBarra(j, v) {
+    pendiente = { j, v };
+    const ahora = performance.now();
+    if (ahora - ultimo < 60) { setTimeout(() => pendiente && mandarBarra(pendiente.j, pendiente.v), 60); return; }
+    ultimo = ahora;
+    const p = pendiente; pendiente = null;
+    pedir(`/mover?j=${p.j}&v=${p.v}`);
+  }
+  $$('.art').forEach(div => {
+    const j = +div.dataset.j, barra = div.querySelector('input');
+    barra.addEventListener('pointerdown', () => { arrastrando = j; });
+    barra.addEventListener('input', () => { arrastrando = j; pintar(); mandarBarra(j, barra.value); });
+    barra.addEventListener('change', () => { arrastrando = -1; mandarBarra(j, barra.value); });
+    div.querySelector('[data-inv]').addEventListener('click', () => pedir(`/accion?op=invertir&j=${j}`));
+  });
+  $('#completo').addEventListener('change', pintar);
+  $$('.pata').forEach(b => b.addEventListener('click', () => pedir('/pata?p=' + b.dataset.p)));
+  $$('[data-op]').forEach(b => b.addEventListener('click', () => pedir('/accion?op=' + b.dataset.op)));
+  $('#probarServo').addEventListener('click', () => pedir(`/servo?placa=${$('#sPlaca').value}&canal=${$('#sCanal').value}`));
+
+  pedir('/estado');
+  setInterval(() => { if (arrastrando < 0) pedir('/estado'); }, 500);
+})();
+</script>

@@ -1,0 +1,789 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Modelo 3D del hexápodo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: plano de taller. Visor 3D grande con cajetín de plano, ficha técnica de piezas a un lado. */
+:root{
+  --bg:#edf1ef; --panel:#f9fbfa; --ink:#14201c; --muted:#56655f; --line:#cad4cf;
+  --accent:#11806a; --accent-ink:#ffffff;
+  --stage:#e1e8e4; --floor:#d7e0db; --grid:#a9b7b1; --grid-soft:#c6d1cc; --box:#11806a;
+  --ok:#17704a; --ok-bg:#d8eee2;
+  --display:"Saira Semi Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1412; --panel:#141c19; --ink:#e3ebe7; --muted:#93a39d; --line:#27342f;
+    --accent:#3cc29f; --accent-ink:#05231a;
+    --stage:#16201c; --floor:#1a2521; --grid:#34443e; --grid-soft:#222d29; --box:#3cc29f;
+    --ok:#74d8a6; --ok-bg:#12301f;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1412; --panel:#141c19; --ink:#e3ebe7; --muted:#93a39d; --line:#27342f;
+  --accent:#3cc29f; --accent-ink:#05231a;
+  --stage:#16201c; --floor:#1a2521; --grid:#34443e; --grid-soft:#222d29; --box:#3cc29f;
+  --ok:#74d8a6; --ok-bg:#12301f;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:28px 44px;display:grid;gap:22px}
+.eyebrow{margin:0;font:500 11.5px/1.4 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+h1{margin:6px 0 8px;font:700 clamp(36px,5.2vw,58px)/1 var(--display);letter-spacing:.005em;text-wrap:balance}
+.lede{margin:0;max-width:62ch;color:var(--muted)}
+.stats{margin:18px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{padding:12px 16px 12px 0;display:grid;gap:3px;align-content:start;min-width:0}
+.stat + .stat{padding-left:16px;border-left:1px solid var(--line)}
+.stat dt{font:500 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.stat dd{margin:0;font:600 22px/1.15 var(--display);font-variant-numeric:tabular-nums}
+.stat small{color:var(--muted);font-size:12.5px}
+.pill{justify-self:start;margin-top:2px;padding:2px 8px;border-radius:999px;font:500 11.5px/1.5 var(--mono);background:var(--ok-bg);color:var(--ok)}
+.meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:3px}
+.meter span{display:block;height:100%;width:46%;background:var(--accent)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media (max-width:940px){.layout{grid-template-columns:minmax(0,1fr)}}
+.viewer{min-width:0;display:grid;gap:12px}
+.stage{position:relative;width:100%;height:clamp(360px,58vw,620px);border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--stage)}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.stage canvas.dragging{cursor:grabbing}
+.views{position:absolute;top:12px;right:12px;display:flex;gap:2px;padding:3px;background:var(--panel);border:1px solid var(--line);border-radius:5px}
+.views button{font:500 12px/1 var(--mono);color:var(--muted);background:transparent;border:0;border-radius:3px;padding:7px 9px;cursor:pointer}
+.views button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.hint{position:absolute;left:12px;top:12px;margin:0;max-width:44%;font:400 11.5px/1.45 var(--mono);color:var(--muted)}
+.cajetin{position:absolute;right:12px;bottom:12px;border-collapse:collapse;background:var(--panel);font:400 11px/1.3 var(--mono);color:var(--ink)}
+.cajetin th,.cajetin td{border:1px solid var(--muted);padding:3px 8px;text-align:left;white-space:nowrap}
+.cajetin th{font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+.nogl{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:24px;text-align:center;color:var(--muted)}
+.eyebox{position:absolute;left:12px;bottom:12px;border:1px solid var(--ink);border-radius:3px;pointer-events:none}
+.eyebox span{position:absolute;left:-1px;top:-24px;padding:3px 7px;background:var(--panel);border:1px solid var(--line);border-radius:3px;font:500 11px/1.3 var(--mono);color:var(--ink);white-space:nowrap}
+@media (max-width:620px){.cajetin{display:none}.hint{display:none}}
+.controls.sub{padding-top:10px;border-top:1px solid var(--line)}
+.rate output.wide{min-width:120px}
+.status{margin:0;font:500 13px/1.4 var(--body);color:var(--ink)}
+.sense{display:grid;grid-template-columns:92px minmax(0,1fr) 36px;align-items:center;gap:10px;font-size:13px}
+.sense .bar{display:block;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.sense .bar i{display:block;height:100%;width:0;background:var(--c)}
+.sense output{font:500 12px/1 var(--mono);color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.note{font-size:12.5px;color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px}
+.primary{font:600 14px/1 var(--body);background:var(--accent);color:var(--accent-ink);border:0;border-radius:4px;padding:11px 16px;cursor:pointer;min-width:150px}
+.rate{display:flex;align-items:center;gap:10px;font-size:14px}
+.rate input{accent-color:var(--accent);width:140px}
+.rate output{font:500 12.5px/1 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;min-width:84px}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.check input{accent-color:var(--accent);width:16px;height:16px}
+.readout{margin:0;font:500 12.5px/1.4 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.side{display:grid;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:grid;gap:8px}
+.kicker{margin:0;display:flex;align-items:center;gap:8px;font:500 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.kicker i{width:12px;height:12px;border-radius:3px;border:1px solid var(--line);display:inline-block}
+.card h2{margin:0;font:600 25px/1.1 var(--display)}
+.card p{margin:0}
+.spec{margin:4px 0 0;display:grid;grid-template-columns:auto 1fr;gap:5px 14px}
+.spec dt{font:500 10.5px/1.7 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.spec dd{margin:0;font-variant-numeric:tabular-nums;min-width:0}
+.ghost{justify-self:start;font:500 13px/1 var(--body);color:var(--accent);background:transparent;border:1px solid var(--accent);border-radius:4px;padding:8px 12px;cursor:pointer}
+.parts h3{margin:6px 0 4px;font:500 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.parts ul{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:2px}
+.parts button{width:100%;display:flex;align-items:center;gap:10px;padding:7px 8px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--ink);font:400 14px/1.3 var(--body);text-align:left;cursor:pointer}
+.parts button:hover{background:var(--panel)}
+.parts button[aria-pressed="true"]{background:var(--panel);border-color:var(--accent)}
+.sw{width:14px;height:14px;border-radius:3px;border:1px solid var(--line);flex:none}
+.parts .nm{flex:1;min-width:0}
+.parts .q{font:400 12px/1 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Competencia de Robot Insecto · CECyTEQ Corregidora</p>
+    <h1>Hexápodo 3 GDL</h1>
+    <p class="lede">El robot terminado con sus sentidos de mosca: cámara como ojos, antenas infrarrojas que huelen la comida y sensores de tacto al frente. Ponlo a caminar y verás cómo busca la fruta-baliza hasta llegar a ella. Toca una pieza para ver sus datos.</p>
+    <dl class="stats">
+      <div class="stat"><dt>Medidas de pie</dt><dd id="dims">239 × 229 × 119 mm</dd><span class="pill" id="fit">Cabe en 25 × 25 × 25 cm</span></div>
+      <div class="stat"><dt>Peso estimado</dt><dd>≈ 685 g</dd><div class="meter" aria-hidden="true"><span></span></div><small>46% de los 1,500 g permitidos</small></div>
+      <div class="stat"><dt>Servos</dt><dd>18 × MG90S</dd><small>6 patas × 3 articulaciones</small></div>
+      <div class="stat"><dt>Cerebro</dt><dd>Raspberry Pi Zero 2 W</dd><small>con microSD de 32 GB</small></div>
+    </dl>
+  </header>
+
+  <main class="layout">
+    <section class="viewer" aria-label="Visor 3D">
+      <div class="stage" id="stage">
+        <canvas id="c" role="img" aria-label="Modelo 3D del hexápodo. Arrastra para girarlo y toca una pieza para ver sus datos."></canvas>
+        <p class="hint">Arrastra para girar · rueda o pellizca para acercar · toca una pieza</p>
+        <div class="views" role="group" aria-label="Vistas de cámara">
+          <button type="button" id="v-iso" data-view="iso" aria-pressed="true">Iso</button>
+          <button type="button" id="v-frente" data-view="frente" aria-pressed="false">Frente</button>
+          <button type="button" id="v-lado" data-view="lado" aria-pressed="false">Lado</button>
+          <button type="button" id="v-arriba" data-view="arriba" aria-pressed="false">Arriba</button>
+        </div>
+        <table class="cajetin" aria-label="Cajetín del plano">
+          <tr><th>Proyecto</th><td>Hexápodo 3 GDL</td></tr>
+          <tr><th>Vista</th><td>Ensamble general</td></tr>
+          <tr><th>Unidades</th><td>mm</td></tr>
+          <tr><th>Material</th><td>PLA+ / TPU 95A</td></tr>
+          <tr><th>Rev.</th><td>D · Sentidos y baliza</td></tr>
+        </table>
+        <div class="eyebox" id="eyebox" hidden><span>Ojos: lo que ve la cámara</span></div>
+        <p class="nogl" id="nogl" hidden>Tu navegador no pudo iniciar el visor 3D (WebGL). Abre la página en Chrome, Edge, Firefox o Safari actualizados.</p>
+      </div>
+      <div class="controls">
+        <button type="button" class="primary" id="walk" aria-pressed="true">Pausar marcha</button>
+        <label class="rate" for="rate">Ritmo
+          <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1.1">
+          <output id="rateOut" for="rate">1.1 ciclos/s</output>
+        </label>
+        <label class="check" for="box25"><input type="checkbox" id="box25"> Mostrar caja de 25 cm</label>
+        <p class="readout" id="readout">≈ 7.8 cm/s · pista de 3 m en ≈ 38 s</p>
+      </div>
+      <div class="controls sub">
+        <label class="check" for="cones"><input type="checkbox" id="cones" checked> Mostrar alcance de los sensores</label>
+        <label class="check" for="eyeview"><input type="checkbox" id="eyeview" checked> Ver lo que ve la cámara</label>
+      </div>
+      <div class="controls">
+        <label class="rate" for="bz">Baliza adelante
+          <input type="range" id="bz" min="250" max="1200" step="10" value="700">
+          <output id="bzOut" for="bz">700 mm</output>
+        </label>
+        <label class="rate" for="bx">Baliza al lado
+          <input type="range" id="bx" min="-300" max="300" step="10" value="120">
+          <output id="bxOut" for="bx" class="wide">120 mm a la izq.</output>
+        </label>
+        <button type="button" class="ghost" id="resetB">Volver a poner la baliza</button>
+      </div>
+      <p class="status" id="status" aria-live="polite">Buscando la comida: las antenas siguen el olor infrarrojo de la fruta-baliza.</p>
+    </section>
+
+    <aside class="side">
+      <article class="card" id="info" aria-live="polite">
+        <p class="kicker"><i id="infoSw" style="background:transparent"></i><span id="infoKicker">Vista general</span></p>
+        <h2 id="infoName">Ensamble completo</h2>
+        <p id="infoJob">Toca una pieza en el modelo o en la lista para resaltarla y ver su material, medidas y peso.</p>
+        <dl class="spec">
+          <dt>Cantidad</dt><dd id="infoQty">6 patas × 3 articulaciones · 18 servos</dd>
+          <dt>Medidas</dt><dd id="infoSize">239 × 229 × 107 mm de pie</dd>
+          <dt>Peso</dt><dd id="infoWeight">≈ 685 g de 1,500 g permitidos</dd>
+        </dl>
+        <button type="button" class="ghost" id="clear" hidden>Ver todo el robot</button>
+      </article>
+      <article class="card" aria-label="Lo que siente la mosca">
+        <p class="kicker">Lo que siente la mosca</p>
+        <div class="sense"><span>Antena izq.</span><b class="bar"><i id="s-ant_izq" style="--c:#c2410c"></i></b><output id="o-ant_izq">0.00</output></div>
+        <div class="sense"><span>Antena der.</span><b class="bar"><i id="s-ant_der" style="--c:#c2410c"></i></b><output id="o-ant_der">0.00</output></div>
+        <div class="sense"><span>Ojo izq.</span><b class="bar"><i id="s-vis_izq" style="--c:#1d9a4e"></i></b><output id="o-vis_izq">0.00</output></div>
+        <div class="sense"><span>Ojo der.</span><b class="bar"><i id="s-vis_der" style="--c:#1d9a4e"></i></b><output id="o-vis_der">0.00</output></div>
+        <div class="sense"><span>Tacto izq.</span><b class="bar"><i id="s-mec_izq" style="--c:#2d5bc4"></i></b><output id="o-mec_izq">0.00</output></div>
+        <div class="sense"><span>Tacto der.</span><b class="bar"><i id="s-mec_der" style="--c:#2d5bc4"></i></b><output id="o-mec_der">0.00</output></div>
+        <p class="note">Las mismas 6 entradas de 0 a 1 que entrega sentidos.py, calculadas con la baliza del modelo. El giro hacia la comida es un reflejo simple de prueba, no el cerebro gen 3514.</p>
+      </article>
+      <nav class="parts card" aria-label="Piezas del robot">
+        <h3>Mecánica</h3>
+        <ul id="listMec"></ul>
+        <h3>Electrónica</h3>
+        <ul id="listEle"></ul>
+        <h3>Sentidos</h3>
+        <ul id="listSen"></ul>
+        <h3>Comida</h3>
+        <ul id="listCom"></ul>
+      </nav>
+    </aside>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var V = THREE.Vector3, R = THREE.MathUtils.degToRad;
+  var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var PARTS = {
+    coxa:{name:"Coxa",color:"#2ba88a",q:"×6",qty:"6 piezas de PLA+ (3 en espejo)",size:"25 mm entre ejes · brazo de 48 × 4 mm con cubo Ø20 · marco de 36 × 26 × 3 mm",weight:"≈ 5 g c/u",job:"Articulación 1. Gira la pata hacia adelante y hacia atrás.",grp:"mec"},
+    femur:{name:"Fémur",color:"#7f77dd",q:"×6",qty:"6 piezas de PLA+ con 30% de relleno",size:"45 mm entre ejes · 14 mm de ancho · 5 mm de espesor",weight:"≈ 4 g c/u",job:"Articulación 2. Sube y baja la pata; es la pieza que más carga soporta.",grp:"mec"},
+    tibia:{name:"Tibia",color:"#e0703f",q:"×6",qty:"6 piezas de PLA+ (3 en espejo)",size:"65 mm del eje de la rodilla a la punta del pie",weight:"≈ 4 g c/u",job:"Articulación 3. Es la rodilla: dobla la pata y apoya el pie.",grp:"mec"},
+    pies:{name:"Pies",color:"#1c1c1e",q:"×6",qty:"6 pies de TPU 95A",size:"Ø14 × 16 mm con punta R7",weight:"≈ 2 g c/u",job:"Dan agarre en la zona rugosa y dejan las puntas sin filo, como pide el reglamento.",grp:"mec"},
+    servos:{name:"Servos MG90S",color:"#26282c",q:"×18",qty:"18 + 2 de repuesto",size:"22.8 × 12.2 × 22.5 mm · 2.2 kg·cm a 6 V",weight:"13.4 g c/u · 241 g en total",job:"Mueven las 3 articulaciones de cada pata. Los discos blancos son los horns.",grp:"mec"},
+    cuerpo:{name:"Cuerpo",color:"#c5cad0",q:"×1",qty:"2 placas, cubierta y 8 separadores M3 (20 y 25 mm)",size:"Placas de 112 × 138 × 3 mm · cubierta de 70 × 100 × 2.5 mm",weight:"≈ 90 g",job:"Sostiene los 6 servos de coxa. Entre las dos placas va la batería en su cuna; entre la placa superior y la cubierta, los PCA9685 y el ADS1115.",grp:"mec"},
+    rpi:{name:"Raspberry Pi Zero 2 W",color:"#1e7a40",q:"×1",qty:"1 · con microSD de 32 GB",size:"65 × 30 mm · 512 MB de RAM",weight:"≈ 10 g",job:"El cerebro: calcula la marcha trípode y el cerebro de mosca, y guarda un registro de cada prueba.",grp:"ele"},
+    pca:{name:"Drivers PCA9685",color:"#2d4aa6",q:"×2",qty:"2 apilados · direcciones 0x40 y 0x41",size:"62 × 25 mm cada uno",weight:"≈ 9 g c/u",job:"Generan las señales PWM de los 18 servos; la Raspberry Pi solo les manda ángulos por I2C.",grp:"ele"},
+    bateria:{name:"Batería LiPo 2S",color:"#3b3f45",q:"×1",qty:"7.4 V, 1300 mAh, conector XT60",size:"≈ 73 × 35 × 18 mm, en una cuna de 16 mm de alto",weight:"≈ 75 g",job:"Unos 20 minutos de marcha. Va protegida entre las dos placas y sujeta con 2 tiras de velcro, porque el reglamento prohíbe baterías expuestas.",grp:"ele"},
+    energia:{name:"UBEC e interruptor",color:"#1f64b8",q:"×2",qty:"2 UBEC de 5 A + interruptor general",size:"43 × 21 × 10 mm cada UBEC, de canto sobre la cubierta",weight:"≈ 15 g c/u",job:"Un UBEC da 6 V a los servos y otro 5 V a la Raspberry Pi, para que los picos de los servos no la reinicien.",grp:"ele"},
+    control:{name:"Botones, LED y ADS1115",color:"#cf3a2e",q:"×4",qty:"Arranque, apagado seguro, LED y lector de batería",size:"ADS1115 de 28 × 17 mm",weight:"≈ 8 g",job:"El botón rojo inicia el modo autónomo, el gris apaga la Raspberry Pi sin dañar la microSD y el LED verde avisa que está lista. El ADS1115 también lee las dos antenas (A1 y A2).",grp:"ele"},
+    ojos:{name:"Ojos: cámara OV5647",color:"#1d9a4e",q:"×1",qty:"1 cámara gran angular (≈ 130°) con cable para Pi Zero",size:"Placa de 25 × 24 mm en un mástil de 48 mm, a ≈ 115 mm del piso",weight:"≈ 3 g",job:"La mitad izquierda de la imagen es el ojo izquierdo y la derecha el derecho. Busca el verde brillante de la fruta-baliza (vis_izq, vis_der).",grp:"sen"},
+    antenas:{name:"Antenas: fototransistores IR",color:"#c2410c",q:"×2",qty:"2 fototransistores IR de 940 nm dentro de tubos impresos",size:"Tubos de Ø9 × 22 mm a ±35°, a ≈ 95 mm del piso",weight:"≈ 2 g c/u",job:"Huelen el \"olor\" infrarrojo que parpadea a 39 Hz. La antena que recibe más indica de qué lado está la comida (ant_izq, ant_der).",grp:"sen"},
+    tacto:{name:"Tacto: sensores VL53L0X",color:"#2d5bc4",q:"×2",qty:"2 sensores de distancia láser (I2C 0x30 y 0x31)",size:"13 × 18 mm, apuntan al frente separados 40 mm, a ≈ 45 mm del piso",weight:"≈ 1 g c/u",job:"\"Tocan\" antes de chocar: valen 1 a 3 cm de un objeto y 0 a 15 cm o más (mec_izq, mec_der).",grp:"sen"},
+    baliza:{name:"Fruta-baliza",color:"#9fe36b",q:"×1",qty:"Fruta de PLA blanco con 8 LED IR, 8 LED verdes y un 555",size:"Ø110 × 139 mm; fruta de Ø70 con el centro a 95 mm del piso",weight:"≈ 150 g sin la batería USB",job:"La comida de la mosca. En la pista va 30 cm después de la meta; aquí está más cerca para verla junto al robot.",grp:"com"}
+  };
+  var GROUP_NAME = {mec:'Mecánica', ele:'Electrónica', sen:'Sentidos', com:'Comida'};
+
+  // ---------- Lista de piezas (se llena aunque WebGL falle) ----------
+  var LISTS = {mec:document.getElementById('listMec'), ele:document.getElementById('listEle'), sen:document.getElementById('listSen'), com:document.getElementById('listCom')};
+  Object.keys(PARTS).forEach(function(k){
+    var p = PARTS[k], li = document.createElement('li'), b = document.createElement('button');
+    b.type = 'button'; b.id = 'part-' + k; b.dataset.part = k; b.setAttribute('aria-pressed','false');
+    b.innerHTML = '<span class="sw" style="background:'+p.color+'"></span><span class="nm">'+p.name+'</span><span class="q">'+p.q+'</span>';
+    li.appendChild(b); LISTS[p.grp].appendChild(li);
+  });
+
+  var stageEl = document.getElementById('stage'), canvas = document.getElementById('c');
+  var renderer;
+  try { renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true}); }
+  catch(err){ document.getElementById('nogl').hidden = false; canvas.hidden = true; return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(35, 1, 5, 5000);
+
+  // ---------- Materiales por pieza ----------
+  var mats = {}, partOf = new Map();
+  function mat(part, color, opts){
+    var o = {color:color, roughness:0.62, metalness:0.04};
+    if (opts) for (var k in opts) o[k] = opts[k];
+    var m = new THREE.MeshStandardMaterial(o);
+    (mats[part] = mats[part] || []).push(m); partOf.set(m, part); return m;
+  }
+  var M = {
+    coxa:mat('coxa',0x2ba88a), femur:mat('femur',0x7f77dd), tibia:mat('tibia',0xe0703f),
+    tpu:mat('pies',0x1c1c1e,{roughness:0.92}),
+    servo:mat('servos',0x26282c,{roughness:0.45}), horn:mat('servos',0xefefea,{roughness:0.5}), shaft:mat('servos',0xc9a227,{metalness:0.6,roughness:0.35}),
+    plate:mat('cuerpo',0xc5cad0,{roughness:0.7}), spacer:mat('cuerpo',0xa8aeb5,{metalness:0.55,roughness:0.35}),
+    pcb:mat('rpi',0x1e7a40,{roughness:0.55}), chip:mat('rpi',0x151515,{roughness:0.4}), metal:mat('rpi',0xc0c5cb,{metalness:0.7,roughness:0.3}), sd:mat('rpi',0x243457),
+    pca:mat('pca',0x2d4aa6,{roughness:0.55}), pcaHdr:mat('pca',0x141414), pcaTerm:mat('pca',0x2f9e4f),
+    bat:mat('bateria',0x3b3f45), strap:mat('bateria',0x24272b,{roughness:0.95}), label:mat('bateria',0xe2b719),
+    ubec:mat('energia',0x1f64b8,{roughness:0.5}), sw:mat('energia',0x1b1b1b), lever:mat('energia',0xc0c5cb,{metalness:0.7,roughness:0.3}),
+    btnBase:mat('control',0x1b1b1b), btnRed:mat('control',0xcf3a2e), btnGrey:mat('control',0x8b9096), ads:mat('control',0x6a3fb0), adsChip:mat('control',0x151515),
+    led:mat('control',0x35d06a,{emissive:0x1f8a45}),
+    camBr:mat('ojos',0x1d9a4e), camPcb:mat('ojos',0x1a1a1a,{roughness:0.5}), camLens:mat('ojos',0x2b3037,{metalness:0.5,roughness:0.3}), camGlass:mat('ojos',0x1c3a6b,{metalness:0.3,roughness:0.15}), camRib:mat('ojos',0xc98a2e),
+    antTube:mat('antenas',0xc2410c), antTip:mat('antenas',0x2a1d4f,{roughness:0.3}),
+    tof:mat('tacto',0x2d5bc4,{roughness:0.5}), tofChip:mat('tacto',0x111111,{roughness:0.3}), tofBr:mat('tacto',0x8ea3cf),
+    bBase:mat('baliza',0x3b3f45), bTop:mat('baliza',0x4b5057), bCol:mat('baliza',0x5b6168), bSw:mat('baliza',0xcf3a2e),
+    fruit:mat('baliza',0xdcef94,{roughness:0.55, emissive:0x2c4a10}), bIr:mat('baliza',0x3a2a6e,{roughness:0.3, emissive:0x000000}),
+    bGreen:mat('baliza',0x1fbf4c,{emissive:0x18b043}), bStem:mat('baliza',0x6b4a2b), bLeaf:mat('baliza',0x3f9e4a)
+  };
+
+  // ---------- Primitivas ----------
+  function mesh(parent, g, m){ var o = new THREE.Mesh(g, m); o.castShadow = true; o.receiveShadow = true; o.userData.part = partOf.get(m); parent.add(o); return o; }
+  function box(parent, m, x0,x1,y0,y1,z0,z1){ var g = new THREE.BoxGeometry(x1-x0, y1-y0, z1-z0); g.translate((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); return mesh(parent,g,m); }
+  function cylY(parent, m, x,z,y0,y1,r,seg){ var g = new THREE.CylinderGeometry(r,r,y1-y0,seg||28); g.translate(x,(y0+y1)/2,z); return mesh(parent,g,m); }
+  function cylZ(parent, m, x,y,z0,z1,r,seg){ var g = new THREE.CylinderGeometry(r,r,z1-z0,seg||28); g.rotateX(Math.PI/2); g.translate(x,y,(z0+z1)/2); return mesh(parent,g,m); }
+  function sphere(parent, m, x,y,z,r){ var o = mesh(parent, new THREE.SphereGeometry(r,22,16), m); o.position.set(x,y,z); return o; }
+  function extrudeZ(parent, m, shape, z0, z1){ var g = new THREE.ExtrudeGeometry(shape,{depth:z1-z0,bevelEnabled:false,curveSegments:24}); g.translate(0,0,z0); return mesh(parent,g,m); }
+  function polyShape(pts){ var s = new THREE.Shape(); s.moveTo(pts[0][0],pts[0][1]); for (var i=1;i<pts.length;i++) s.lineTo(pts[i][0],pts[i][1]); s.closePath(); return s; }
+  function rectShape(x0,y0,x1,y1){ return polyShape([[x0,y0],[x1,y0],[x1,y1],[x0,y1]]); }
+  function slotShape(x0,x1,r){ var s = new THREE.Shape(); s.moveTo(x0,-r); s.lineTo(x1,-r); s.absarc(x1,0,r,-Math.PI/2,Math.PI/2,false); s.lineTo(x0,r); s.absarc(x0,0,r,Math.PI/2,Math.PI*1.5,false); return s; }
+  // Placa horizontal: contorno en (x, z), espesor en y
+  function plateY(parent, m, pts, y0, y1){ var g = new THREE.ExtrudeGeometry(polyShape(pts),{depth:y1-y0,bevelEnabled:false}); g.rotateX(Math.PI/2); g.translate(0,y1,0); return mesh(parent,g,m); }
+
+  // Servo MG90S: eje de salida en +Y local, punta del eje en y = 0, cuerpo hacia -X (eje desfasado 5.3 mm)
+  function servo(parent, bx, by, pos){
+    var g = new THREE.Group();
+    box(g,M.servo,-16.7,6.1,-26.5,-4,-6.1,6.1);
+    box(g,M.servo,-21.4,10.8,-9.75,-7.25,-6.1,6.1);
+    cylY(g,M.servo,0,0,-4,-1,6);
+    cylY(g,M.shaft,0,0,-1,0,2.4,16);
+    box(g,M.servo,-18.2,-16.7,-24,-20.5,-2,2);
+    var bz = new V().crossVectors(bx,by);
+    g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(bx,by,bz));
+    g.position.copy(pos); parent.add(g); return g;
+  }
+
+  // Medidas iguales a la pestaña "Planos SolidWorks" del documento
+  var femurShape = slotShape(0,45,7);
+  var tibiaFrame = rectShape(-9,-26,9,13); tibiaFrame.holes.push(rectShape(-6.3,-16.9,6.3,6.3));
+  var bladeShape = polyShape([[-9,-26],[9,-26],[5,-49],[5,-57],[-5,-57],[-5,-49]]);
+  var ribShape = polyShape([[-2,-26],[2,-26],[1.5,-49],[-1.5,-49]]);
+
+  // Pata: x hacia afuera, y hacia arriba, z lateral. y = 0 es la cara de abajo del brazo de la coxa.
+  function buildLeg(){
+    var root = new THREE.Group();
+    servo(root, new V(1,0,0), new V(0,1,0), new V(0,-2,0));
+    var coxa = new THREE.Group(); root.add(coxa);
+    cylY(coxa,M.horn,0,0,-2,0,7);
+    cylY(coxa,M.coxa,0,0,0,4,10);                        // cubo Ø20
+    box(coxa,M.coxa,0,20,0,4,-12.75,6);                   // parte ancha
+    box(coxa,M.coxa,0,48,0,4,-12.75,-1.75);               // brazo de 48
+    box(coxa,M.coxa,12,48,-3.7,0,-12.75,-9.75);           // marco de 36 × 26 × 3 con ventana de 23.2 × 12.6
+    box(coxa,M.coxa,12,48,-22,-16.3,-12.75,-9.75);
+    box(coxa,M.coxa,12,18.7,-16.3,-3.7,-12.75,-9.75);
+    box(coxa,M.coxa,41.9,48,-16.3,-3.7,-12.75,-9.75);
+    servo(coxa, new V(-1,0,0), new V(0,0,1), new V(25,-10,0));
+    var femur = new THREE.Group(); femur.position.set(25,-10,0); coxa.add(femur);
+    extrudeZ(femur,M.femur,femurShape,0,5);               // 5 mm parejo; los horns quedan en su cavidad
+    cylZ(femur,M.femur,0,0,0,5,8.5);
+    cylZ(femur,M.femur,45,0,0,5,8.5);
+    var tibia = new THREE.Group(); tibia.position.set(45,0,0); femur.add(tibia);
+    servo(tibia, new V(0,1,0), new V(0,0,1), new V(0,0,0));
+    extrudeZ(tibia,M.tibia,tibiaFrame,-12.75,-9.75);
+    extrudeZ(tibia,M.tibia,bladeShape,-12.75,-7.75);
+    extrudeZ(tibia,M.tibia,ribShape,-7.75,-5.25);
+    cylY(tibia,M.tpu,0,-10.25,-58,-49,7,24);              // pie de TPU Ø14
+    var foot = sphere(tibia,M.tpu,0,-58,-10.25,7);        // punta R7, a 65 del eje de la rodilla
+    return {root:root, coxa:coxa, femur:femur, tibia:tibia, foot:foot, sgn:1, off:0};
+  }
+  function pose(L, coxaDeg, liftDeg){
+    L.coxa.rotation.y = R(coxaDeg);
+    L.femur.rotation.z = R(15 + liftDeg);
+    L.tibia.rotation.z = R(-(15 + liftDeg) - liftDeg*0.5);
+  }
+
+  // ---------- Robot ----------
+  var robot = new THREE.Group(); scene.add(robot);
+  var MOUNTS = [[38,55,45],[42,0,0],[38,-55,-45],[-38,55,135],[-42,0,180],[-38,-55,225]];
+  var legs = MOUNTS.map(function(m, i){
+    var L = buildLeg();
+    L.root.position.set(m[0],0,m[1]);
+    L.root.rotation.y = -R(m[2]);
+    if ((m[0] < 0) !== (m[1] < 0)) L.root.scale.z = -1;
+    L.off = (i === 0 || i === 2 || i === 4) ? 0 : 0.5; // trípode A: delantera der., trasera der., media izq.
+    robot.add(L.root); pose(L,0,0); return L;
+  });
+
+  var body = new THREE.Group(); robot.add(body);
+  // Placas de 112 × 138 × 3 mm: arcos de R14 alrededor de cada eje de coxa (izquierda del robot = +x)
+  var OUTLINE = [[47.02,-13.07],[48.92,-12.17],[50.67,-10.99],[52.22,-9.57],[53.54,-7.93],[54.60,-6.11],[55.37,-4.15],[55.84,-2.10],[56.00,0.00],[51.52,51.38],[51.90,53.31],[52.00,55.28],[51.82,57.25],[51.37,59.17],[50.65,61.00],[49.68,62.72],[48.48,64.28],[47.07,65.66],[45.48,66.83],[43.75,67.77],[41.90,68.45],[39.97,68.86],[38.00,69.00],[-38.00,69.00],[-39.97,68.86],[-41.90,68.45],[-43.75,67.77],[-45.48,66.83],[-47.07,65.66],[-48.48,64.28],[-49.68,62.72],[-50.65,61.00],[-51.37,59.17],[-51.82,57.25],[-52.00,55.28],[-51.90,53.31],[-51.52,51.38],[-56.00,0.00],[-55.84,-2.10],[-55.37,-4.15],[-54.60,-6.11],[-53.54,-7.93],[-52.22,-9.57],[-50.67,-10.99],[-48.92,-12.17],[-47.02,-13.07],[-52.00,-55.00],[-51.86,-56.99],[-51.43,-58.94],[-50.73,-60.82],[-49.78,-62.57],[-48.58,-64.17],[-47.17,-65.58],[-45.57,-66.78],[-43.82,-67.73],[-41.94,-68.43],[-39.99,-68.86],[-38.00,-69.00],[38.00,-69.00],[39.99,-68.86],[41.94,-68.43],[43.82,-67.73],[45.57,-66.78],[47.17,-65.58],[48.58,-64.17],[49.78,-62.57],[50.73,-60.82],[51.43,-58.94],[51.86,-56.99],[52.00,-55.00]];
+  function plateShape(holes){
+    var sh = polyShape(OUTLINE);
+    (holes || []).forEach(function(h){ sh.holes.push(new THREE.Path(h.map(function(p){ return new THREE.Vector2(p[0], p[1]); }))); });
+    return sh;
+  }
+  function slabY(parent, m, shape, y0, y1){ var g = new THREE.ExtrudeGeometry(shape,{depth:y1-y0,bevelEnabled:false,curveSegments:16}); g.rotateX(Math.PI/2); g.translate(0,y1,0); return mesh(parent,g,m); }
+  // Ventanas de 23.2 × 12.6 de los servos de coxa: centro a 5.3 mm del eje, hacia adentro
+  var winHoles = MOUNTS.map(function(m){
+    var a = R(m[2]), ux = Math.cos(a), uz = Math.sin(a), cx = m[0] - 5.3*ux, cz = m[1] - 5.3*uz;
+    return [[-1,-1],[1,-1],[1,1],[-1,1]].map(function(k){ return [cx + k[0]*11.6*ux - k[1]*6.3*uz, cz + k[0]*11.6*uz + k[1]*6.3*ux]; });
+  });
+  slabY(body,M.plate,plateShape(winHoles),-14.75,-11.75);   // placa superior (48.6–51.6 mm del piso)
+  slabY(body,M.plate,plateShape(),-37.75,-34.75);           // placa inferior (25.6–28.6 mm del piso)
+  [[30,12],[-30,12],[30,-12],[-30,-12]].forEach(function(p){
+    cylY(body,M.spacer,p[0],p[1],-34.75,-14.75,2.75,6);     // M3 macho-hembra de 20
+    cylY(body,M.spacer,p[0],p[1],-11.75,13.25,2.75,6);      // M3 hembra-hembra de 25
+  });
+  plateY(body,M.plate,[[-31,-50],[31,-50],[35,-46],[35,46],[31,50],[-31,50],[-35,46],[-35,-46]],13.25,15.75);   // cubierta 70 × 100 × 2.5
+
+  // Cuna de la batería (paredes de 2 × 16 mm, abierta atrás) con la LiPo 2S y 2 tiras de velcro
+  box(body,M.plate,19,21,-34.75,-18.75,-40,40); box(body,M.plate,-21,-19,-34.75,-18.75,-40,40);
+  box(body,M.plate,-19,19,-34.75,-18.75,38,40);
+  box(body,M.bat,-17.5,17.5,-34.75,-16.75,-35,38);
+  box(body,M.label,-12,12,-16.75,-16.45,-20,20);
+  box(body,M.label,-4,4,-30,-23,-41,-35);                  // conector XT60
+  [-22,22].forEach(function(zc){
+    box(body,M.strap,-25,25,-16.75,-15.95,zc-10,zc+10);
+    box(body,M.strap,23,25,-34.75,-16.75,zc-10,zc+10); box(body,M.strap,-25,-23,-34.75,-16.75,zc-10,zc+10);
+  });
+
+  // Sobre la placa superior: dos PCA9685 apilados y el ADS1115
+  function pca(y){
+    box(body,M.pca,-12.5,12.5,y,y+1.6,-31,31);
+    box(body,M.pcaHdr,4,12,y+1.6,y+4.1,-24,24);
+    box(body,M.pcaHdr,-4,4,y+1.6,y+2.8,-4,4);
+    box(body,M.pcaTerm,-7,5,y+1.6,y+7,25,30);
+  }
+  pca(-9.75); pca(1.85);
+  [[9.5,28],[-9.5,28],[9.5,-28],[-9.5,-28]].forEach(function(p){ cylY(body,M.spacer,p[0],p[1],-11.75,-9.75,1.4,12); cylY(body,M.spacer,p[0],p[1],-8.15,1.85,1.4,12); });
+  box(body,M.ads,-14,14,-11.75,-10.15,34,51);
+  box(body,M.adsChip,-3,3,-10.15,-9.35,40,45);
+
+  // Cubierta: Raspberry Pi Zero 2 W en separadores de 5 mm, UBEC de canto, botones, LED e interruptor
+  [[29,-44.5],[-29,-44.5],[29,-21.5],[-29,-21.5]].forEach(function(p){ cylY(body,M.spacer,p[0],p[1],15.75,20.75,2.2,6); });
+  var py = 20.75;
+  box(body,M.pcb,-32.5,32.5,py,py+1.6,-48,-18);
+  box(body,M.chip,-6,6,py+1.6,py+2.8,-39,-27);
+  box(body,M.chip,-25.4,25.4,py+1.6,py+4.1,-23,-18.6);
+  box(body,M.metal,-32.5,-25,py+1.6,py+2.9,-38,-27);
+  box(body,M.sd,-35,-32.5,py+1.9,py+2.6,-37,-28);
+  box(body,M.metal,10,18,py+1.6,py+4.2,-48.5,-45);
+  box(body,M.metal,22,30,py+1.6,py+4.2,-48.5,-45);
+  box(body,M.metal,-20,-9,py+1.6,py+4.8,-48.5,-45);
+  box(body,M.ubec,-21.5,21.5,15.75,36.75,-10,0);          // UBEC 6 V (servos)
+  box(body,M.ubec,-21.5,21.5,15.75,36.75,2,12);           // UBEC 5 V (Raspberry Pi)
+  cylY(body,M.btnBase,18,25,15.75,18.5,5); cylY(body,M.btnRed,18,25,18.5,21.5,3.4);    // arranque (GPIO17)
+  cylY(body,M.btnBase,6,25,15.75,18.5,5); cylY(body,M.btnGrey,6,25,18.5,21.5,3.4);     // apagado (GPIO27)
+  cylY(body,M.led,-6,25,15.75,19,2.5); sphere(body,M.led,-6,19,25,2.5);                // LED (GPIO22)
+  cylY(body,M.sw,-18,25,15.75,19,4.2); box(body,M.lever,-19,-17,19,26,24,26);           // interruptor general
+
+  // ---------- Sentidos (izquierda del robot = +x) ----------
+  // Ojos: cámara OV5647 en un mástil al frente de la cubierta (centro a 36 mm sobre la cubierta)
+  box(body,M.camBr,-12.5,12.5,15.75,18.75,40,50);
+  box(body,M.camBr,-12.5,12.5,18.75,63.75,46,50);
+  box(body,M.camBr,-1.5,1.5,18.75,32,42,46);
+  box(body,M.camPcb,-12.5,12.5,39.75,63.75,50,51);
+  cylZ(body,M.camLens,0,51.75,51,56,4.5,20);
+  cylZ(body,M.camGlass,0,51.75,56,56.6,3,20);
+  box(body,M.camRib,-8,8,33,62,45.4,46);
+  // Antenas: fototransistores IR dentro de tubos, a ±35°, eje a 16 mm sobre la cubierta
+  [1,-1].forEach(function(s){
+    box(body,M.antTube,s*27-5,s*27+5,15.75,18.75,35,49);
+    box(body,M.antTube,s*27-3,s*27+3,18.75,27.25,39,45);
+    var g = new THREE.Group(); g.position.set(s*27,31.75,42); g.rotation.y = R(35*s); body.add(g);
+    cylZ(g,M.antTube,0,0,-4,18,4.5,20);
+    cylZ(g,M.antTip,0,0,17.9,18.2,2.6,16);
+  });
+  // Tacto: dos VL53L0X en soportes al frente de la placa inferior, apuntando al frente
+  [1,-1].forEach(function(s){
+    box(body,M.tofBr,s*20-7,s*20+7,-34.75,-31.75,59,69);
+    box(body,M.tofBr,s*20-13,s*20+13,-34.75,-9.75,69,72);
+    box(body,M.tof,s*20-6.5,s*20+6.5,-27.35,-9.35,72,73.6);
+    box(body,M.tofChip,s*20-2.5,s*20+2.5,-19.85,-16.85,73.6,74.6);
+  });
+
+  // Signo de la coxa para que "+" mueva el pie hacia el frente (+z) en cada pata
+  var tmp = new V(), stride = 0, nStride = 0;
+  legs.forEach(function(L, i){
+    pose(L,15,0); robot.updateMatrixWorld(true); var a = L.foot.getWorldPosition(tmp).z;
+    pose(L,-15,0); robot.updateMatrixWorld(true); var b = L.foot.getWorldPosition(tmp).z;
+    L.sgn = a > b ? 1 : -1;
+    if (i === 1 || i === 4){ stride += Math.abs(a - b); nStride++; }
+    pose(L,0,0);
+  });
+  stride /= nStride; // mm que avanza el cuerpo por medio ciclo
+
+  robot.updateMatrixWorld(true);
+  var bb = new THREE.Box3().setFromObject(robot);
+  robot.position.y = -bb.min.y;
+  robot.updateMatrixWorld(true);
+  bb.setFromObject(robot);
+  var size = bb.getSize(new V()), center = bb.getCenter(new V());
+  var dimsTxt = Math.round(size.x) + ' × ' + Math.round(size.z) + ' × ' + Math.round(size.y) + ' mm';
+  document.getElementById('dims').textContent = dimsTxt;
+  var fits = size.x <= 250 && size.y <= 250 && size.z <= 250;
+  document.getElementById('fit').textContent = fits ? 'Cabe en 25 × 25 × 25 cm' : 'Revisar: pasa de 25 cm';
+  var DEFAULT_INFO = {kicker:'Vista general', name:'Ensamble completo', job:'Toca una pieza en el modelo o en la lista para resaltarla y ver su material, medidas y peso.', qty:'6 patas × 3 articulaciones · 18 servos · 6 sensores', size:dimsTxt + ' de pie', weight:'≈ 685 g de 1,500 g permitidos'};
+
+  // ---------- Piso, luces, caja de 25 cm ----------
+  var floorMat = new THREE.MeshStandardMaterial({color:0xd7e0db, roughness:1});
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(4000,4000), floorMat);
+  floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+  var grid = null;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x7f8a85, 0.75));
+  var sun = new THREE.DirectionalLight(0xffffff, 0.85);
+  sun.position.set(220,420,260); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048,2048);
+  var sc = sun.shadow.camera; sc.left = -650; sc.right = 650; sc.top = 650; sc.bottom = -650; sc.near = 50; sc.far = 1600;
+  sun.shadow.bias = -0.0006; scene.add(sun);
+  var fill = new THREE.DirectionalLight(0xffffff, 0.28); fill.position.set(-300,180,-220); scene.add(fill);
+
+  var boxGroup = new THREE.Group(); boxGroup.visible = false; scene.add(boxGroup);
+  var boxLineMat = new THREE.LineBasicMaterial({color:0x11806a});
+  var boxFaceMat = new THREE.MeshBasicMaterial({color:0x11806a, transparent:true, opacity:0.05, depthWrite:false});
+  var cubeGeo = new THREE.BoxGeometry(250,250,250);
+  boxGroup.add(new THREE.LineSegments(new THREE.EdgesGeometry(cubeGeo), boxLineMat));
+  boxGroup.add(new THREE.Mesh(cubeGeo, boxFaceMat));
+  boxGroup.position.set(center.x, 125, center.z);
+
+  // ---------- Fruta-baliza (la comida) ----------
+  var beacon = new THREE.Group(); scene.add(beacon);
+  cylY(beacon,M.bBase,0,0,0,20,55,40);
+  cylY(beacon,M.bTop,0,0,20,21.5,50,40);
+  cylY(beacon,M.bCol,0,0,21.5,62,10,24);
+  box(beacon,M.bSw,-4,4,7,13,-58,-54);
+  var fruitMesh = mesh(beacon, new THREE.SphereGeometry(35,32,24), M.fruit); fruitMesh.position.set(0,95,0);
+  cylY(beacon,M.bStem,0,0,128,139,2.6,12);
+  var leafMesh = mesh(beacon, new THREE.SphereGeometry(13,16,10), M.bLeaf);
+  leafMesh.scale.set(1,0.12,0.42); leafMesh.position.set(12,137,0); leafMesh.rotation.z = 0.45;
+  for (var k = 0; k < 8; k++){
+    var a = R(k*45);
+    var ir = mesh(beacon, new THREE.CylinderGeometry(2.6,2.6,6,14).rotateZ(Math.PI/2), M.bIr);
+    ir.position.set(Math.cos(a)*37, 95, Math.sin(a)*37); ir.rotation.y = -a;
+    var a2 = R(k*45 + 22.5), el = R(38);
+    sphere(beacon, M.bGreen, Math.cos(a2)*Math.cos(el)*35, 95 + Math.sin(el)*35, Math.sin(a2)*Math.cos(el)*35, 2.8);
+  }
+  var glow = new THREE.PointLight(0x9cff7a, 0.45, 420, 2); glow.position.set(0,95,0); beacon.add(glow);
+  var BEACON_HOME = {x:120, z:700};
+  beacon.position.set(BEACON_HOME.x, 0, BEACON_HOME.z);
+
+  // ---------- Alcance de los sensores (abanicos a la altura de cada sensor) ----------
+  var fx = new THREE.Group(); fx.position.copy(robot.position); scene.add(fx);
+  function sector(x, y, z, headingDeg, halfDeg, radius, color, opacity){
+    var g = new THREE.CircleGeometry(radius, 40, R(headingDeg - 90 - halfDeg), R(2*halfDeg));
+    g.rotateX(-Math.PI/2);
+    var m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({color:color, transparent:true, opacity:opacity, side:THREE.DoubleSide, depthWrite:false}));
+    m.position.set(x, y, z); fx.add(m); return m;
+  }
+  sector(0, 51.75, 56.6, 0, 65, 330, 0x1d9a4e, 0.10);
+  [1,-1].forEach(function(s){
+    sector(s*27, 31.75, 42, 35*s, 20, 430, 0xc2410c, 0.13);
+    sector(s*20, -18.35, 74.6, 0, 12.5, 150, 0x2d5bc4, 0.22);
+  });
+
+  // ---------- Ojos: cámara virtual en la posición de la cámara real ----------
+  var eyeCam = new THREE.PerspectiveCamera(110, 4/3, 5, 4000);
+  eyeCam.position.set(0, robot.position.y + 51.75, 57);
+  eyeCam.lookAt(0, robot.position.y + 51.75 - 0.12, 58);
+
+  // ---------- Los 6 sentidos, en la misma escala de 0 a 1 que sentidos.py ----------
+  var SENSE = {ant_izq:0, ant_der:0, vis_izq:0, vis_der:0, mec_izq:0, mec_der:0};
+  var G0 = Math.exp(-Math.pow(35/25, 2)), VIS_K = 90;
+  function deg(a){ return a*180/Math.PI; }
+  function computeSenses(){
+    var ry = robot.position.y, bx = beacon.position.x, bz = beacon.position.z;
+    [1,-1].forEach(function(s){
+      var side = s > 0 ? 'izq' : 'der';
+      var dx = bx - 27*s, dz = bz - 42, dist = Math.max(60, Math.hypot(dx, dz));
+      var off = deg(Math.atan2(dx, dz)) - 35*s;
+      SENSE['ant_' + side] = clamp(Math.pow(200/dist, 2) * Math.exp(-Math.pow(off/25, 2)) / G0, 0, 1);
+      var tx = bx - 20*s, tz = bz - 74.6, td = Math.hypot(tx, tz), mm = td - 10;
+      var seen = tz > 0 && Math.abs(deg(Math.atan2(tx, tz))) <= 12.5 + deg(Math.atan2(10, Math.max(td, 1)));
+      SENSE['mec_' + side] = seen ? clamp((150 - mm)/120, 0, 1) : 0;
+    });
+    var ex = bx, ey = 95 - (ry + 51.75), ez = bz - 57, hz = Math.hypot(ex, ez), L = 0, Rv = 0;
+    if (ez > 0){
+      var h = deg(Math.atan2(ex, ez)), v = deg(Math.atan2(ey, hz));
+      if (Math.abs(h) < 65 && Math.abs(v) < 50){
+        var d3 = Math.hypot(ex, ey, ez), rpx = Math.max(0.5, deg(Math.atan2(35, d3))/65*160);
+        var frac = Math.PI*rpx*rpx/(160*240), xpx = -h/65*160;
+        var shareL = clamp(0.5 - xpx/(2*rpx), 0, 1);
+        L = clamp(frac*shareL*VIS_K, 0, 1); Rv = clamp(frac*(1 - shareL)*VIS_K, 0, 1);
+      }
+    }
+    SENSE.vis_izq = L; SENSE.vis_der = Rv;
+  }
+  var senseEls = {};
+  Object.keys(SENSE).forEach(function(k){ senseEls[k] = [document.getElementById('s-' + k), document.getElementById('o-' + k)]; });
+  function showSenses(){
+    Object.keys(SENSE).forEach(function(k){ senseEls[k][0].style.width = (SENSE[k]*100).toFixed(1) + '%'; senseEls[k][1].textContent = SENSE[k].toFixed(2); });
+  }
+
+  function tok(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function applyTheme(){
+    var stage = tok('--stage') || '#e1e8e4';
+    scene.background = new THREE.Color(stage);
+    scene.fog = new THREE.Fog(stage, 900, 2200);
+    floorMat.color.set(tok('--floor') || '#d7e0db');
+    boxLineMat.color.set(tok('--box') || '#11806a'); boxFaceMat.color.set(tok('--box') || '#11806a');
+    if (grid){ scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+    grid = new THREE.GridHelper(2400, 120, tok('--grid') || '#a9b7b1', tok('--grid-soft') || '#c6d1cc');
+    scene.add(grid); placeGrid();
+  }
+  // El piso se mueve y gira alrededor del robot (el robot se queda al centro de la vista)
+  var gPhi = 0, gU = 0, gV = 0;
+  function placeGrid(){
+    if (!grid) return;
+    var c = Math.cos(gPhi), s = Math.sin(gPhi);
+    grid.rotation.y = gPhi;
+    grid.position.set(gU*c + gV*s, 0.1, -gU*s + gV*c);
+  }
+  applyTheme();
+  new MutationObserver(applyTheme).observe(document.documentElement,{attributes:true, attributeFilter:['data-theme']});
+  if (window.matchMedia){ var mq = matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', applyTheme); }
+
+  // ---------- Cámara orbital ----------
+  var target = new V(0, size.y*0.42, 120);
+  var VIEWS = {iso:{theta:R(212),phi:R(62),r:700}, frente:{theta:0,phi:R(78),r:620}, lado:{theta:R(90),phi:R(80),r:760}, arriba:{theta:R(180),phi:0.03,r:820}};
+  var cam = {theta:VIEWS.iso.theta, phi:VIEWS.iso.phi, r:VIEWS.iso.r}, camAnim = null;
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+  function placeCamera(){
+    var sp = Math.sin(cam.phi);
+    camera.position.set(target.x + cam.r*sp*Math.sin(cam.theta), target.y + cam.r*Math.cos(cam.phi), target.z + cam.r*sp*Math.cos(cam.theta));
+    camera.lookAt(target);
+  }
+  function setView(name){
+    var v = VIEWS[name];
+    document.querySelectorAll('.views button').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.view === name)); });
+    var dt = ((v.theta - cam.theta + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI;
+    if (reduced){ cam.theta += dt; cam.phi = v.phi; cam.r = v.r; camAnim = null; return; }
+    camAnim = {t:0, from:{theta:cam.theta, phi:cam.phi, r:cam.r}, to:{theta:cam.theta+dt, phi:v.phi, r:v.r}};
+  }
+  document.querySelectorAll('.views button').forEach(function(b){ b.addEventListener('click', function(){ setView(b.dataset.view); }); });
+  function clearViewButtons(){ document.querySelectorAll('.views button').forEach(function(b){ b.setAttribute('aria-pressed','false'); }); }
+
+  var pointers = new Map(), down = null, pinch0 = 0, r0 = 0;
+  function pinchDist(){ var p = Array.from(pointers.values()); return Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y); }
+  canvas.addEventListener('pointerdown', function(e){
+    canvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (pointers.size === 1) down = {x:e.clientX, y:e.clientY, moved:false};
+    else { if (down) down.moved = true; pinch0 = pinchDist(); r0 = cam.r; }
+    camAnim = null; canvas.classList.add('dragging');
+  });
+  canvas.addEventListener('pointermove', function(e){
+    var p = pointers.get(e.pointerId); if (!p) return;
+    var dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    if (pointers.size === 1){
+      cam.theta -= dx*0.008; cam.phi = clamp(cam.phi - dy*0.008, 0.03, 1.5);
+      if (down && Math.abs(e.clientX-down.x) + Math.abs(e.clientY-down.y) > 6){ down.moved = true; clearViewButtons(); }
+    } else if (pointers.size === 2 && pinch0){
+      cam.r = clamp(r0*pinch0/pinchDist(), 260, 1400);
+    }
+  });
+  function endPointer(e){
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinch0 = 0;
+    if (pointers.size === 0){
+      if (down && !down.moved && e.type === 'pointerup') pick(e);
+      down = null; canvas.classList.remove('dragging');
+    }
+  }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('wheel', function(e){ e.preventDefault(); camAnim = null; cam.r = clamp(cam.r*Math.exp(e.deltaY*0.0012), 260, 1400); }, {passive:false});
+
+  // ---------- Selección de piezas ----------
+  var selected = null, ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function pick(e){
+    var r = canvas.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left)/r.width)*2 - 1, -((e.clientY - r.top)/r.height)*2 + 1);
+    ray.setFromCamera(ndc, camera);
+    var hits = ray.intersectObjects([robot, beacon], true), part = null;
+    for (var i = 0; i < hits.length; i++){
+      var o = hits[i].object; if (!o.userData.part) continue;
+      if (selected && o.userData.part !== selected && o.material.transparent) continue;
+      part = o.userData.part; break;
+    }
+    select(part && part === selected ? null : part);
+  }
+  function fillInfo(d, color){
+    document.getElementById('infoKicker').textContent = d.kicker;
+    document.getElementById('infoName').textContent = d.name;
+    document.getElementById('infoJob').textContent = d.job;
+    document.getElementById('infoQty').textContent = d.qty;
+    document.getElementById('infoSize').textContent = d.size;
+    document.getElementById('infoWeight').textContent = d.weight;
+    document.getElementById('infoSw').style.background = color || 'transparent';
+  }
+  function select(part){
+    selected = part || null;
+    Object.keys(mats).forEach(function(k){
+      var dim = selected && k !== selected;
+      mats[k].forEach(function(m){ m.transparent = !!dim; m.opacity = dim ? 0.12 : 1; m.depthWrite = !dim; m.needsUpdate = true; });
+    });
+    document.querySelectorAll('.parts button').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.part === selected)); });
+    document.getElementById('clear').hidden = !selected;
+    if (!selected){ fillInfo(DEFAULT_INFO); return; }
+    var p = PARTS[selected];
+    fillInfo({kicker:GROUP_NAME[p.grp], name:p.name, job:p.job, qty:p.qty, size:p.size, weight:p.weight}, p.color);
+  }
+  document.querySelectorAll('.parts button').forEach(function(b){ b.addEventListener('click', function(){ select(b.dataset.part === selected ? null : b.dataset.part); }); });
+  document.getElementById('clear').addEventListener('click', function(){ select(null); });
+
+  // ---------- Marcha trípode ----------
+  var SW = 15, LIFT = 25;
+  var walking = !reduced, amp = walking ? 1 : 0, phase = 0, rate = 1.1, arrived = false;
+  var walkBtn = document.getElementById('walk'), rateIn = document.getElementById('rate');
+  function gait(p){
+    p = ((p % 1) + 1) % 1;
+    if (p < 0.5){ var t = p/0.5; return [SW*(1 - 2*t), 0]; }
+    var s = (p - 0.5)/0.5, e = s*s*(3 - 2*s);
+    return [SW*(-1 + 2*e), LIFT*Math.sin(Math.PI*s)];
+  }
+  function updateReadout(){
+    var v = stride*2*rate; // mm/s
+    document.getElementById('rateOut').textContent = rate.toFixed(1) + ' ciclos/s';
+    document.getElementById('readout').textContent = '≈ ' + (v/10).toFixed(1) + ' cm/s · pista de 3 m en ≈ ' + Math.round(3000/v) + ' s';
+  }
+  function syncWalk(){ walkBtn.textContent = walking ? 'Pausar marcha' : 'Caminar'; walkBtn.setAttribute('aria-pressed', String(walking)); }
+  var statusEl = document.getElementById('status');
+  var bzIn = document.getElementById('bz'), bxIn = document.getElementById('bx');
+  function setStatus(t){ if (statusEl.textContent !== t) statusEl.textContent = t; }
+  function syncBeaconInputs(){
+    var z = Math.round(beacon.position.z), x = Math.round(beacon.position.x);
+    bzIn.value = clamp(z, 250, 1200); bxIn.value = clamp(x, -300, 300);
+    document.getElementById('bzOut').textContent = z + ' mm';
+    document.getElementById('bxOut').textContent = Math.abs(x) < 5 ? 'al centro' : Math.abs(x) + ' mm a la ' + (x > 0 ? 'izq.' : 'der.');
+  }
+  function placeBeacon(x, z){ beacon.position.set(x, 0, z); arrived = false; syncBeaconInputs(); setStatus('Buscando la comida: las antenas siguen el olor infrarrojo de la fruta-baliza.'); }
+  walkBtn.addEventListener('click', function(){
+    if (!walking && arrived) placeBeacon(BEACON_HOME.x, BEACON_HOME.z);
+    walking = !walking; syncWalk();
+  });
+  rateIn.addEventListener('input', function(){ rate = parseFloat(rateIn.value) || 1.1; updateReadout(); });
+  document.getElementById('box25').addEventListener('change', function(e){ boxGroup.visible = e.target.checked; });
+  document.getElementById('cones').addEventListener('change', function(e){ fx.visible = e.target.checked; });
+  var eyeOn = true, eyeBox = document.getElementById('eyebox');
+  document.getElementById('eyeview').addEventListener('change', function(e){ eyeOn = e.target.checked; eyeBox.hidden = !eyeOn; });
+  bzIn.addEventListener('input', function(){ placeBeacon(beacon.position.x, parseFloat(bzIn.value)); });
+  bxIn.addEventListener('input', function(){ placeBeacon(parseFloat(bxIn.value), beacon.position.z); });
+  document.getElementById('resetB').addEventListener('click', function(){
+    placeBeacon(BEACON_HOME.x, BEACON_HOME.z);
+    if (!reduced){ walking = true; syncWalk(); }
+  });
+  syncWalk(); updateReadout(); syncBeaconInputs();
+
+  // ---------- Tamaño y ciclo de dibujo ----------
+  var W = 0, H = 0, eyeW = 0, eyeH = 0;
+  function resize(){
+    var w = stageEl.clientWidth, h = stageEl.clientHeight; if (!w || !h) return;
+    W = w; H = h;
+    renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
+    eyeW = Math.round(clamp(w*0.3, 140, 280)); eyeH = Math.round(eyeW*0.75);
+    eyeBox.style.width = eyeW + 'px'; eyeBox.style.height = eyeH + 'px';
+  }
+  eyeBox.hidden = false;
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stageEl); else window.addEventListener('resize', resize);
+  resize();
+
+  // Gira el mundo alrededor del robot: el piso y la baliza (el robot se queda al centro)
+  function turnWorld(theta){
+    var c = Math.cos(theta), s = Math.sin(theta), x = beacon.position.x, z = beacon.position.z;
+    beacon.position.x = x*c + z*s; beacon.position.z = -x*s + z*c;
+    beacon.rotation.y += theta; gPhi += theta;
+  }
+  var last = 0, lastUi = 0;
+  function frame(now){
+    var dt = last ? Math.min(0.05, (now - last)/1000) : 0; last = now;
+    amp += ((walking ? 1 : 0) - amp) * Math.min(1, dt*3);
+    computeSenses();
+    if (amp > 0.002){
+      phase += dt*rate;
+      legs.forEach(function(L){ var g = gait(phase + L.off); pose(L, L.sgn*g[0]*amp, g[1]*amp); });
+      // Avance: el piso y la baliza se acercan a la velocidad de la marcha
+      var d = stride*2*rate*amp*dt;
+      gU = ((gU + d*Math.sin(gPhi)) % 20 + 20) % 20;
+      gV = ((gV - d*Math.cos(gPhi)) % 20 + 20) % 20;
+      beacon.position.z -= d;
+      // Reflejo de prueba: gira hacia el lado que huele y ve más la comida
+      var w = clamp(4*(SENSE.ant_izq - SENSE.ant_der) + 1.2*(SENSE.vis_izq - SENSE.vis_der), -0.7, 0.7);
+      turnWorld(-w*amp*dt);
+      placeGrid();
+    } else if (amp !== 0){ amp = 0; legs.forEach(function(L){ pose(L,0,0); }); }
+    // ¿Llegó a la comida? (misma regla que el programa: ojos > 0.8 y tacto > 0.7)
+    if (!arrived && Math.max(SENSE.vis_izq, SENSE.vis_der) > 0.8 && Math.max(SENSE.mec_izq, SENSE.mec_der) > 0.7){
+      arrived = true; walking = false; syncWalk();
+      setStatus('La mosca llegó a la comida y se detuvo de pie. Usa "Volver a poner la baliza" para repetir.');
+    } else if (!arrived && (beacon.position.z < -150 || Math.hypot(beacon.position.x, beacon.position.z) > 1700)){
+      placeBeacon(BEACON_HOME.x, BEACON_HOME.z);
+      setStatus('La comida quedó fuera de su alcance; se volvió a poner la baliza.');
+    }
+    // Olor infrarrojo: en la vida real parpadea a 39 Hz (invisible); aquí se muestra lento
+    var pulse = 0.5 + 0.5*Math.sin(now*0.006);
+    M.bIr.emissive.setRGB(0.45*pulse, 0.16*pulse, 0.7*pulse);
+    if (now - lastUi > 100){ lastUi = now; showSenses(); syncBeaconInputs(); }
+    if (camAnim){
+      camAnim.t = Math.min(1, camAnim.t + dt/0.6);
+      var k = camAnim.t < 0.5 ? 2*camAnim.t*camAnim.t : 1 - Math.pow(-2*camAnim.t + 2, 2)/2;
+      cam.theta = camAnim.from.theta + (camAnim.to.theta - camAnim.from.theta)*k;
+      cam.phi = camAnim.from.phi + (camAnim.to.phi - camAnim.from.phi)*k;
+      cam.r = camAnim.from.r + (camAnim.to.r - camAnim.from.r)*k;
+      if (camAnim.t >= 1) camAnim = null;
+    }
+    placeCamera();
+    renderFrame();
+    requestAnimationFrame(frame);
+  }
+  function renderFrame(){
+    renderer.setViewport(0, 0, W, H); renderer.setScissorTest(false);
+    renderer.render(scene, camera);
+    if (eyeOn && eyeW){
+      var fxVis = fx.visible, boxVis = boxGroup.visible;
+      fx.visible = false; boxGroup.visible = false;
+      renderer.setViewport(12, 12, eyeW, eyeH); renderer.setScissor(12, 12, eyeW, eyeH); renderer.setScissorTest(true);
+      renderer.render(scene, eyeCam);
+      renderer.setScissorTest(false); renderer.setViewport(0, 0, W, H);
+      fx.visible = fxVis; boxGroup.visible = boxVis;
+    }
+  }
+  computeSenses(); showSenses();
+  placeCamera(); renderFrame();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
