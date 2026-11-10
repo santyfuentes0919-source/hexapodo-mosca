@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control de la Mosca</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Control de juego en una sola pantalla: palanca y cruceta a la izquierda, vista del robot al centro,
+   botones ABXY y palanca a la derecha. Tema oscuro fijo, como un control. Sin fuentes externas:
+   la ESP32 no tiene internet, asi que todo usa las fuentes del sistema. */
+:root {
+  --fondo: #161a19;
+  --panel: #212625;
+  --borde: #343b39;
+  --texto: #e8ecea;
+  --tenue: #9aa5a1;
+  --verde: #5dbb4a;
+  --rojo: #e5534b;
+  --azul: #3d8bfd;
+  --amarillo: #f2c230;
+  --cara: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.4 var(--cara);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--amarillo); outline-offset: 2px; }
+
+#app { min-height: 100%; display: flex; flex-direction: column; gap: 12px; padding-block: 12px; max-width: 1100px; margin: 0 auto; }
+
+.barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.barra h1 { font-size: 17px; margin: 0 auto 0 0; letter-spacing: .02em; }
+.pill { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--borde); color: var(--tenue); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill b { color: var(--texto); font-weight: 600; }
+.pill.ok { color: var(--verde); border-color: color-mix(in srgb, var(--verde) 50%, var(--borde)); }
+.pill.mal { color: var(--rojo); border-color: color-mix(in srgb, var(--rojo) 50%, var(--borde)); }
+.pill.demo { color: var(--amarillo); border-color: color-mix(in srgb, var(--amarillo) 45%, var(--borde)); }
+.boton-cal { background: transparent; border: 1px solid var(--borde); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+
+.control { flex: 1; display: grid; grid-template-columns: 1fr minmax(0, 1.25fr) 1fr; gap: 16px; align-items: center; }
+.lado { display: grid; justify-items: center; gap: 18px; padding-bottom: 26px; }
+.centro { display: grid; gap: 8px; justify-items: center; min-width: 0; }
+
+.hombro { width: 100%; max-width: 190px; padding: 10px 0 8px; border-radius: 18px 18px 8px 8px; background: var(--panel); border: 1px solid var(--borde); display: grid; gap: 1px; }
+.hombro small, .etq { font-size: 11.5px; color: var(--tenue); letter-spacing: .03em; }
+.hombro strong { font-size: 15px; }
+
+.cruceta { display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px); }
+.cruceta button { background: var(--panel); border: 1px solid var(--borde); font-size: 16px; }
+.cruceta .arriba { grid-area: 1 / 2; border-radius: 8px 8px 0 0; }
+.cruceta .abajo { grid-area: 3 / 2; border-radius: 0 0 8px 8px; }
+.cruceta .medio { grid-area: 2 / 2; background: var(--panel); border-inline: 1px solid var(--borde); display: grid; place-items: center; font-size: 10px; color: var(--tenue); text-align: center; line-height: 1.1; }
+.cruceta .izq, .cruceta .der { visibility: hidden; }
+
+.abxy { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); }
+.abxy button { border-radius: 50%; border: 2px solid currentColor; background: color-mix(in srgb, currentColor 14%, var(--panel)); font-weight: 700; font-size: 18px; display: grid; place-items: center; line-height: 1; }
+.abxy button span { font-size: 8.5px; font-weight: 500; color: var(--texto); letter-spacing: .02em; margin-top: -10px; }
+.abxy .y { grid-area: 1 / 2; color: var(--amarillo); }
+.abxy .x { grid-area: 2 / 1; color: var(--azul); }
+.abxy .b { grid-area: 2 / 3; color: var(--rojo); }
+.abxy .a { grid-area: 3 / 2; color: var(--verde); }
+.apretado { transform: scale(.92); filter: brightness(1.4); }
+
+.palanca { position: relative; width: min(42vw, 170px); aspect-ratio: 1; max-width: 100%; border-radius: 50%;
+  background: radial-gradient(circle, var(--panel) 55%, var(--fondo) 100%); border: 1px solid var(--borde); touch-action: none; }
+.palanca::before { content: ""; position: absolute; inset: 22%; border-radius: 50%; border: 1px dashed var(--borde); }
+.perilla { position: absolute; left: 50%; top: 50%; width: 42%; aspect-ratio: 1; margin: -21% 0 0 -21%; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #4a524f, #2a302e); border: 1px solid #555e5b; box-shadow: 0 4px 10px rgb(0 0 0 / .45); pointer-events: none; }
+.palanca .etq { position: absolute; left: 0; right: 0; bottom: -22px; text-align: center; }
+
+canvas { width: min(100%, 340px); aspect-ratio: 1; border-radius: 16px; background: var(--panel); border: 1px solid var(--borde); }
+#aviso { min-height: 1.4em; margin: 0; text-align: center; font-size: 13.5px; color: var(--amarillo); }
+.ayuda { margin: 0; font-size: 12px; color: var(--tenue); text-align: center; max-width: 340px; }
+kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--borde); border-radius: 4px; color: var(--texto); }
+
+/* Panel de calibracion */
+#cal { display: grid; gap: 14px; max-width: 640px; width: 100%; margin: 0 auto; }
+#cal h2 { font-size: 18px; margin: 0; }
+#cal p { margin: 0; color: var(--tenue); }
+.paso { background: var(--panel); border: 1px solid var(--borde); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.paso h3 { margin: 0; font-size: 15px; }
+.fila { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px; padding: 9px 14px; min-width: 52px; }
+.btn.fuerte { background: var(--verde); border-color: var(--verde); color: #0d1a0b; font-weight: 600; }
+.btn.peligro { color: var(--rojo); }
+select { font: inherit; color: var(--texto); background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px; padding: 8px 10px; }
+.seg { display: inline-flex; border: 1px solid var(--borde); border-radius: 10px; overflow: hidden; }
+.seg button { background: var(--fondo); border: 0; padding: 8px 14px; }
+.seg button[aria-pressed="true"] { background: var(--borde); font-weight: 600; }
+.lectura { font: 14px var(--mono); font-variant-numeric: tabular-nums; }
+#calMsg { color: var(--amarillo); min-height: 1.4em; }
+
+@media (max-width: 760px) {
+  .control { grid-template-columns: 1fr 1fr; align-items: start; }
+  .centro { grid-column: 1 / -1; order: -1; }
+  canvas { width: min(100%, 260px); }
+  .lado { gap: 14px; }
+  .ayuda.teclado { display: none; }
+}
+/* Celular acostado: palanca y botones lado a lado, como un control de verdad */
+@media (orientation: landscape) and (max-height: 520px) {
+  #app { gap: 6px; padding-block: 6px; }
+  .barra h1 { font-size: 15px; }
+  .pill { padding: 2px 8px; }
+  .lado { grid-template-columns: auto auto; align-items: center; gap: 10px 14px; padding-bottom: 20px; }
+  .hombro { grid-column: 1 / -1; order: -2; padding: 5px 0; }
+  .hombro small { display: none; }
+  .palanca { order: -1; width: min(32vh, 130px); }
+  .lado.der .palanca { order: 0; }
+  .lado.der .abxy { order: 1; }
+  .cruceta { grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(3, 36px); }
+  .abxy { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); }
+  .abxy button span { display: none; }
+  canvas { width: min(100%, 56vh); }
+  .ayuda.teclado { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .apretado { transform: none; } }
+</style>
+
+<div id="app">
+  <header class="barra">
+    <h1>Mosca hexápodo</h1>
+    <span class="pill" id="pConexion">Buscando la araña…</span>
+    <span class="pill" id="pEstado">Sentada</span>
+    <span class="pill" id="pMarcha">Marcha <b>rápida</b></span>
+    <span class="pill" id="pVel">Velocidad <b>2</b>/4</span>
+    <span class="pill" id="pAltura">Altura <b>53</b> mm</span>
+    <button class="boton-cal" id="abrirCal" type="button">Calibrar</button>
+  </header>
+
+  <main class="control" id="control">
+    <section class="lado">
+      <button class="hombro" data-k="LB" type="button"><strong>LB</strong><small>más lento</small></button>
+      <div class="cruceta" aria-label="Altura del cuerpo">
+        <button class="arriba" data-k="ARRIBA" type="button" aria-label="Subir el cuerpo">▲</button>
+        <div class="medio">altura</div>
+        <button class="abajo" data-k="ABAJO" type="button" aria-label="Bajar el cuerpo">▼</button>
+        <span class="izq"></span><span class="der"></span>
+      </div>
+      <div class="palanca" id="palIzq" aria-label="Palanca izquierda: caminar"><div class="perilla"></div><span class="etq">caminar</span></div>
+    </section>
+
+    <section class="centro">
+      <canvas id="vista" width="340" height="340" aria-label="Vista de la araña desde arriba"></canvas>
+      <p id="aviso"></p>
+      <p class="ayuda" id="pad">Control de Xbox: conéctalo a la compu o al celular y aprieta cualquier botón.</p>
+      <p class="ayuda teclado">Teclado: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> caminar · <kbd>←</kbd><kbd>→</kbd> girar · <kbd>↑</kbd><kbd>↓</kbd> inclinar · <kbd>Espacio</kbd> A · <kbd>P</kbd> B · <kbd>M</kbd> X · <kbd>H</kbd> Y</p>
+    </section>
+
+    <section class="lado der">
+      <button class="hombro" data-k="RB" type="button"><strong>RB</strong><small>más rápido</small></button>
+      <div class="abxy">
+        <button class="y" data-k="Y" type="button">Y<span>saludar</span></button>
+        <button class="x" data-k="X" type="button">X<span>marcha</span></button>
+        <button class="b" data-k="B" type="button">B<span>alto</span></button>
+        <button class="a" data-k="A" type="button">A<span>parar</span></button>
+      </div>
+      <div class="palanca" id="palDer" aria-label="Palanca derecha: girar e inclinar"><div class="perilla"></div><span class="etq">girar · inclinar</span></div>
+    </section>
+  </main>
+
+  <section id="cal" hidden>
+    <div class="fila"><h2>Calibrar las patas</h2><button class="btn" id="cerrarCal" type="button" style="margin-left:auto">Volver al control</button></div>
+    <p>La ESP32 no puede ver dónde quedó cada pata, así que no se puede calibrar sola. Estos 3 pasos lo hacen casi automático.</p>
+
+    <div class="paso">
+      <h3>1. Modo armado</h3>
+      <p>Pone los 18 servos en 90°. Con eso puesto, acomoden cada pata en la postura de pie y atornillen el cuerno del servo.</p>
+      <div class="fila"><button class="btn fuerte" data-op="armado" type="button">Todos a 90°</button></div>
+    </div>
+
+    <div class="paso">
+      <h3>2. Revisar todas</h3>
+      <p>Mueve las 18 articulaciones una por una y aquí dice cuál se mueve y hacia dónde debe ir. Anoten las que se muevan al revés o queden chuecas.</p>
+      <div class="fila"><button class="btn fuerte" data-op="revisar" type="button">Empezar revisión</button></div>
+    </div>
+
+    <div class="paso">
+      <h3>3. Ajuste fino</h3>
+      <div class="fila">
+        <select id="selPata" aria-label="Pata">
+          <option value="0">Delantera derecha</option><option value="1">Media derecha</option><option value="2">Trasera derecha</option>
+          <option value="3">Delantera izquierda</option><option value="4">Media izquierda</option><option value="5">Trasera izquierda</option>
+        </select>
+        <div class="seg" id="selArt" role="group" aria-label="Articulación">
+          <button type="button" data-a="0" aria-pressed="true">Coxa</button><button type="button" data-a="1" aria-pressed="false">Fémur</button><button type="button" data-a="2" aria-pressed="false">Tibia</button>
+        </div>
+      </div>
+      <div class="lectura" id="lectura">centro 90° · dirección normal</div>
+      <div class="fila">
+        <button class="btn" data-op="menos5" type="button">−5</button><button class="btn" data-op="menos1" type="button">−1</button>
+        <button class="btn" data-op="mas1" type="button">+1</button><button class="btn" data-op="mas5" type="button">+5</button>
+        <button class="btn" data-op="probar" type="button">Probar</button><button class="btn" data-op="invertir" type="button">Invertir</button>
+      </div>
+      <p id="sentido">Con «Probar» la coxa debe moverse hacia adelante.</p>
+      <div class="fila"><button class="btn fuerte" data-op="guardar" type="button">Guardar calibración</button></div>
+    </div>
+
+    <p id="calMsg"></p>
+    <div class="fila"><button class="btn" data-op="postura" type="button">Postura de pie</button><button class="btn peligro" data-op="soltar" type="button">Soltar servos</button></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  // ---------- Estado (lo manda la ESP32; en modo demostración se simula aquí) ----------
+  const st = { modo: 'normal', marcha: 0, vel: 1, altura: 53, sentada: 1, detenida: 0, pata: 0, art: 0, centro: 90, dir: 1, msg: '' };
+  let conectado = false, demo = false, fallas = 0, panelCal = false;
+  const demoCal = { centro: [...Array(6)].map(() => [90, 90, 90]), dir: [...Array(6)].map((_, p) => p < 3 ? [1, 1, 1] : [-1, -1, -1]) };
+  let saludoHasta = 0, revisarDesde = 0;
+
+  async function pedir(url) {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), 900);
+    try {
+      const r = await fetch(url, { signal: ac.signal, cache: 'no-store' });
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      if (typeof j.modo !== 'string') throw new Error('respuesta rara');
+      fallas = 0; conectado = true; demo = false;
+      Object.assign(st, j);
+      return j;
+    } catch (e) {
+      fallas++;
+      if (fallas >= 3) conectado = false;
+      return null;
+    } finally { clearTimeout(t); }
+  }
+
+  // ---------- Entradas: palancas en pantalla, teclado y control de Xbox ----------
+  const toque = { lx: 0, ly: 0, rx: 0, ry: 0 };
+  const pad = { lx: 0, ly: 0, rx: 0, ry: 0, nombre: '' };
+  const teclas = new Set();
+
+  function palanca(el, kx, ky) {
+    const perilla = el.querySelector('.perilla');
+    let id = null;
+    const mover = e => {
+      const r = el.getBoundingClientRect();
+      const rad = r.width / 2;
+      let x = (e.clientX - r.left - rad) / rad, y = -(e.clientY - r.top - rad) / rad;
+      const m = Math.hypot(x, y);
+      if (m > 1) { x /= m; y /= m; }
+      toque[kx] = x; toque[ky] = y;
+    };
+    el.addEventListener('pointerdown', e => { id = e.pointerId; el.setPointerCapture(id); mover(e); });
+    el.addEventListener('pointermove', e => { if (e.pointerId === id) mover(e); });
+    const soltar = e => { if (e.pointerId === id) { id = null; toque[kx] = 0; toque[ky] = 0; } };
+    el.addEventListener('pointerup', soltar);
+    el.addEventListener('pointercancel', soltar);
+    return perilla;
+  }
+  const perIzq = palanca($('#palIzq'), 'lx', 'ly');
+  const perDer = palanca($('#palDer'), 'rx', 'ry');
+
+  const zona = v => Math.abs(v) < 0.14 ? 0 : (v - Math.sign(v) * 0.14) / 0.86;
+  const fuerte = (...vs) => vs.reduce((a, b) => Math.abs(b) > Math.abs(a) ? b : a, 0);
+
+  function valores() {
+    const kx = (teclas.has('d') ? 1 : 0) - (teclas.has('a') ? 1 : 0);
+    const ky = (teclas.has('w') ? 1 : 0) - (teclas.has('s') ? 1 : 0);
+    const kw = (teclas.has('ArrowRight') ? 1 : 0) - (teclas.has('ArrowLeft') ? 1 : 0);
+    const ki = (teclas.has('ArrowUp') ? 1 : 0) - (teclas.has('ArrowDown') ? 1 : 0);
+    const v = { lx: fuerte(toque.lx, pad.lx, kx), ly: fuerte(toque.ly, pad.ly, ky), rx: fuerte(toque.rx, pad.rx, kw), ry: fuerte(toque.ry, pad.ry, ki) };
+    const pos = (per, x, y) => { per.style.transform = `translate(${x * 60}%, ${-y * 60}%)`; };
+    pos(perIzq, v.lx, v.ly); pos(perDer, v.rx, v.ry);
+    return v;
+  }
+
+  // Botones del control de Xbox (mapa estándar del navegador)
+  const BOTON_PAD = { 0: 'A', 1: 'B', 2: 'X', 3: 'Y', 4: 'LB', 5: 'RB', 12: 'ARRIBA', 13: 'ABAJO' };
+  const antes = {};
+  function leerControl() {
+    let lista = [];
+    try { lista = navigator.getGamepads ? Array.from(navigator.getGamepads()) : []; } catch (e) { lista = []; }
+    const gp = lista.find(g => g && g.connected);
+    if (!gp) { pad.lx = pad.ly = pad.rx = pad.ry = 0; pad.nombre = ''; return; }
+    pad.nombre = gp.id;
+    pad.lx = zona(gp.axes[0] || 0); pad.ly = -zona(gp.axes[1] || 0);
+    pad.rx = zona(gp.axes[2] || 0); pad.ry = -zona(gp.axes[3] || 0);
+    for (const [i, k] of Object.entries(BOTON_PAD)) {
+      const b = gp.buttons[i], ahora = !!(b && b.pressed);
+      if (ahora && !antes[i]) presionar(k);
+      antes[i] = ahora;
+    }
+  }
+
+  const TECLA_BOTON = { ' ': 'A', p: 'B', m: 'X', h: 'Y', z: 'LB', c: 'RB', r: 'ARRIBA', f: 'ABAJO' };
+  addEventListener('keydown', e => {
+    if (panelCal || e.target.closest('select')) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if ('wasd'.includes(k) && k.length === 1 || k.startsWith('Arrow')) { teclas.add(k); e.preventDefault(); return; }
+    if (TECLA_BOTON[k] && !e.repeat) { presionar(TECLA_BOTON[k]); e.preventDefault(); }
+  });
+  addEventListener('keyup', e => teclas.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key));
+  addEventListener('blur', () => teclas.clear());
+
+  // ---------- Botones ----------
+  async function presionar(k) {
+    const el = document.querySelector(`[data-k="${k}"]`);
+    if (el) { el.classList.add('apretado'); setTimeout(() => el.classList.remove('apretado'), 140); }
+    if (panelCal) return;
+    if (conectado) { await pedir('/b?k=' + k); pintar(); return; }
+    // Demostración: las mismas reglas que la ESP32
+    if (k === 'A') st.sentada = st.sentada ? 0 : 1;
+    else if (k === 'B') st.detenida = st.detenida ? 0 : 1;
+    else if (k === 'X') st.marcha = 1 - st.marcha;
+    else if (k === 'Y' && !st.sentada && !st.detenida) saludoHasta = performance.now() + 3000;
+    else if (k === 'LB') st.vel = Math.max(0, st.vel - 1);
+    else if (k === 'RB') st.vel = Math.min(3, st.vel + 1);
+    else if (k === 'ARRIBA') st.altura = Math.min(68, st.altura + 4);
+    else if (k === 'ABAJO') st.altura = Math.max(38, st.altura - 4);
+    pintar();
+  }
+  $$('[data-k]').forEach(b => b.addEventListener('click', () => presionar(b.dataset.k)));
+
+  // ---------- Mandar las palancas a la araña ----------
+  let enVuelo = false, ultimoEnvio = 0, ultimoTexto = '';
+  setInterval(async () => {
+    if (!conectado || panelCal || enVuelo) return;
+    const v = valores();
+    const n = x => Math.round(x * 100);
+    const q = `x=${n(v.lx)}&y=${n(v.ly)}&w=${n(v.rx)}&i=${n(v.ry)}`;
+    const ahora = performance.now();
+    if (q === ultimoTexto && ahora - ultimoEnvio < 250) return;   // sin cambios: solo un "sigo aquí" cada 250 ms
+    enVuelo = true; ultimoTexto = q; ultimoEnvio = ahora;
+    await pedir('/c?' + q);
+    enVuelo = false;
+    pintar();
+  }, 60);
+
+  async function buscar() {
+    if (conectado) return;
+    const j = await pedir('/estado');
+    if (!j && !conectado) demo = true;
+    pintar();
+  }
+  buscar();
+  setInterval(buscar, 4000);
+
+  // ---------- Pintar el estado ----------
+  const MARCHA = ['rápida', 'lenta'];
+  function pintar() {
+    const c = $('#pConexion');
+    if (conectado) { c.textContent = 'Conectada'; c.className = 'pill ok'; }
+    else if (demo) { c.textContent = 'Demostración (sin araña)'; c.className = 'pill demo'; }
+    else { c.textContent = 'Buscando la araña…'; c.className = 'pill mal'; }
+    const e = $('#pEstado');
+    const modo = st.modo === 'normal' || st.modo === 'saludo' ? (st.detenida ? 'ALTO' : st.sentada ? 'Sentada' : 'De pie') : 'Calibrando';
+    e.textContent = modo; e.className = 'pill' + (st.detenida ? ' mal' : '');
+    $('#pMarcha').innerHTML = `Marcha <b>${MARCHA[st.marcha]}</b>`;
+    $('#pVel').innerHTML = `Velocidad <b>${st.vel + 1}</b>/4`;
+    $('#pAltura').innerHTML = `Altura <b>${Math.round(st.altura)}</b> mm`;
+    let aviso = '';
+    if (st.detenida) aviso = 'Alto total. Aprieta B para seguir.';
+    else if (st.sentada) aviso = 'Está sentada. Aprieta A para pararla.';
+    else if (st.msg && !panelCal) aviso = st.msg;
+    $('#aviso').textContent = aviso;
+    $('#pad').textContent = pad.nombre ? 'Control conectado: ' + pad.nombre.replace(/\(.*?\)/g, '').trim().slice(0, 40)
+      : 'Control de Xbox: conéctalo a la compu o al celular y aprieta cualquier botón.';
+    if (panelCal) pintarCal();
+  }
+
+  // ---------- Calibración ----------
+  const ARTIC = ['la coxa', 'el fémur', 'la tibia'];
+  const SENTIDO = ['hacia adelante', 'hacia arriba', 'con la punta hacia el cuerpo'];
+  let calP = 0, calA = 0, sondeo = null;
+
+  async function cal(op) {
+    if (conectado) { await pedir(`/cal?op=${op}&p=${calP}&a=${calA}`); }
+    else {
+      const c = demoCal.centro[calP], d = demoCal.dir[calP];
+      const pasos = { mas1: 1, menos1: -1, mas5: 5, menos5: -5 };
+      st.msg = '';
+      if (op in pasos) c[calA] = Math.max(0, Math.min(180, c[calA] + pasos[op]));
+      else if (op === 'invertir') d[calA] *= -1;
+      else if (op === 'guardar') st.msg = 'Calibracion guardada (demostración)';
+      else if (op === 'armado') st.msg = 'Todos los servos en 90 grados';
+      else if (op === 'soltar') st.msg = 'Servos sueltos';
+      else if (op === 'revisar') revisarDesde = performance.now();
+      st.centro = c[calA]; st.dir = d[calA];
+      st.modo = op === 'salir' ? 'normal' : op === 'revisar' ? 'revisar' : 'calibrar';
+    }
+    pintar();
+  }
+
+  function pintarCal() {
+    $('#lectura').textContent = `centro ${Math.round(st.centro)}° · dirección ${st.dir > 0 ? 'normal' : 'invertida'}`;
+    $('#sentido').textContent = `Con «Probar» ${ARTIC[calA]} debe moverse ${SENTIDO[calA]}. Si va al revés, «Invertir».`;
+    $('#calMsg').textContent = st.msg || (st.modo === 'revisar' ? 'Revisando…' : '');
+  }
+
+  function abrirCal(si) {
+    panelCal = si;
+    $('#cal').hidden = !si; $('#control').hidden = si;
+    $('#abrirCal').hidden = si;
+    clearInterval(sondeo);
+    if (si) {
+      cal('entrar');
+      sondeo = setInterval(() => { if (conectado) pedir('/estado').then(pintar); else demoRevisar(); }, 400);
+    } else cal('salir');
+  }
+  function demoRevisar() {
+    if (st.modo !== 'revisar') return;
+    const t = performance.now() - revisarDesde, paso = Math.floor(t / 1200);
+    if (paso >= 18) { st.modo = 'calibrar'; st.msg = 'Revision terminada'; }
+    else st.msg = `${['delantera der', 'media der', 'trasera der', 'delantera izq', 'media izq', 'trasera izq'][Math.floor(paso / 3)]} / ${['coxa', 'femur', 'tibia'][paso % 3]}: debe moverse ${SENTIDO[paso % 3]}`;
+    pintarCal();
+  }
+  $('#abrirCal').addEventListener('click', () => abrirCal(true));
+  $('#cerrarCal').addEventListener('click', () => abrirCal(false));
+  $$('[data-op]').forEach(b => b.addEventListener('click', () => cal(b.dataset.op)));
+  $('#selPata').addEventListener('change', e => { calP = +e.target.value; cal('elegir'); });
+  $$('#selArt button').forEach(b => b.addEventListener('click', () => {
+    calA = +b.dataset.a;
+    $$('#selArt button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    cal('elegir');
+  }));
+
+  // ---------- Vista desde arriba (la misma marcha que la ESP32, sin los servos) ----------
+  const EJE_X = [38, 42, 38, -38, -42, -38], EJE_Y = [55, 0, -55, 55, 0, -55], ANG = [45, 0, -45, 135, 180, 225];
+  const ZANCADA = 16, PERIODO = [1.4, 1.0, 0.75, 0.55], LENTA = 2.2;
+  const DESF = [[0, .5, 0, .5, 0, .5], [4 / 6, 5 / 6, 0, 1 / 6, 2 / 6, 3 / 6]], AIRE = [.5, 1 / 6];
+  const alcance = 25 + 45 * Math.cos(15 * Math.PI / 180);
+  const NX = ANG.map((a, p) => EJE_X[p] + alcance * Math.cos(a * Math.PI / 180));
+  const NY = ANG.map((a, p) => EJE_Y[p] + alcance * Math.sin(a * Math.PI / 180));
+  const RMAX = Math.max(...NX.map((x, p) => Math.hypot(x, NY[p])));
+  const sim = { fase: 0, cx: 0, cy: 0, cw: 0, x: 0, y: 0, th: 0 };
+
+  const lienzo = $('#vista'), ctx = lienzo.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  const color = n => css.getPropertyValue(n).trim();
+  const C = { borde: color('--borde'), texto: color('--texto'), tenue: color('--tenue'), verde: color('--verde'), rojo: color('--rojo'), panel: color('--panel'), fondo: color('--fondo') };
+
+  function ajustarLienzo() {
+    const r = lienzo.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    const lado = Math.max(100, Math.round(r.width * dpr));
+    if (lienzo.width !== lado) { lienzo.width = lado; lienzo.height = lado; }
+  }
+
+  function pasoSim(dt, v) {
+    if (st.detenida) return { pies: null };
+    const puede = !st.sentada && (st.modo === 'normal' || st.modo === 'saludo') && !panelCal;
+    const k = 1 - Math.exp(-dt / 0.2);
+    sim.cx += ((puede ? v.lx : 0) - sim.cx) * k;
+    sim.cy += ((puede ? v.ly : 0) - sim.cy) * k;
+    sim.cw += ((puede ? -v.rx : 0) - sim.cw) * k;
+    const S = [];
+    let maxS = 0;
+    for (let p = 0; p < 6; p++) {
+      const sx = ZANCADA * sim.cx - sim.cw * ZANCADA / RMAX * NY[p];
+      const sy = ZANCADA * sim.cy + sim.cw * ZANCADA / RMAX * NX[p];
+      S.push([sx, sy]); maxS = Math.max(maxS, Math.hypot(sx, sy));
+    }
+    const esc = maxS > ZANCADA ? ZANCADA / maxS : 1;
+    maxS *= esc;
+    const T = PERIODO[st.vel] * (st.marcha ? LENTA : 1), b = AIRE[st.marcha];
+    if (maxS > 0.3) {
+      sim.fase = (sim.fase + dt / T) % 1;
+      const rapidez = 2 * esc / ((1 - b) * T);           // el cuerpo avanza lo que los pies empujan
+      const vx = sim.cx * ZANCADA * rapidez, vy = sim.cy * ZANCADA * rapidez;
+      sim.th += sim.cw * ZANCADA / RMAX * rapidez * dt;
+      sim.x += (vx * Math.cos(sim.th) - vy * Math.sin(sim.th)) * dt;
+      sim.y += (vx * Math.sin(sim.th) + vy * Math.cos(sim.th)) * dt;
+    }
+    const pies = [];
+    for (let p = 0; p < 6; p++) {
+      const f = (sim.fase + DESF[st.marcha][p]) % 1;
+      let s, aire = false;
+      if (f < b) { const u = f / b; s = -Math.cos(Math.PI * u); aire = maxS > 0.3; }
+      else s = 1 - 2 * (f - b) / (1 - b);
+      pies.push({ x: NX[p] + S[p][0] * esc * s, y: NY[p] + S[p][1] * esc * s, aire });
+    }
+    const ahora = performance.now();
+    if ((st.modo === 'saludo' || saludoHasta > ahora) && !st.sentada) {
+      const a = (ANG[0] + 15 * Math.sin(ahora / 1000 * 2 * Math.PI * 1.5)) * Math.PI / 180;
+      pies[0] = { x: EJE_X[0] + (alcance + 12) * Math.cos(a), y: EJE_Y[0] + (alcance + 12) * Math.sin(a), aire: true };
+    }
+    return { pies };
+  }
+
+  let ultimos = null, tPrevio = performance.now();
+  function cuadro(t) {
+    const dt = Math.min(0.1, (t - tPrevio) / 1000); tPrevio = t;
+    leerControl();
+    const v = valores();
+    const r = pasoSim(dt, v);
+    if (r.pies) ultimos = r.pies;
+    dibujar(ultimos);
+    requestAnimationFrame(cuadro);
+  }
+
+  function dibujar(pies) {
+    ajustarLienzo();
+    const W = lienzo.width, k = W / 2 / 165;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, W);
+    // piso: cuadricula de 4 cm que se mueve cuando la araña camina
+    ctx.save();
+    ctx.translate(W / 2, W / 2); ctx.scale(k, -k); ctx.rotate(-sim.th); ctx.translate(-sim.x, -sim.y);
+    ctx.strokeStyle = C.borde; ctx.lineWidth = 1 / k;
+    const paso = 40, x0 = Math.floor((sim.x - 260) / paso) * paso, y0 = Math.floor((sim.y - 260) / paso) * paso;
+    ctx.beginPath();
+    for (let i = 0; i <= 13; i++) {
+      ctx.moveTo(x0 + i * paso, y0); ctx.lineTo(x0 + i * paso, y0 + 520);
+      ctx.moveTo(x0, y0 + i * paso); ctx.lineTo(x0 + 520, y0 + i * paso);
+    }
+    ctx.stroke();
+    ctx.restore();
+    // la araña, siempre viendo hacia arriba
+    ctx.save();
+    ctx.translate(W / 2, W / 2); ctx.scale(k, -k);
+    const sentada = st.sentada && !st.detenida;
+    if (pies) for (let p = 0; p < 6; p++) {
+      const pie = pies[p];
+      ctx.strokeStyle = C.tenue; ctx.lineWidth = 7; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(EJE_X[p], EJE_Y[p]); ctx.lineTo(pie.x, pie.y); ctx.stroke();
+      ctx.beginPath(); ctx.arc(pie.x, pie.y, pie.aire ? 9 : 6.5, 0, 2 * Math.PI);
+      if (pie.aire) { ctx.lineWidth = 3; ctx.strokeStyle = C.texto; ctx.stroke(); }
+      else { ctx.fillStyle = sentada ? C.tenue : C.verde; ctx.fill(); }
+    }
+    ctx.fillStyle = C.fondo; ctx.strokeStyle = st.detenida ? C.rojo : C.texto; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-56, -69, 112, 138, 24) : ctx.rect(-56, -69, 112, 138);
+    ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 2; ctx.strokeStyle = C.tenue;                     // antenas al frente
+    ctx.beginPath(); ctx.moveTo(-14, 60); ctx.lineTo(-30, 92); ctx.moveTo(14, 60); ctx.lineTo(30, 92); ctx.stroke();
+    ctx.fillStyle = C.texto;
+    ctx.beginPath(); ctx.moveTo(0, 58); ctx.lineTo(-11, 38); ctx.lineTo(11, 38); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  pintar();
+  requestAnimationFrame(cuadro);
+  setInterval(pintar, 500);
+})();
+</script>

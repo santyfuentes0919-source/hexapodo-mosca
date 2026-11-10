@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía del Hexápodo Mosca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: cuaderno de taller. Barra de capítulos arriba, una columna de lectura, diagramas a lo ancho de la columna. */
+:root{
+  --papel:#f3f6f8; --hoja:#ffffff; --tinta:#14202b; --tenue:#566572; --linea:#d4dde4;
+  --acento:#d97a06; --acento-suave:#fdf0de;
+  --rojo:#d43d2f; --negro:#2b3640; --azul:#2563c9; --amarillo:#c79a00; --verde:#1f9a55; --morado:#7b4fc4;
+  --codigo-bg:#e9eef2;
+  --f-titulo:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-texto:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --papel:#0f161c; --hoja:#16212a; --tinta:#e4ebf0; --tenue:#98a7b3; --linea:#2a3843;
+  --acento:#f29b2c; --acento-suave:#33240f;
+  --rojo:#ff6b5c; --negro:#b9c4cd; --azul:#6aa0ff; --amarillo:#f0c63a; --verde:#4fd08a; --morado:#b391f5;
+  --codigo-bg:#1d2a35; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --papel:#0f161c; --hoja:#16212a; --tinta:#e4ebf0; --tenue:#98a7b3; --linea:#2a3843;
+  --acento:#f29b2c; --acento-suave:#33240f;
+  --rojo:#ff6b5c; --negro:#b9c4cd; --azul:#6aa0ff; --amarillo:#f0c63a; --verde:#4fd08a; --morado:#b391f5;
+  --codigo-bg:#1d2a35; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--papel);color:var(--tinta);font-family:var(--f-texto);font-size:17px;line-height:1.6;margin:0}
+.envoltura{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
+nav.capitulos{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--papel);border-bottom:1px solid var(--linea)}
+nav.capitulos .fila{max-width:860px;margin:0 auto;padding:10px 16px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+nav.capitulos a{flex:none;font-family:var(--f-titulo);font-weight:500;font-size:14px;color:var(--tenue);text-decoration:none;padding:5px 11px;border-radius:999px;border:1px solid var(--linea);background:var(--hoja)}
+nav.capitulos a:hover,nav.capitulos a:focus-visible{color:var(--tinta);border-color:var(--acento);outline:none}
+header.portada{padding-block:40px 8px}
+.eti{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--acento);font-weight:600}
+h1{font-family:var(--f-titulo);font-weight:800;font-size:clamp(34px,6vw,52px);line-height:1.05;margin:8px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--f-titulo);font-weight:800;font-size:clamp(26px,4vw,34px);line-height:1.15;margin:0 0 6px;text-wrap:balance}
+h3{font-family:var(--f-titulo);font-weight:700;font-size:21px;margin:30px 0 8px;text-wrap:balance}
+h4{font-family:var(--f-titulo);font-weight:700;font-size:17px;margin:20px 0 4px}
+p{margin:0 0 14px;max-width:68ch}
+.entrada{font-size:19px;color:var(--tenue);max-width:60ch}
+section.cap{padding-top:56px;scroll-margin-top:56px}
+section.cap > .eti{display:block;margin-bottom:6px}
+ul,ol{margin:0 0 14px;padding-left:22px;max-width:68ch}
+li{margin-bottom:6px}
+strong{font-weight:700}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--codigo-bg);padding:1px 5px;border-radius:4px}
+pre{font-family:var(--f-mono);font-size:13.5px;line-height:1.55;background:var(--codigo-bg);border:1px solid var(--linea);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:0 0 6px}
+pre code{background:none;padding:0;font-size:inherit}
+.c{color:var(--tenue)}
+.porque{border-left:4px solid var(--acento);background:var(--acento-suave);padding:12px 16px;border-radius:0 8px 8px 0;margin:4px 0 18px;max-width:68ch}
+.porque b.t{font-family:var(--f-titulo);display:block;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--acento);margin-bottom:2px}
+.porque p:last-child{margin-bottom:0}
+.ojo{border:1.5px solid var(--rojo);border-radius:8px;padding:12px 16px;margin:4px 0 18px;max-width:68ch}
+.ojo b.t{color:var(--rojo);font-family:var(--f-titulo)}
+.tabla{overflow-x:auto;margin:6px 0 18px;border:1px solid var(--linea);border-radius:8px;background:var(--hoja)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--linea);vertical-align:top}
+th{font-family:var(--f-titulo);font-weight:700;font-size:14px;background:var(--codigo-bg)}
+tr:last-child td{border-bottom:none}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap;font-family:var(--f-mono);font-size:13.5px}
+figure{margin:10px 0 22px;background:var(--hoja);border:1px solid var(--linea);border-radius:10px;padding:14px}
+figure .lienzo{overflow-x:auto}
+figure svg{display:block;width:100%;height:auto;min-width:560px}
+figcaption{font-size:14px;color:var(--tenue);margin-top:8px}
+svg text{font-family:var(--f-texto);fill:var(--tinta)}
+svg .chico{font-size:12px;fill:var(--tenue)}
+svg .mono{font-family:var(--f-mono);font-size:12px}
+svg .caja{fill:var(--hoja);stroke:var(--tinta);stroke-width:1.5}
+svg .caja-ac{fill:var(--acento-suave);stroke:var(--acento);stroke-width:2}
+svg .caja-v{fill:var(--hoja);stroke:var(--verde);stroke-width:2}
+svg .caja-m{fill:var(--hoja);stroke:var(--morado);stroke-width:2}
+svg .caja-a{fill:var(--hoja);stroke:var(--azul);stroke-width:2}
+svg .flecha{stroke:var(--tinta);stroke-width:1.8;fill:none}
+svg .rojo{stroke:var(--rojo);stroke-width:3;fill:none}
+svg .negro{stroke:var(--negro);stroke-width:2.2;fill:none;stroke-dasharray:6 4}
+svg .azul{stroke:var(--azul);stroke-width:3;fill:none}
+svg .amar{stroke:var(--amarillo);stroke-width:2.2;fill:none}
+svg .verde{stroke:var(--verde);stroke-width:2.6;fill:none}
+svg .inhibe{stroke:var(--rojo);stroke-width:2.2;fill:none;stroke-dasharray:5 4}
+svg .relleno-tinta{fill:var(--tinta)}
+svg .relleno-ac{fill:var(--acento)}
+svg .relleno-az{fill:var(--azul)}
+svg .relleno-ro{fill:var(--rojo)}
+svg .relleno-ve{fill:var(--verde)}
+svg .relleno-hoja{fill:var(--hoja)}
+svg .pata-a{stroke:var(--acento);stroke-width:5;stroke-linecap:round;fill:none}
+svg .pata-b{stroke:var(--azul);stroke-width:5;stroke-linecap:round;fill:none}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--tenue);margin-top:8px}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{display:inline-block;width:22px;height:4px;border-radius:2px}
+.pasos{counter-reset:paso;list-style:none;padding-left:0;max-width:72ch}
+.pasos > li{counter-increment:paso;position:relative;padding:10px 0 10px 46px;border-bottom:1px solid var(--linea);margin:0}
+.pasos > li::before{content:counter(paso);position:absolute;left:0;top:10px;width:32px;height:32px;border-radius:50%;background:var(--tinta);color:var(--papel);font-family:var(--f-titulo);font-weight:700;display:grid;place-items:center;font-size:15px}
+.pasos > li:last-child{border-bottom:none}
+.pasos .pq{display:block;color:var(--tenue);font-size:15px;margin-top:2px}
+.archivo{background:var(--hoja);border:1px solid var(--linea);border-radius:10px;padding:18px 18px 8px;margin:18px 0}
+.archivo h3{margin-top:0;font-family:var(--f-mono);font-size:19px}
+.archivo .rol{color:var(--tenue);margin-top:-4px}
+.dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:8px 0 18px}
+.dos > div{background:var(--hoja);border:1px solid var(--linea);border-radius:8px;padding:12px 14px;min-width:0}
+.dos h4{margin-top:0}
+.dos p{font-size:15.5px;margin-bottom:6px}
+dl.glosario{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:8px 18px;max-width:72ch}
+dl.glosario dt{font-family:var(--f-mono);font-weight:600;font-size:14.5px;padding-top:2px}
+dl.glosario dd{margin:0}
+@media (max-width:560px){dl.glosario{grid-template-columns:1fr} dl.glosario dd{margin-bottom:8px}}
+a{color:var(--azul)}
+.pie{margin-top:56px;padding-top:18px;border-top:1px solid var(--linea);color:var(--tenue);font-size:15px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+
+<nav class="capitulos" aria-label="Capítulos">
+  <div class="fila">
+    <a href="#panorama">1 · El robot completo</a>
+    <a href="#electronica">2 · Electrónica</a>
+    <a href="#sentidos">3 · Sentidos y fruta</a>
+    <a href="#ensamblaje">4 · Ensamblaje</a>
+    <a href="#programacion">5 · Programación</a>
+    <a href="#cerebro">6 · El cerebro de mosca</a>
+    <a href="#pruebas">7 · Pruebas</a>
+    <a href="#glosario">Glosario</a>
+  </div>
+</nav>
+
+<div class="envoltura">
+
+<header class="portada">
+  <span class="eti">CECyTEQ Corregidora · Proyecto de Mecatrónica</span>
+  <h1>Guía del Hexápodo Mosca</h1>
+  <p class="entrada">Todo el proyecto explicado en orden: qué hace cada pieza, cómo se conecta, cómo se arma y qué hace cada línea importante del programa. Léelo de arriba abajo la primera vez; después úsalo como consulta.</p>
+</header>
+
+<!-- ============ 1 ============ -->
+<section class="cap" id="panorama">
+  <span class="eti">Capítulo 1</span>
+  <h2>El robot completo, en una sola idea</h2>
+  <p>El hexápodo es un robot de 6 patas que tiene que <strong>caminar solo hasta una "fruta"</strong> que está después de la meta. No lo controla nadie con un control remoto: él mismo "huele" y "ve" la fruta y decide hacia dónde caminar.</p>
+  <p>Para lograrlo, el robot repite el mismo ciclo <strong>50 veces por segundo</strong> (una vez cada 20 milisegundos):</p>
+
+  <figure>
+    <div class="lienzo">
+    <svg viewBox="0 0 820 250" role="img" aria-label="Ciclo del robot: sentidos, cerebro y patas">
+      <defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="relleno-tinta"/></marker></defs>
+      <rect x="10" y="40" width="210" height="150" rx="10" class="caja-v"/>
+      <text x="115" y="68" text-anchor="middle" font-weight="700" font-size="17">1. SENTIR</text>
+      <text x="115" y="94" text-anchor="middle" font-size="14">Antenas (olor)</text>
+      <text x="115" y="116" text-anchor="middle" font-size="14">Ojos (cámara)</text>
+      <text x="115" y="138" text-anchor="middle" font-size="14">Tacto (distancia)</text>
+      <text x="115" y="170" text-anchor="middle" class="chico mono">sentidos.py</text>
+
+      <rect x="305" y="40" width="210" height="150" rx="10" class="caja-ac"/>
+      <text x="410" y="68" text-anchor="middle" font-weight="700" font-size="17">2. PENSAR</text>
+      <text x="410" y="94" text-anchor="middle" font-size="14">6 neuronas de mosca</text>
+      <text x="410" y="116" text-anchor="middle" font-size="14">deciden avanzar</text>
+      <text x="410" y="138" text-anchor="middle" font-size="14">y hacia dónde girar</text>
+      <text x="410" y="170" text-anchor="middle" class="chico mono">cerebro.py</text>
+
+      <rect x="600" y="40" width="210" height="150" rx="10" class="caja-a"/>
+      <text x="705" y="68" text-anchor="middle" font-weight="700" font-size="17">3. MOVERSE</text>
+      <text x="705" y="94" text-anchor="middle" font-size="14">18 ángulos</text>
+      <text x="705" y="116" text-anchor="middle" font-size="14">van a 2 PCA9685</text>
+      <text x="705" y="138" text-anchor="middle" font-size="14">y a 18 servos</text>
+      <text x="705" y="170" text-anchor="middle" class="chico mono">servos.py</text>
+
+      <line x1="222" y1="115" x2="300" y2="115" class="flecha" marker-end="url(#pf)"/>
+      <text x="261" y="105" text-anchor="middle" class="chico">6 números</text>
+      <text x="261" y="135" text-anchor="middle" class="chico">de 0 a 1</text>
+      <line x1="517" y1="115" x2="595" y2="115" class="flecha" marker-end="url(#pf)"/>
+      <text x="556" y="105" text-anchor="middle" class="chico">18 ángulos</text>
+      <text x="556" y="135" text-anchor="middle" class="chico">en grados</text>
+
+      <path d="M705,192 C705,240 115,240 115,194" class="flecha" marker-end="url(#pf)"/>
+      <text x="410" y="236" text-anchor="middle" class="chico">se repite cada 20 ms (50 veces por segundo) · lo organiza main.py</text>
+    </svg>
+    </div>
+    <figcaption>Así de simple es la idea general. Todo lo demás (cables, piezas, código) existe para que estos tres pasos funcionen bien.</figcaption>
+  </figure>
+
+  <div class="porque"><b class="t">¿Por qué 50 veces por segundo?</b>
+    <p>Los servos reciben un pulso nuevo cada 20 ms (50 Hz), así que no tiene caso calcular más rápido. Y si se calculara más lento, las patas se moverían a saltos. 20 ms también le da a la Raspberry Pi tiempo de sobra para hacer todas las cuentas.</p>
+  </div>
+
+  <h3>Las partes del robot</h3>
+  <div class="tabla"><table>
+    <tr><th>Parte</th><th>Qué es</th><th>Su papel</th></tr>
+    <tr><td>Raspberry Pi Zero 2 W</td><td>Una computadora del tamaño de un chicle, con Linux y Python</td><td>Es el cerebro: corre el programa</td></tr>
+    <tr><td>18 servos MG90S</td><td>Motorcitos que giran a un ángulo exacto y se quedan ahí</td><td>Los músculos: 3 por pata × 6 patas</td></tr>
+    <tr><td>2 drivers PCA9685</td><td>Placas que generan la señal de 16 servos cada una</td><td>La médula: traducen órdenes de la Pi en pulsos para los servos</td></tr>
+    <tr><td>Batería LiPo 2S (7.4 V)</td><td>Batería recargable de 2 celdas, 1300 mAh</td><td>La comida del robot</td></tr>
+    <tr><td>2 UBEC</td><td>Reguladores que bajan el voltaje (uno a 6 V, otro a 5 V)</td><td>Le dan a cada parte el voltaje que aguanta</td></tr>
+    <tr><td>ADS1115</td><td>Convertidor analógico a digital (lee voltajes)</td><td>Lee las antenas y la batería</td></tr>
+    <tr><td>2 VL53L0X</td><td>Sensores láser que miden distancia</td><td>El tacto: avisan si hay pared cerca</td></tr>
+    <tr><td>Cámara OV5647 gran angular</td><td>Cámara de 130° para la Pi</td><td>Los ojos: buscan la fruta verde</td></tr>
+    <tr><td>Fruta-baliza</td><td>Una fruta impresa con LED verdes e infrarrojos</td><td>La "comida" que el robot busca</td></tr>
+    <tr><td>Piezas impresas</td><td>PLA+ (estructura) y TPU (pies de hule)</td><td>El esqueleto</td></tr>
+  </table></div>
+
+  <div class="porque"><b class="t">¿Por qué una Raspberry Pi y no un Arduino o ESP32?</b>
+    <p>La primera versión usaba ESP32. Se cambió porque el robot tiene que procesar imágenes de una cámara (buscar la mancha verde de la fruta) y eso necesita más memoria y la librería OpenCV, que corre en Linux. La Pi Zero 2 W tiene 4 núcleos y 512 MB de RAM: alcanza justo para cámara + cerebro + servos.</p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="cap" id="electronica">
+  <span class="eti">Capítulo 2</span>
+  <h2>Electrónica: energía y señales</h2>
+  <p>Toda la electrónica se entiende mejor si la separas en <strong>dos sistemas</strong> que viajan por cables distintos:</p>
+  <ul>
+    <li><strong>La energía</strong> (cables gruesos): lleva la fuerza de la batería a cada parte.</li>
+    <li><strong>Las señales</strong> (cables delgados): llevan información, como "pon el servo 3 a 45°" o "¿a cuántos milímetros está la pared?".</li>
+  </ul>
+
+  <h3>2.1 La energía: de la batería a cada parte</h3>
+  <figure>
+    <div class="lienzo">
+    <svg viewBox="0 0 820 380" role="img" aria-label="Diagrama de energía del robot">
+      <defs><marker id="pr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="relleno-ro"/></marker></defs>
+      <!-- bateria -->
+      <rect x="10" y="150" width="120" height="70" rx="8" class="caja"/>
+      <text x="70" y="178" text-anchor="middle" font-weight="700">Batería LiPo</text>
+      <text x="70" y="198" text-anchor="middle" class="chico">2S · 7.4 V (8.4 llena)</text>
+      <!-- fusible -->
+      <rect x="160" y="165" width="90" height="40" rx="6" class="caja"/>
+      <text x="205" y="185" text-anchor="middle" font-size="14">Fusible</text>
+      <text x="205" y="199" text-anchor="middle" class="chico">7.5 A</text>
+      <!-- interruptor -->
+      <rect x="280" y="165" width="100" height="40" rx="6" class="caja"/>
+      <text x="330" y="185" text-anchor="middle" font-size="14">Interruptor</text>
+      <text x="330" y="199" text-anchor="middle" class="chico">encendido</text>
+      <line x1="130" y1="185" x2="158" y2="185" class="rojo" marker-end="url(#pr)"/>
+      <line x1="250" y1="185" x2="278" y2="185" class="rojo" marker-end="url(#pr)"/>
+      <!-- split -->
+      <path d="M380,185 H420 V80 H458" class="rojo" marker-end="url(#pr)"/>
+      <path d="M420,185 V290 H458" class="rojo" marker-end="url(#pr)"/>
+      <path d="M420,185 H458" class="rojo" marker-end="url(#pr)"/>
+      <!-- UBEC 6 -->
+      <rect x="460" y="55" width="120" height="50" rx="6" class="caja-ac"/>
+      <text x="520" y="78" text-anchor="middle" font-weight="700">UBEC 6 V</text>
+      <text x="520" y="95" text-anchor="middle" class="chico">5 A</text>
+      <!-- divisor -->
+      <rect x="460" y="165" width="120" height="40" rx="6" class="caja"/>
+      <text x="520" y="182" text-anchor="middle" font-size="13">Divisor 10k / 4.7k</text>
+      <text x="520" y="197" text-anchor="middle" class="chico">mide la batería</text>
+      <!-- UBEC 5 -->
+      <rect x="460" y="265" width="120" height="50" rx="6" class="caja-ac"/>
+      <text x="520" y="288" text-anchor="middle" font-weight="700">UBEC 5 V</text>
+      <text x="520" y="305" text-anchor="middle" class="chico">5 A</text>
+      <!-- destinos -->
+      <rect x="640" y="30" width="170" height="100" rx="6" class="caja-a"/>
+      <text x="725" y="55" text-anchor="middle" font-weight="700" font-size="14">V+ de los 2 PCA9685</text>
+      <text x="725" y="75" text-anchor="middle" class="chico">+ capacitor 1000 µF c/u</text>
+      <text x="725" y="100" text-anchor="middle" font-size="14">→ 18 servos</text>
+      <text x="725" y="118" text-anchor="middle" class="chico">(la fuerza de las patas)</text>
+      <rect x="640" y="160" width="170" height="50" rx="6" class="caja"/>
+      <text x="725" y="182" text-anchor="middle" font-size="14">A0 del ADS1115</text>
+      <text x="725" y="199" text-anchor="middle" class="chico">8.4 V se leen como 2.7 V</text>
+      <rect x="640" y="240" width="170" height="125" rx="6" class="caja-v"/>
+      <text x="725" y="263" text-anchor="middle" font-weight="700" font-size="14">Raspberry Pi</text>
+      <text x="725" y="281" text-anchor="middle" class="chico">pin 2 (5 V) y pin 6 (GND)</text>
+      <text x="725" y="306" text-anchor="middle" font-size="13">su pin 1 da 3.3 V a:</text>
+      <text x="725" y="324" text-anchor="middle" class="chico">lógica de PCA9685, ADS1115,</text>
+      <text x="725" y="340" text-anchor="middle" class="chico">VL53L0X y fototransistores</text>
+      <line x1="580" y1="80" x2="638" y2="80" class="rojo" marker-end="url(#pr)"/>
+      <line x1="580" y1="185" x2="638" y2="185" class="rojo" marker-end="url(#pr)"/>
+      <line x1="580" y1="290" x2="638" y2="290" class="rojo" marker-end="url(#pr)"/>
+      <text x="20" y="360" class="chico">Todas las tierras (GND) se unen en un solo punto común.</text>
+    </svg>
+    </div>
+    <figcaption>Rojo = energía. La batería pasa por fusible e interruptor y luego se divide en dos ramas que no se estorban.</figcaption>
+  </figure>
+
+  <div class="porque"><b class="t">¿Por qué dos UBEC separados?</b>
+    <p>Cuando 18 servos arrancan al mismo tiempo pueden pedir <strong>más de 5 amperes</strong> de golpe. Si la Raspberry Pi compartiera esa misma línea, el voltaje caería por un instante y la Pi se <strong>reiniciaría a media carrera</strong>. Con dos reguladores, los servos "jalan" de uno y la Pi come tranquila del otro.</p>
+    <p>Los servos van a 6 V (y no a 7.4 V de la batería directa) porque el MG90S está hecho para 4.8–6 V: más voltaje los calienta y los rompe.</p>
+  </div>
+  <div class="porque"><b class="t">¿Por qué el fusible y los capacitores?</b>
+    <p><strong>Fusible:</strong> una LiPo en corto puede soltar decenas de amperes y quemar cables o incendiarse. El fusible de 7.5 A se funde antes que eso pase.</p>
+    <p><strong>Capacitor de 1000 µF:</strong> funciona como un "tanquecito" de energía pegado a los servos. Cuando un servo pide un pico de corriente, lo saca primero del capacitor y el voltaje no se cae. Sin él los servos tiemblan.</p>
+  </div>
+  <div class="porque"><b class="t">¿Para qué el divisor de 10 kΩ y 4.7 kΩ?</b>
+    <p>El robot debe saber cuánta batería le queda (si baja de 6.8 V se detiene para no dañarla). Pero el ADS1115 solo aguanta voltajes pequeños. Dos resistencias en serie dividen el voltaje: 8.4 V × 4.7 ÷ (10 + 4.7) = <strong>2.69 V</strong>, que sí puede leer. En el programa se multiplica de regreso por 14.7 ÷ 4.7.</p>
+  </div>
+  <div class="ojo"><b class="t">Cuidado:</b> midan cada UBEC con el multímetro <strong>antes</strong> de conectarlo a la Pi. Si un UBEC viene mal ajustado a 6 V o 7 V, quema la Raspberry Pi al instante.</div>
+
+  <h3>2.2 Las señales: un solo bus I2C para casi todo</h3>
+  <p>La Pi tiene que hablar con 5 aparatos (2 PCA9685, 1 ADS1115, 2 VL53L0X). En lugar de un cable para cada uno, usa <strong>I2C</strong>: un "bus" de solo <strong>2 cables</strong> (SDA = datos, SCL = reloj) al que se cuelgan todos. Cada aparato tiene una <strong>dirección</strong>, como un número de casa, y solo contesta cuando la Pi dice su número.</p>
+
+  <figure>
+    <div class="lienzo">
+    <svg viewBox="0 0 820 250" role="img" aria-label="Bus I2C con cinco dispositivos">
+      <rect x="10" y="80" width="130" height="80" rx="8" class="caja-v"/>
+      <text x="75" y="108" text-anchor="middle" font-weight="700">Raspberry Pi</text>
+      <text x="75" y="128" text-anchor="middle" class="chico">pin 3 = SDA</text>
+      <text x="75" y="145" text-anchor="middle" class="chico">pin 5 = SCL</text>
+      <line x1="140" y1="105" x2="805" y2="105" class="azul"/>
+      <line x1="140" y1="135" x2="805" y2="135" class="azul" style="stroke-dasharray:9 5"/>
+      <text x="810" y="100" text-anchor="end" class="chico">SDA</text>
+      <text x="810" y="152" text-anchor="end" class="chico">SCL</text>
+      <g>
+        <line x1="210" y1="105" x2="210" y2="185" class="azul"/><line x1="226" y1="135" x2="226" y2="185" class="azul" style="stroke-dasharray:9 5"/>
+        <rect x="165" y="185" width="105" height="55" rx="6" class="caja-a"/>
+        <text x="217" y="207" text-anchor="middle" font-size="13" font-weight="700">PCA9685</text>
+        <text x="217" y="226" text-anchor="middle" class="mono">0x40 · der.</text>
+      </g>
+      <g>
+        <line x1="335" y1="105" x2="335" y2="185" class="azul"/><line x1="351" y1="135" x2="351" y2="185" class="azul" style="stroke-dasharray:9 5"/>
+        <rect x="290" y="185" width="105" height="55" rx="6" class="caja-a"/>
+        <text x="342" y="207" text-anchor="middle" font-size="13" font-weight="700">PCA9685</text>
+        <text x="342" y="226" text-anchor="middle" class="mono">0x41 · izq.</text>
+      </g>
+      <g>
+        <line x1="460" y1="105" x2="460" y2="185" class="azul"/><line x1="476" y1="135" x2="476" y2="185" class="azul" style="stroke-dasharray:9 5"/>
+        <rect x="415" y="185" width="105" height="55" rx="6" class="caja"/>
+        <text x="467" y="207" text-anchor="middle" font-size="13" font-weight="700">ADS1115</text>
+        <text x="467" y="226" text-anchor="middle" class="mono">0x48</text>
+      </g>
+      <g>
+        <line x1="585" y1="105" x2="585" y2="185" class="azul"/><line x1="601" y1="135" x2="601" y2="185" class="azul" style="stroke-dasharray:9 5"/>
+        <rect x="540" y="185" width="105" height="55" rx="6" class="caja"/>
+        <text x="592" y="207" text-anchor="middle" font-size="13" font-weight="700">VL53L0X izq</text>
+        <text x="592" y="226" text-anchor="middle" class="mono">0x30</text>
+      </g>
+      <g>
+        <line x1="710" y1="105" x2="710" y2="185" class="azul"/><line x1="726" y1="135" x2="726" y2="185" class="azul" style="stroke-dasharray:9 5"/>
+        <rect x="665" y="185" width="105" height="55" rx="6" class="caja"/>
+        <text x="717" y="207" text-anchor="middle" font-size="13" font-weight="700">VL53L0X der</text>
+        <text x="717" y="226" text-anchor="middle" class="mono">0x31</text>
+      </g>
+      <text x="165" y="40" font-size="14">Cada aparato tiene su propio número (dirección), así no se confunden:</text>
+      <text x="165" y="62" class="chico">el 2.º PCA9685 lleva el puente A0 soldado · los VL53L0X cambian su dirección al arrancar con XSHUT</text>
+    </svg>
+    </div>
+    <figcaption>Azul = señales I2C. Dos cables recorren todo el robot y los 5 aparatos se cuelgan de ellos.</figcaption>
+  </figure>
+
+  <div class="porque"><b class="t">¿Por qué la Pi no mueve los servos directamente?</b>
+    <p>Un servo se controla con un pulso que se repite 50 veces por segundo: si el pulso dura 0.5 ms el servo va a 0°, si dura 2.5 ms va a 180°, y en medio, proporcional. La Pi solo tiene 2 salidas capaces de generar pulsos precisos, y necesitamos 18. El <strong>PCA9685</strong> tiene su propio reloj y genera 16 pulsos perfectos por su cuenta; la Pi solo le dice por I2C "canal 4 → 1.6 ms" y se olvida.</p>
+  </div>
+  <div class="porque"><b class="t">¿Por qué el truco de XSHUT en los VL53L0X?</b>
+    <p>Los dos VL53L0X salen de fábrica con la <strong>misma dirección (0x29)</strong>. Si los dos contestan al mismo tiempo, el bus se confunde. Por eso al arrancar el programa los apaga a los dos (pin XSHUT en 0), prende solo el izquierdo y le cambia su dirección a 0x30, luego prende el derecho y le pone 0x31.</p>
+  </div>
+  <div class="porque"><b class="t">¿Por qué I2C a 400 kHz?</b>
+    <p>Por defecto el bus va a 100 kHz. Cada 20 ms la Pi manda hasta 18 ángulos y además lee sensores; a 100 kHz el bus se satura. A 400 kHz cabe todo con holgura. Se activa con esta línea en <code>/boot/firmware/config.txt</code>:</p>
+    <pre><code>dtparam=i2c_arm=on,i2c_arm_baudrate=400000</code></pre>
+  </div>
+
+  <h3>2.3 Tabla de conexiones de la Raspberry Pi</h3>
+  <p>Los números de pin son los físicos del conector de 40 pines (contando desde la esquina con el pin 1 marcado).</p>
+  <div class="tabla"><table>
+    <tr><th>Pin</th><th>Se conecta a</th><th>Para qué</th></tr>
+    <tr><td class="n">1 (3.3 V)</td><td>VCC de los PCA9685, ADS1115, VL53L0X y colector de los fototransistores</td><td>Alimenta la parte "pensante" de cada chip</td></tr>
+    <tr><td class="n">2 (5 V), 6 (GND)</td><td>Salida del UBEC de 5 V</td><td>Alimenta la Pi</td></tr>
+    <tr><td class="n">3 (GPIO2)</td><td>SDA de todos</td><td>Bus I2C, datos</td></tr>
+    <tr><td class="n">5 (GPIO3)</td><td>SCL de todos</td><td>Bus I2C, reloj</td></tr>
+    <tr><td class="n">11 (GPIO17)</td><td>Botón de arranque → GND</td><td>Presionar: cuenta 5 s y arranca. En carrera: para</td></tr>
+    <tr><td class="n">13 (GPIO27)</td><td>Botón de apagado → GND</td><td>Mantener 2 s apaga la Pi sin dañar la microSD</td></tr>
+    <tr><td class="n">15 (GPIO22)</td><td>LED con resistencia de 330 Ω → GND</td><td>Lento = listo · rápido = cuenta · fijo = corriendo</td></tr>
+    <tr><td class="n">16 (GPIO23)</td><td>Pin OE de los 2 PCA9685</td><td>Freno de emergencia: en 1 suelta todos los servos</td></tr>
+    <tr><td class="n">29 (GPIO5)</td><td>XSHUT del VL53L0X izquierdo</td><td>Cambiarle la dirección a 0x30</td></tr>
+    <tr><td class="n">31 (GPIO6)</td><td>XSHUT del VL53L0X derecho</td><td>Cambiarle la dirección a 0x31</td></tr>
+    <tr><td class="n">CSI</td><td>Cámara (cable plano de 22 a 15 pines)</td><td>Los ojos</td></tr>
+  </table></div>
+
+  <h4>Canales de los servos</h4>
+  <div class="tabla"><table>
+    <tr><th>Pata</th><th>Placa</th><th>Coxa</th><th>Fémur</th><th>Tibia</th></tr>
+    <tr><td>0 · Delantera derecha</td><td class="n">0x40</td><td class="n">0</td><td class="n">1</td><td class="n">2</td></tr>
+    <tr><td>1 · Media derecha</td><td class="n">0x40</td><td class="n">3</td><td class="n">4</td><td class="n">5</td></tr>
+    <tr><td>2 · Trasera derecha</td><td class="n">0x40</td><td class="n">6</td><td class="n">7</td><td class="n">8</td></tr>
+    <tr><td>3 · Delantera izquierda</td><td class="n">0x41</td><td class="n">0</td><td class="n">1</td><td class="n">2</td></tr>
+    <tr><td>4 · Media izquierda</td><td class="n">0x41</td><td class="n">3</td><td class="n">4</td><td class="n">5</td></tr>
+    <tr><td>5 · Trasera izquierda</td><td class="n">0x41</td><td class="n">6</td><td class="n">7</td><td class="n">8</td></tr>
+  </table></div>
+  <div class="ojo"><b class="t">La regla que más se olvida:</b> <strong>todas las GND van unidas</strong> (batería, UBEC, Pi, PCA9685, sensores). Una señal es "voltaje comparado contra tierra"; si cada parte tiene su propia tierra, el servo no entiende el pulso y tiembla o no se mueve.</div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="cap" id="sentidos">
+  <span class="eti">Capítulo 3</span>
+  <h2>Los sentidos y la fruta-baliza</h2>
+  <p>Una mosca real encuentra comida primero por el <strong>olor</strong> (de lejos) y luego por la <strong>vista</strong> (de cerca), y siente las paredes con el <strong>tacto</strong>. El robot copia eso con 3 sentidos, cada uno con lado izquierdo y derecho. Cada sensor termina convertido en un número de <strong>0 (no siento nada) a 1 (lo siento al máximo)</strong>.</p>
+
+  <div class="dos">
+    <div>
+      <h4>Antenas = olfato</h4>
+      <p><strong>Sensor:</strong> 2 fototransistores infrarrojos (940 nm) dentro de tubitos, girados 20° hacia afuera.</p>
+      <p><strong>Cómo funciona:</strong> entre más luz IR les llega, más corriente dejan pasar; una resistencia de 47 kΩ convierte esa corriente en voltaje que lee el ADS1115.</p>
+      <p><strong>Entradas:</strong> <code>ant_izq</code>, <code>ant_der</code></p>
+    </div>
+    <div>
+      <h4>Ojos = vista</h4>
+      <p><strong>Sensor:</strong> cámara de 130° que toma imágenes de 320 × 240.</p>
+      <p><strong>Cómo funciona:</strong> busca la mancha verde más grande y redonda y cuenta cuántos píxeles caen en la mitad izquierda y en la derecha.</p>
+      <p><strong>Entradas:</strong> <code>vis_izq</code>, <code>vis_der</code></p>
+    </div>
+    <div>
+      <h4>Tacto</h4>
+      <p><strong>Sensor:</strong> 2 VL53L0X (láser invisible que mide cuánto tarda en rebotar), girados 30° hacia afuera.</p>
+      <p><strong>Cómo funciona:</strong> 150 mm o más = 0; 30 mm o menos = 1; en medio, proporcional.</p>
+      <p><strong>Entradas:</strong> <code>mec_izq</code>, <code>mec_der</code></p>
+    </div>
+  </div>
+
+  <h3>La fruta-baliza</h3>
+  <p>Es una esfera de PLA blanco de 70 mm con 16 agujeros: <strong>8 LED infrarrojos</strong> que parpadean (el "olor") y <strong>8 LED verdes</strong> siempre encendidos (lo que ve la cámara). Su centro está a 95 mm del piso, la misma altura que las antenas.</p>
+  <div class="porque"><b class="t">¿Por qué luz infrarroja y no un olor de verdad?</b>
+    <p>Los sensores de gas tardan segundos en reaccionar y no dicen de qué lado viene el olor. La luz infrarroja viaja en línea recta y llega al instante, así que la antena que apunta hacia la fruta recibe más que la otra.</p>
+  </div>
+  <div class="porque"><b class="t">¿Por qué parpadea a 39 Hz?</b>
+    <p>En el lugar de la competencia hay luz por todos lados: el sol y los focos también tienen infrarrojo. Si la baliza solo estuviera prendida, el robot no sabría qué luz es la fruta. Al hacerla <strong>parpadear 39 veces por segundo</strong>, el programa busca solo la luz que "tiembla" a esa velocidad (entre 33 y 45 Hz) e ignora la luz fija del sol y el parpadeo de los focos (100–120 Hz). A esto se le llama <strong>detección síncrona</strong>.</p>
+  </div>
+  <h4>El circuito de la baliza</h4>
+  <p>Un chip <strong>NE555</strong> funciona como reloj: prende y apaga su pin 3 a una frecuencia fija. Esa frecuencia la deciden dos resistencias y un capacitor:</p>
+  <pre><code>f = 1.44 / ((R1 + 2·R2) · C)
+  = 1.44 / ((1 kΩ + 2 × 18 kΩ) × 1 µF)
+  = 1.44 / 0.037  ≈  39 Hz</code></pre>
+  <p>El 555 no tiene fuerza para prender 8 LED IR (piden ≈ 105 mA por rama), así que su salida controla un <strong>MOSFET IRLZ44N</strong>, que funciona como un interruptor electrónico: el 555 le da la orden con poca corriente y el MOSFET deja pasar la corriente grande. Todo se alimenta con un power bank de 5 V (dura ≈ 9 horas).</p>
+  <div class="ojo"><b class="t">Truco para probar:</b> los LED infrarrojos no se ven a simple vista, pero la cámara frontal de un celular sí los ve (morados y temblorosos). Y para probar el 555, pongan primero C = 100 µF: parpadea lento y se ve con un LED normal.</div>
+
+  <h3>¿Por qué curvas logarítmicas?</h3>
+  <p>La luz se debilita muy rápido con la distancia: a 20 cm la antena recibe muchísimo y a 1.5 m casi nada. Si el número fuera proporcional (lineal), de lejos siempre saldría ≈ 0 y el robot no sentiría la fruta hasta estar encima. El logaritmo "estira" las señales débiles:</p>
+  <div class="tabla"><table>
+    <tr><th>Distancia a la fruta (de frente)</th><th>Olor (antenas)</th><th>Vista (cámara)</th></tr>
+    <tr><td>0.2 m</td><td class="n">0.88</td><td class="n">0.88</td></tr>
+    <tr><td>0.5 m</td><td class="n">0.53</td><td class="n">—</td></tr>
+    <tr><td>1 m</td><td class="n">0.27</td><td class="n">0.38</td></tr>
+    <tr><td>1.5 m</td><td class="n">0.12</td><td class="n">—</td></tr>
+    <tr><td>2.3 m (salida)</td><td class="n">≈ 0</td><td class="n">0.17</td></tr>
+  </table></div>
+  <p>Estos valores salen con la calibración de referencia; ustedes deben medir los suyos con <code>sentidos.py --calibrar</code>.</p>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="cap" id="ensamblaje">
+  <span class="eti">Capítulo 4</span>
+  <h2>Ensamblaje</h2>
+  <h3>4.1 Cómo es una pata</h3>
+  <p>Cada pata tiene 3 articulaciones con nombre de insecto, y cada una tiene un servo:</p>
+  <figure>
+    <div class="lienzo">
+    <svg viewBox="0 0 820 260" role="img" aria-label="Vista de frente de una pata con coxa, fémur y tibia">
+      <rect x="20" y="70" width="150" height="40" rx="6" class="caja"/>
+      <text x="95" y="95" text-anchor="middle" font-size="14">Cuerpo</text>
+      <!-- coxa -->
+      <circle cx="170" cy="90" r="9" class="relleno-ac"/>
+      <line x1="170" y1="90" x2="300" y2="90" class="pata-a"/>
+      <!-- femur, 15° up -->
+      <circle cx="300" cy="90" r="9" class="relleno-ac"/>
+      <line x1="300" y1="90" x2="455" y2="48" class="pata-b"/>
+      <!-- tibia vertical -->
+      <circle cx="455" cy="48" r="9" class="relleno-ac"/>
+      <line x1="455" y1="48" x2="455" y2="230" style="stroke:var(--verde);stroke-width:5;stroke-linecap:round"/>
+      <circle cx="455" cy="232" r="9" class="relleno-tinta"/>
+      <line x1="20" y1="242" x2="800" y2="242" class="flecha" style="stroke-dasharray:3 4"/>
+      <text x="235" y="118" text-anchor="middle" font-weight="700" font-size="14">COXA · 25 mm</text>
+      <text x="235" y="136" text-anchor="middle" class="chico">gira adelante/atrás (±20°)</text>
+      <text x="380" y="40" text-anchor="middle" font-weight="700" font-size="14">FÉMUR · 45 mm</text>
+      <text x="380" y="22" text-anchor="middle" class="chico">sube y baja la pata · de pie +15°</text>
+      <text x="470" y="140" font-weight="700" font-size="14">TIBIA · 65 mm</text>
+      <text x="470" y="158" class="chico">la "rodilla"; de pie, vertical</text>
+      <text x="470" y="226" class="chico">pie de TPU (hule) Ø14</text>
+      <text x="600" y="100" font-size="14">● = un servo MG90S</text>
+      <text x="600" y="122" class="chico">3 por pata × 6 patas = 18</text>
+    </svg>
+    </div>
+    <figcaption>Vista de frente de una pata en postura de pie. Las medidas son distancia entre ejes de giro.</figcaption>
+  </figure>
+
+  <h3>4.2 Qué se imprime</h3>
+  <div class="tabla"><table>
+    <tr><th>Pieza</th><th>Cantidad</th><th>Material</th><th>Nota</th></tr>
+    <tr><td>Coxa</td><td class="n">6 (3 + 3 espejo)</td><td>PLA+ 30 %</td><td>Lleva el servo del fémur en su marco</td></tr>
+    <tr><td>Fémur</td><td class="n">6 iguales</td><td>PLA+ 30 %</td><td>5 mm de espesor, une dos horns</td></tr>
+    <tr><td>Tibia</td><td class="n">6 (3 + 3 espejo)</td><td>PLA+</td><td>Lleva el servo de la rodilla</td></tr>
+    <tr><td>Pie</td><td class="n">6</td><td>TPU 95A</td><td>Hule: agarra el piso y amortigua</td></tr>
+    <tr><td>Placa superior e inferior</td><td class="n">1 + 1</td><td>PLA+</td><td>112 × 138 × 3 mm</td></tr>
+    <tr><td>Cubierta</td><td class="n">1</td><td>PLA+</td><td>Lleva la Pi, UBEC, botones, LED</td></tr>
+    <tr><td>Soportes de cámara, antenas y VL53L0X</td><td class="n">1 + 2 + 2</td><td>PLA+</td><td>Piezas pequeñas</td></tr>
+  </table></div>
+  <div class="porque"><b class="t">¿Por qué piezas "espejo"?</b>
+    <p>Las patas del lado izquierdo son el reflejo de las del derecho, como tus manos. Una coxa derecha no sirve en el lado izquierdo porque el servo quedaría al revés.</p>
+  </div>
+  <div class="porque"><b class="t">¿Por qué PLA+ y TPU?</b>
+    <p>El PLA+ es rígido y fácil de imprimir: ideal para el esqueleto. El TPU es flexible como hule: en los pies da agarre para que el robot no resbale y absorbe golpes. El tamaño total de pie es 239 × 229 × 127 mm, dentro del límite de 25 × 25 × 25 cm.</p>
+  </div>
+  <p>Las medidas exactas de cada pieza están en <code>entregables/03-planos-solidworks/planos-solidworks.md</code> y en los planos PNG de esa carpeta.</p>
+
+  <h3>4.3 Orden de armado</h3>
+  <ol class="pasos">
+    <li><strong>Imprimir una coxa de prueba</strong> y revisar que el servo entre y que el eje del fémur quede a 25 mm del de la coxa.<span class="pq">Por qué: si la medida del servo real es distinta, se corrige antes de imprimir 18 piezas.</span></li>
+    <li><strong>Armar la electrónica en la mesa</strong> (Pi, PCA9685, UBEC) y probar un servo en cada canal.<span class="pq">Por qué: es mucho más fácil encontrar un cable malo con todo a la vista que dentro del robot.</span></li>
+    <li><strong>Grabar la microSD</strong>, instalar librerías y copiar los archivos del programa, sin activar todavía el arranque automático.</li>
+    <li><strong>Centrar los 18 servos</strong> con <code>sudo python3 servos.py</code> antes de poner los horns.<span class="pq">Por qué: si pones el horn con el servo en cualquier posición, la pata queda chueca y sin recorrido hacia un lado.</span></li>
+    <li><strong>Placa inferior:</strong> soportes de los VL53L0X girados 30° hacia afuera, separadores de 20 mm y la batería en su cuna con velcro.<span class="pq">Por qué abajo: la batería es lo más pesado, y abajo baja el centro de masa y el robot no se voltea.</span></li>
+    <li><strong>Placa superior:</strong> los 6 servos de coxa entran por arriba en sus ventanas; encima, los PCA9685 apilados y el ADS1115. Los cables bajan por las ranuras.</li>
+    <li><strong>Unir las placas</strong> y poner cada coxa sobre su horn apuntando en la dirección de su pata (45°, 0° o −45°).</li>
+    <li><strong>Fémur:</strong> atornillar su servo al marco de la coxa y el fémur sobre su horn, ≈ 15° arriba de la horizontal.</li>
+    <li><strong>Tibia:</strong> atornillar el servo de la rodilla a la tibia, unir su horn al otro extremo del fémur con la tibia vertical y pegar el pie de TPU.</li>
+    <li><strong>Cubierta:</strong> separadores de 25 mm y la cubierta con la Pi, los dos UBEC, botones, LED, interruptor, cámara y antenas.</li>
+    <li><strong>Ordenar cables</strong> con cinchos, dejando una curva en cada articulación, y etiquetar cada canal.<span class="pq">Por qué la curva: si el cable va tenso, cada paso lo jala y termina rompiéndose o desconectándose.</span></li>
+  </ol>
+
+  <h3>4.4 Calibrar los servos</h3>
+  <p>Ningún servo sale exactamente igual de fábrica, y los horns entran en "dientes", así que cada pata queda un poquito distinta. La calibración corrige eso <strong>por software</strong>. Con el robot sobre una caja (patas al aire):</p>
+  <pre><code>sudo python3 servos.py --calibrar</code></pre>
+  <div class="tabla"><table>
+    <tr><th>Comando</th><th>Qué hace</th></tr>
+    <tr><td class="n">p N / a N</td><td>Elige pata (0–5) / articulación (0 coxa, 1 fémur, 2 tibia)</td></tr>
+    <tr><td class="n">+ − / ++ −−</td><td>Mueve el centro 1° / 5°</td></tr>
+    <tr><td class="n">t</td><td>Prueba +15°: debe ir hacia adelante (coxa), arriba (fémur) o con la punta hacia el cuerpo (tibia)</td></tr>
+    <tr><td class="n">d</td><td>Invierte la dirección si la prueba se movió al revés</td></tr>
+    <tr><td class="n">g / q</td><td>Guarda en <code>servos_calibracion.json</code> / sale</td></tr>
+  </table></div>
+  <p><strong>La meta:</strong> con todo en 0, las 6 patas iguales, fémur a +15° y tibia vertical.</p>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="cap" id="programacion">
+  <span class="eti">Capítulo 5</span>
+  <h2>Programación, archivo por archivo</h2>
+  <p>El programa está en Python y son <strong>4 archivos</strong> más los pesos del cerebro. Cada archivo tiene un solo trabajo; así, si algo falla, sabes dónde buscar.</p>
+  <div class="tabla"><table>
+    <tr><th>Archivo</th><th>Su trabajo</th><th>Se parece a…</th></tr>
+    <tr><td><code>main.py</code></td><td>Organiza todo: botones, LED, el ciclo de 50 Hz, cuándo parar, guardar el registro</td><td>El director de orquesta</td></tr>
+    <tr><td><code>sentidos.py</code></td><td>Lee antenas, cámara, tacto y batería y los convierte en números de 0 a 1</td><td>Los nervios de los sentidos</td></tr>
+    <tr><td><code>cerebro.py</code></td><td>Recibe los 6 números y calcula los 18 ángulos de las patas</td><td>El cerebro</td></tr>
+    <tr><td><code>servos.py</code></td><td>Convierte esos ángulos en órdenes para cada servo, y calibra</td><td>La médula y los músculos</td></tr>
+    <tr><td><code>cerebro-mosca-v3.json</code></td><td>Los 19 pesos entrenados en el simulador</td><td>Lo que la mosca "aprendió"</td></tr>
+    <tr><td><code>mosca.service</code></td><td>Hace que <code>main.py</code> arranque solo al prender la Pi</td><td>El botón de encendido automático</td></tr>
+  </table></div>
+
+  <!-- main -->
+  <div class="archivo">
+    <h3>main.py</h3>
+    <p class="rol">El director: espera el botón, corre la carrera y decide cuándo parar.</p>
+    <h4>1. Preparar los pines</h4>
+    <pre><code>boton_inicio = Button(17, hold_time=2)
+boton_apagar = Button(27, hold_time=2)
+led = LED(22)
+oe = OutputDevice(23, initial_value=False)   <span class="c"># 0 = servos activos</span></code></pre>
+    <p>La librería <code>gpiozero</code> crea un objeto por cada cosa conectada a un pin. Así en lugar de "lee el pin 17" el código dice <code>boton_inicio.is_pressed</code>, que se entiende solo.</p>
+
+    <h4>2. Esperar el botón</h4>
+    <pre><code>while True:
+    led.blink(on_time=0.5, off_time=0.5)   <span class="c"># parpadeo lento = listo</span>
+    boton_inicio.wait_for_press()
+    led.blink(on_time=0.1, off_time=0.1)   <span class="c"># parpadeo rápido = cuenta</span>
+    time.sleep(RETARDO)                     <span class="c"># 5 segundos</span>
+    carrera(cerebro, patas, ...)</code></pre>
+    <p>Los 5 segundos de espera te dan tiempo de quitar la mano y de que los jueces arranquen el cronómetro.</p>
+
+    <h4>3. El ciclo de la carrera (el corazón del programa)</h4>
+    <pre><code>while True:
+    s, fallas = sentidos.leer()          <span class="c"># 1. SENTIR: 6 números de 0 a 1</span>
+    ang = cerebro.paso(s, dt)            <span class="c"># 2. PENSAR: 18 ángulos</span>
+    patas.mover(ang)                     <span class="c"># 3. MOVERSE</span>
+    reg.writerow([...])                  <span class="c"># guarda todo en un CSV</span>
+    ...
+    espera = PERIODO - (time.monotonic() - ahora)
+    if espera > 0:
+        time.sleep(espera)               <span class="c"># completa los 20 ms</span></code></pre>
+    <p>Es exactamente el diagrama del capítulo 1. La última parte mide cuánto tardó la vuelta y duerme lo que falte para que cada vuelta dure 20 ms exactos.</p>
+
+    <h4>4. Cuándo parar</h4>
+    <pre><code>if boton_inicio.is_pressed and t > 1.0:   motivo = "boton"
+elif t > T_MAX:                           motivo = "tiempo"        <span class="c"># 60 s</span>
+elif bat is not None and bat < BATERIA_MIN: motivo = "bateria baja" <span class="c"># 6.8 V</span>
+elif s["ant_izq"] > ALTO_OLOR and s["ant_der"] > ALTO_OLOR:
+                                          motivo = "llego a la fruta"</code></pre>
+    <p>El robot sabe que llegó cuando <strong>las dos antenas</strong> marcan más de 0.97: eso solo pasa si la fruta está justo enfrente y muy cerca.</p>
+
+    <h4>5. Seguridad</h4>
+    <pre><code>try:
+    ang = cerebro.paso(s, dt)
+except Exception:                       <span class="c"># modo seguro</span>
+    cerebro.reiniciar()
+    ang = cerebro.paso({k: 0.0 for k in ENTRADAS}, dt)
+...
+finally:
+    oe.on()          <span class="c"># al salir por cualquier error, suelta los servos</span></code></pre>
+    <div class="porque"><b class="t">¿Por qué tanta seguridad?</b>
+      <p>Si el programa truena a media carrera, los servos se quedarían forzados en la última posición y se calientan. <code>finally</code> se ejecuta <strong>siempre</strong> al salir, haya error o no, y pone OE en 1 para soltar los servos. Y si el cerebro falla, en vez de detenerse el robot sigue caminando recto, que en una carrera es mejor que quedarse quieto.</p>
+    </div>
+    <h4>Modos de prueba</h4>
+    <ul>
+      <li><code>python3 main.py</code>: carrera normal.</li>
+      <li><code>python3 main.py --a-ciegas</code>: ignora los sensores (todos en 0) y camina recto. Sirve para revisar la calibración.</li>
+      <li><code>python3 main.py --en-el-aire</code>: camina sobre una caja e imprime el tacto, que debe quedarse en 0.</li>
+    </ul>
+  </div>
+
+  <!-- sentidos -->
+  <div class="archivo">
+    <h3>sentidos.py</h3>
+    <p class="rol">Lee los sensores al mismo tiempo, en "hilos" paralelos, y entrega 6 números.</p>
+    <div class="porque"><b class="t">¿Qué es un hilo y por qué se usan?</b>
+      <p>Cada sensor tarda distinto: las antenas necesitan juntar muestras durante 0.25 s, la cámara entrega 20 imágenes por segundo y el tacto 30 lecturas por segundo. Si el programa esperara a cada uno en fila, el ciclo de 20 ms sería imposible. Un <strong>hilo</strong> (<code>threading.Thread</code>) es como un ayudante que trabaja en paralelo: hay uno por sensor, cada uno actualiza su valor en un diccionario compartido (<code>estado</code>), y <code>main.py</code> solo copia lo último que haya.</p>
+    </div>
+    <h4>Antenas: detector síncrono</h4>
+    <pre><code>def amplitud(t, x):
+    x = np.asarray(x) - np.mean(x)          <span class="c"># quita la luz fija (el sol, los focos)</span>
+    mejor = 0.0
+    for f in np.arange(F_MIN, F_MAX + 0.01, 0.5):   <span class="c"># prueba 33, 33.5, ... 45 Hz</span>
+        z = np.sum(x * np.exp(-2j * np.pi * f * t))
+        mejor = max(mejor, 2.0 * abs(z) / len(x))
+    return mejor</code></pre>
+    <p>No te asustes con la <code>j</code>: es una forma matemática de preguntar <em>"¿cuánto de esta señal tiembla exactamente a f Hz?"</em>. El código lo pregunta para cada frecuencia entre 33 y 45 Hz y se queda con la respuesta más grande. Si la baliza está cerca, la respuesta es grande; si no hay baliza, es casi 0 aunque haya mucha luz.</p>
+    <pre><code>def olor(a):
+    return recorta(math.log(a / AMP_FONDO) / math.log(AMP_CERCA / AMP_FONDO))</code></pre>
+    <p>Esto es la curva logarítmica del capítulo 3: convierte la amplitud en volts a un número de 0 a 1.</p>
+
+    <h4>Ojos: buscar la mancha verde</h4>
+    <pre><code>hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+verde = cv2.inRange(hsv, VERDE_BAJO, VERDE_ALTO)       <span class="c"># blanco donde hay verde</span>
+n, etiquetas, stats, _ = cv2.connectedComponentsWithStats(verde)
+<span class="c"># se queda con la mancha más grande que sea "redonda"</span>
+<span class="c"># y cuenta cuántos píxeles caen en cada mitad de la imagen</span></code></pre>
+    <div class="porque"><b class="t">¿Por qué HSV y no RGB?</b>
+      <p>En RGB, un verde con sombra y un verde con luz tienen números muy distintos. HSV separa el <strong>tono</strong> (qué color es) del <strong>brillo</strong>. Así basta con decir "tono entre 40 y 85" y el verde se detecta aunque cambie la iluminación. Además, solo cuenta manchas casi redondas, para no confundir una playera verde con la fruta.</p>
+    </div>
+
+    <h4>Tacto</h4>
+    <pre><code>def tacto(mm):
+    if mm <= 0 or mm >= 8000:   return 0.0        <span class="c"># lectura inválida</span>
+    return recorta((150 - mm) / (150 - 30))     <span class="c"># 150 mm → 0, 30 mm → 1</span></code></pre>
+
+    <h4>Si un sensor se descompone</h4>
+    <pre><code>fallas = [g for g, lim in VIEJO.items() if ahora - hora[g] > lim]
+for g in fallas:
+    s[f"{g}_izq"] = s[f"{g}_der"] = 0.0</code></pre>
+    <p>Cada hilo anota a qué hora actualizó. Si un sensor lleva mucho sin actualizar (0.3 s ojos y tacto, 0.6 s antenas), se le pone 0. Con entradas en 0 el cerebro camina recto, así que un sensor roto no hace que el robot se vuelva loco.</p>
+  </div>
+
+  <!-- servos -->
+  <div class="archivo">
+    <h3>servos.py</h3>
+    <p class="rol">Traduce los ángulos del cerebro a ángulos reales de cada servo.</p>
+    <p>El cerebro piensa en ángulos "desde la postura de pie": 0 = parado, +15 = coxa hacia adelante, etc. Pero cada servo físico va de 0° a 180°, y los del lado izquierdo están montados al revés. Esta función resuelve las dos cosas:</p>
+    <pre><code>def angulo_servo(self, pata, j, a):
+    a = max(LIM[j][0], min(LIM[j][1], a))                  <span class="c"># 1. no pasar los límites</span>
+    s = centro[pata][j] + direccion[pata][j] * a           <span class="c"># 2. convertir</span>
+    return max(0.0, min(180.0, s))                         <span class="c"># 3. rango del servo</span></code></pre>
+    <p><strong>Ejemplo:</strong> el cerebro pide coxa +10° en la pata 3 (delantera izquierda). Su centro calibrado es 92° y su dirección es −1 (lado izquierdo, montado en espejo). Entonces el servo va a 92 + (−1 × 10) = <strong>82°</strong>.</p>
+    <div class="porque"><b class="t">¿Por qué límites?</b>
+      <p>La coxa a más de ±25° choca con la placa o con la pata vecina. Por eso el programa nunca deja pasar de ±20° (coxa), −45° a +60° (fémur) y ±45° (tibia), aunque el cerebro lo pida. Protege el robot de su propio cerebro.</p>
+    </div>
+    <pre><code>if self.ultimo[i][j] is None or abs(s - self.ultimo[i][j]) >= 0.3:
+    self._servo(i, j).angle = s</code></pre>
+    <p>Solo manda el ángulo si cambió al menos 0.3°. Así el bus I2C no se llena de órdenes repetidas.</p>
+  </div>
+
+  <!-- service -->
+  <div class="archivo">
+    <h3>mosca.service</h3>
+    <p class="rol">Para que el robot funcione sin computadora, teclado ni pantalla.</p>
+    <pre><code>sudo cp mosca.service /etc/systemd/system/
+sudo systemctl enable --now mosca.service</code></pre>
+    <p><code>systemd</code> es el programa de Linux que arranca servicios al prender. Con esto, al encender el robot, <code>main.py</code> se ejecuta solo, el LED parpadea lento y queda listo para el botón. <code>Restart=on-failure</code> lo vuelve a arrancar si se cae.</p>
+  </div>
+
+  <h3>Instalación en la Raspberry Pi</h3>
+  <pre><code>sudo apt install python3-picamera2 python3-opencv python3-gpiozero
+pip install adafruit-circuitpython-servokit adafruit-circuitpython-ads1x15 \
+            adafruit-circuitpython-vl53l0x --break-system-packages</code></pre>
+  <p>Después copien a una carpeta (por ejemplo <code>/home/pi/mosca</code>) los 4 archivos <code>.py</code> y <code>cerebro-mosca-v3.json</code>, y activen I2C y la cámara.</p>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="cap" id="cerebro">
+  <span class="eti">Capítulo 6</span>
+  <h2>El cerebro de mosca, explicado</h2>
+  <p>La idea viene de <strong>MaleCNS v1.0</strong>, el mapa completo de conexiones del sistema nervioso de una mosca de la fruta (166,691 neuronas). Ese mapa es demasiado grande para la Pi Zero, así que el robot usa <strong>solo 6 neuronas</strong> que existen en la mosca real y que se encargan justo de lo que necesitamos: encontrar comida, girar y avanzar.</p>
+
+  <figure>
+    <div class="lienzo">
+    <svg viewBox="0 0 820 400" role="img" aria-label="Red de seis neuronas del cerebro v3">
+      <defs>
+        <marker id="pe" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="relleno-ve"/></marker>
+        <marker id="pi" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6"><circle cx="5" cy="5" r="4" class="relleno-ro"/></marker>
+        <marker id="pt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="relleno-tinta"/></marker>
+      </defs>
+      <text x="80" y="24" text-anchor="middle" class="chico">SENTIDOS</text>
+      <text x="290" y="24" text-anchor="middle" class="chico">NEURONAS</text>
+      <text x="520" y="24" text-anchor="middle" class="chico">NEURONAS DE MANDO</text>
+      <text x="725" y="24" text-anchor="middle" class="chico">PATAS</text>
+      <!-- inputs -->
+      <rect x="10" y="45" width="140" height="56" rx="6" class="caja-v"/>
+      <text x="80" y="68" text-anchor="middle" font-size="14">Ojo + antena</text>
+      <text x="80" y="87" text-anchor="middle" font-size="14" font-weight="700">IZQUIERDA</text>
+      <rect x="10" y="135" width="140" height="56" rx="6" class="caja-v"/>
+      <text x="80" y="158" text-anchor="middle" font-size="14">Ojo + antena</text>
+      <text x="80" y="177" text-anchor="middle" font-size="14" font-weight="700">DERECHA</text>
+      <rect x="10" y="270" width="140" height="50" rx="6" class="caja"/>
+      <text x="80" y="300" text-anchor="middle" font-size="14">Tacto (izq/der)</text>
+      <!-- PFL -->
+      <circle cx="290" cy="73" r="34" class="caja-ac"/>
+      <text x="290" y="70" text-anchor="middle" font-weight="700" font-size="14">PFL</text>
+      <text x="290" y="87" text-anchor="middle" class="chico">izq</text>
+      <circle cx="290" cy="163" r="34" class="caja-ac"/>
+      <text x="290" y="160" text-anchor="middle" font-weight="700" font-size="14">PFL</text>
+      <text x="290" y="177" text-anchor="middle" class="chico">der</text>
+      <line x1="150" y1="73" x2="254" y2="73" class="verde" marker-end="url(#pe)"/>
+      <line x1="150" y1="163" x2="254" y2="163" class="verde" marker-end="url(#pe)"/>
+      <text x="200" y="66" text-anchor="middle" class="chico">×3 ojo</text>
+      <text x="200" y="156" text-anchor="middle" class="chico">×3 ojo</text>
+      <!-- DNa -->
+      <circle cx="520" cy="73" r="34" class="caja-m"/>
+      <text x="520" y="70" text-anchor="middle" font-weight="700" font-size="14">DNa</text>
+      <text x="520" y="87" text-anchor="middle" class="chico">izq</text>
+      <circle cx="520" cy="163" r="34" class="caja-m"/>
+      <text x="520" y="160" text-anchor="middle" font-weight="700" font-size="14">DNa</text>
+      <text x="520" y="177" text-anchor="middle" class="chico">der</text>
+      <line x1="324" y1="73" x2="484" y2="73" class="verde" marker-end="url(#pe)"/>
+      <line x1="324" y1="163" x2="484" y2="163" class="verde" marker-end="url(#pe)"/>
+      <line x1="322" y1="85" x2="486" y2="150" class="inhibe" marker-end="url(#pi)"/>
+      <line x1="322" y1="151" x2="486" y2="86" class="inhibe" marker-end="url(#pi)"/>
+      <text x="405" y="64" text-anchor="middle" class="chico">+0.36</text>
+      <text x="405" y="112" text-anchor="middle" class="chico" style="fill:var(--rojo)">−3 cruzado</text>
+      <!-- DNp, MDN -->
+      <circle cx="520" cy="263" r="34" class="caja-m"/>
+      <text x="520" y="260" text-anchor="middle" font-weight="700" font-size="14">DNp</text>
+      <text x="520" y="277" text-anchor="middle" class="chico">avanzar</text>
+      <circle cx="520" cy="353" r="34" class="caja-m"/>
+      <text x="520" y="350" text-anchor="middle" font-weight="700" font-size="14">MDN</text>
+      <text x="520" y="367" text-anchor="middle" class="chico">reversa</text>
+      <path d="M150,295 C300,295 360,263 484,263" class="inhibe" marker-end="url(#pi)"/>
+      <path d="M150,305 C300,320 360,353 484,353" class="verde" marker-end="url(#pe)"/>
+      <text x="320" y="270" text-anchor="middle" class="chico" style="fill:var(--rojo)">pared → frena</text>
+      <text x="320" y="352" text-anchor="middle" class="chico">pared muy cerca</text>
+      <text x="395" y="232" class="chico">sesgo +2.99: sin estímulos, avanza</text>
+      <!-- outputs -->
+      <rect x="640" y="85" width="170" height="70" rx="6" class="caja"/>
+      <text x="725" y="110" text-anchor="middle" font-weight="700" font-size="14">GIRO</text>
+      <text x="725" y="130" text-anchor="middle" class="chico">1.73 × (DNa izq − DNa der)</text>
+      <rect x="640" y="230" width="170" height="70" rx="6" class="caja"/>
+      <text x="725" y="255" text-anchor="middle" font-weight="700" font-size="14">AVANCE</text>
+      <text x="725" y="275" text-anchor="middle" class="chico">DNp × (1 − MDN) − MDN</text>
+      <line x1="554" y1="80" x2="638" y2="110" class="flecha" marker-end="url(#pt)"/>
+      <line x1="554" y1="158" x2="638" y2="130" class="flecha" marker-end="url(#pt)"/>
+      <line x1="554" y1="263" x2="638" y2="263" class="flecha" marker-end="url(#pt)"/>
+      <line x1="554" y1="345" x2="638" y2="285" class="flecha" marker-end="url(#pt)"/>
+      <rect x="640" y="330" width="170" height="56" rx="6" class="caja-ac"/>
+      <text x="725" y="353" text-anchor="middle" font-weight="700" font-size="14">CPG → 18 servos</text>
+      <text x="725" y="372" text-anchor="middle" class="chico">marcha trípode, hasta 2 Hz</text>
+      <line x1="725" y1="155" x2="725" y2="228" class="flecha" marker-end="url(#pt)"/>
+      <line x1="725" y1="300" x2="725" y2="328" class="flecha" marker-end="url(#pt)"/>
+    </svg>
+    </div>
+    <div class="leyenda">
+      <span><i style="background:var(--verde)"></i>excita (empuja hacia arriba)</span>
+      <span><i style="background:var(--rojo)"></i>inhibe (apaga)</span>
+    </div>
+    <figcaption>Versión simplificada de las conexiones más importantes, con los pesos reales del cerebro entrenado.</figcaption>
+  </figure>
+
+  <h3>Las 6 neuronas</h3>
+  <div class="tabla"><table>
+    <tr><th>Neurona</th><th>En la mosca real</th><th>En el robot</th></tr>
+    <tr><td><strong>PFL</strong> izq y der</td><td>Comparan hacia dónde va la mosca con su meta</td><td>Se encienden cuando ese lado ve o huele la fruta</td></tr>
+    <tr><td><strong>DNa</strong> izq y der</td><td>Neuronas descendentes de giro</td><td>Su diferencia decide hacia dónde gira</td></tr>
+    <tr><td><strong>DNp</strong></td><td>Inician la caminata hacia adelante</td><td>Manda avanzar; frena cerca de una pared</td></tr>
+    <tr><td><strong>MDN</strong></td><td>"Moonwalker": caminar hacia atrás</td><td>Reversa (con los pesos entrenados casi nunca se activa)</td></tr>
+  </table></div>
+
+  <h3>Cómo "piensa" una neurona digital</h3>
+  <p>Cada neurona es solo un número de 0 a 1 (qué tan activa está). En cada paso hace dos cosas:</p>
+  <pre><code>objetivo = f(peso1 × entrada1 + peso2 × entrada2 + ...)   <span class="c"># 1. suma lo que le llega</span>
+neurona += k × (objetivo − neurona)                      <span class="c"># 2. se acerca poco a poco</span></code></pre>
+  <ul>
+    <li>Un <strong>peso positivo</strong> excita (empuja la neurona hacia arriba) y uno <strong>negativo</strong> la inhibe.</li>
+    <li><code>f</code> es <code>tanh</code> recortada en 0: aplana todo para que el resultado quede entre 0 y 1, como una neurona real que no puede disparar "negativo" ni infinito.</li>
+    <li><code>k = dt / TAU</code> con TAU = 0.08 s hace que la neurona no salte de golpe: tarda ≈ 0.08 s en reaccionar. Así el robot no da tirones por un ruido de un instante.</li>
+  </ul>
+
+  <h3>Un ejemplo real: la fruta aparece a la izquierda</h3>
+  <p>Estos números salen de correr <code>cerebro.py</code> con el cerebro entrenado y la cámara izquierda viendo la fruta (<code>vis_izq = 0.5</code>, todo lo demás en 0):</p>
+  <div class="tabla"><table>
+    <tr><th>Paso</th><th>Qué pasa</th><th>Valor</th></tr>
+    <tr><td>1</td><td>La PFL izquierda se enciende (el ojo izquierdo la empuja con peso 3)</td><td class="n">PFL izq = 0.91</td></tr>
+    <tr><td>2</td><td>La PFL izquierda enciende un poco la DNa izquierda</td><td class="n">DNa izq = 0.32</td></tr>
+    <tr><td>3</td><td>Giro = 1.73 × (0.32 − 0)</td><td class="n">giro ≈ +0.55</td></tr>
+    <tr><td>4</td><td>Las patas derechas dan pasos completos y las izquierdas pasos cortos</td><td class="n">der 1.00 · izq 0.28</td></tr>
+    <tr><td>5</td><td>Resultado: el robot voltea hacia la izquierda, hacia la fruta</td><td>✓</td></tr>
+  </table></div>
+  <p>Es como manejar un tanque: si la oruga derecha va más rápido que la izquierda, el tanque gira a la izquierda.</p>
+  <p>Y si no siente nada: la DNp queda en 0.99 (por su sesgo de +2.99), ambos lados iguales, y el robot <strong>camina recto a 2 pasos por segundo</strong>. Con una pared a la derecha muy cerca, la DNp baja a 0.78: frena, pero no gira.</p>
+
+  <h3>La marcha trípode (el CPG)</h3>
+  <p>El <strong>CPG</strong> (generador central de patrones) es el "metrónomo" de las patas. Una mosca real no piensa cada paso: un circuito en su "médula" produce el ritmo solo, y el cerebro solo le dice qué tan rápido y hacia dónde.</p>
+  <figure>
+    <div class="lienzo">
+    <svg viewBox="0 0 820 230" role="img" aria-label="Marcha trípode: dos grupos de tres patas">
+      <g transform="translate(110,115)">
+        <rect x="-35" y="-60" width="70" height="120" rx="20" class="caja"/>
+        <text x="0" y="-70" text-anchor="middle" class="chico">frente ↑</text>
+        <line x1="35" y1="-45" x2="85" y2="-80" class="pata-a"/><text x="92" y="-82" class="chico">0</text>
+        <line x1="35" y1="0" x2="95" y2="0" class="pata-b"/><text x="102" y="4" class="chico">1</text>
+        <line x1="35" y1="45" x2="85" y2="80" class="pata-a"/><text x="92" y="92" class="chico">2</text>
+        <line x1="-35" y1="-45" x2="-85" y2="-80" class="pata-b"/><text x="-100" y="-82" class="chico">3</text>
+        <line x1="-35" y1="0" x2="-95" y2="0" class="pata-a"/><text x="-110" y="4" class="chico">4</text>
+        <line x1="-35" y1="45" x2="-85" y2="80" class="pata-b"/><text x="-100" y="92" class="chico">5</text>
+      </g>
+      <text x="270" y="60" font-weight="700" fill="var(--acento)" style="fill:var(--acento)">Trípode A: patas 0, 2 y 4</text>
+      <text x="270" y="82" class="chico">delantera der · trasera der · media izq</text>
+      <text x="270" y="130" font-weight="700" style="fill:var(--azul)">Trípode B: patas 1, 3 y 5</text>
+      <text x="270" y="152" class="chico">media der · delantera izq · trasera izq</text>
+      <text x="270" y="195" font-size="14">Mientras un trípode empuja en el piso, el otro va por el aire.</text>
+      <text x="270" y="215" font-size="14">Siempre hay 3 patas apoyadas formando un triángulo: el robot nunca se cae.</text>
+    </svg>
+    </div>
+    <figcaption>Vista desde arriba. Es la misma forma de caminar que usan las moscas y las cucarachas cuando van rápido.</figcaption>
+  </figure>
+  <pre><code>psi = self.fase + (math.pi if i in (1, 3, 5) else 0.0)   <span class="c"># trípode B va media vuelta atrás</span>
+lev = max(0.0, -math.sin(psi)) * alto                    <span class="c"># levantar solo media vuelta</span>
+obj = (amp_coxa * lado * math.cos(psi),                  <span class="c"># coxa: adelante y atrás</span>
+       amp_femur * lev,                                  <span class="c"># fémur: sube en el aire</span>
+       amp_tibia * lev)                                  <span class="c"># tibia: se dobla en el aire</span></code></pre>
+  <p>La <strong>fase</strong> es un ángulo que da vueltas (de 0 a 2π) como la manecilla de un reloj. El coseno hace que la coxa vaya y venga; el seno decide cuándo la pata está en el aire. <code>lado</code> es la velocidad de ese lado (por eso un lado da pasos más cortos al girar).</p>
+
+  <h3>¿Qué significa "entrenar" aquí?</h3>
+  <p>El cerebro tiene <strong>19 pesos</strong> (los números de <code>cerebro-mosca-v3.json</code>). En el simulador se probaron miles de cerebros con pesos al azar en una pista virtual, y los que llegaban mejor a la fruta se "reproducían" con pequeños cambios. Esto se llama <strong>algoritmo evolutivo</strong>, igual que la selección natural. Tras 98 generaciones, el cerebro v3 llega a la fruta en el 100 % de las carreras simuladas con paredes y 98.8 % sin paredes.</p>
+  <div class="porque"><b class="t">Lo que aprendió el entrenamiento</b>
+    <p><strong>Los ojos hacen girar</strong> (peso fuerte de 3). <strong>Las antenas casi no hacen girar</strong>: sirven para saber cuándo llegó. <strong>El tacto frena pero no gira</strong>. Y <strong>sin sentidos camina recto</strong>, por eso un sensor roto no es grave.</p>
+  </div>
+  <div class="ojo"><b class="t">El riesgo más grande:</b> sin baliza y sin paredes, el robot no tiene cómo saber si se desvía (0 % llega en el simulador). Si los jueces no permiten la baliza, la defensa es calibrar muy bien los servos para que camine recto.</div>
+  <p><code>cerebro.py</code> tiene exactamente las mismas ecuaciones que el simulador v3 (<code>motor.js</code>). Por eso lo que el cerebro aprendió en la computadora funciona igual en el robot.</p>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="cap" id="pruebas">
+  <span class="eti">Capítulo 7</span>
+  <h2>Pruebas, en este orden</h2>
+  <p>Se prueba de lo más simple a lo más complejo. Si algo falla, sabes que el problema está en lo último que agregaste.</p>
+  <ol class="pasos">
+    <li><strong>Cerebro solo:</strong> <code>python3 cerebro.py cerebro-mosca-v3.json</code>. La frecuencia debe subir hasta ≈ 2 Hz.<span class="pq">No necesita ni servos ni sensores: prueba que las matemáticas funcionan.</span></li>
+    <li><strong>Sentidos:</strong> <code>python3 sentidos.py --calibrar</code> con la fruta encendida y apagada. Anoten AMP_CERCA, AMP_FONDO y la exposición de la cámara.</li>
+    <li><strong>En el aire:</strong> <code>python3 main.py --en-el-aire</code> sobre una caja. Las patas hacen el trípode y el tacto se queda en 0.</li>
+    <li><strong>A ciegas:</strong> <code>python3 main.py --a-ciegas</code> en 3 m de pista. Si se desvía, corrijan el centro de las coxas hasta que vaya recto.</li>
+    <li><strong>Con la fruta:</strong> 10 carreras desde distintas posiciones. Anoten tiempo y si llegó, y revisen los CSV de la carpeta <code>registros/</code>.</li>
+    <li><strong>Batería:</strong> carreras seguidas hasta que se detenga por batería baja, para saber cuántas caben por carga.</li>
+  </ol>
+  <div class="porque"><b class="t">¿Para qué el CSV?</b>
+    <p>Cada carrera guarda, 50 veces por segundo, lo que sintió, lo que pensó cada neurona, el ángulo de la pata 0 y la batería. Lo pueden abrir en Excel y graficar. Si el robot hizo algo raro, el CSV dice por qué. Además, las gráficas se ven muy bien en la presentación.</p>
+  </div>
+</section>
+
+<!-- ============ Glosario ============ -->
+<section class="cap" id="glosario">
+  <span class="eti">Consulta rápida</span>
+  <h2>Glosario</h2>
+  <dl class="glosario">
+    <dt>Servo</dt><dd>Motor con engranes y un sensor interno que gira a un ángulo exacto según el pulso que recibe.</dd>
+    <dt>PWM</dt><dd>Señal de pulsos. En un servo, la duración del pulso (0.5 a 2.5 ms) indica el ángulo.</dd>
+    <dt>Horn</dt><dd>El bracito de plástico que se pone en el eje del servo y se atornilla a la pieza que mueve.</dd>
+    <dt>I2C</dt><dd>Forma de comunicación de 2 cables (SDA y SCL) donde muchos aparatos comparten el mismo bus, cada uno con su dirección.</dd>
+    <dt>Dirección I2C</dt><dd>El "número de casa" de cada aparato, como 0x40. El <code>0x</code> indica que está en hexadecimal.</dd>
+    <dt>GPIO</dt><dd>Pines de la Pi que el programa puede prender, apagar o leer (botones, LED).</dd>
+    <dt>UBEC</dt><dd>Regulador conmutado que baja el voltaje de la batería sin calentarse mucho.</dd>
+    <dt>LiPo 2S</dt><dd>Batería de litio-polímero con 2 celdas en serie: 7.4 V nominal, 8.4 V llena. Nunca debe bajar de 3.4 V por celda.</dd>
+    <dt>ADC</dt><dd>Convertidor analógico a digital: convierte un voltaje en un número que la computadora entiende.</dd>
+    <dt>Fototransistor</dt><dd>Transistor que deja pasar más corriente entre más luz recibe.</dd>
+    <dt>MOSFET</dt><dd>Transistor que funciona como interruptor electrónico: con una señal pequeña controla una corriente grande.</dd>
+    <dt>Hilo (thread)</dt><dd>Una parte del programa que corre en paralelo con las demás.</dd>
+    <dt>HSV</dt><dd>Forma de describir colores por tono, saturación y brillo. Facilita detectar un color con distinta luz.</dd>
+    <dt>Conectoma</dt><dd>Mapa de qué neurona se conecta con cuál. MaleCNS es el de la mosca macho.</dd>
+    <dt>Peso</dt><dd>Qué tan fuerte una entrada empuja (positivo) o apaga (negativo) a una neurona.</dd>
+    <dt>CPG</dt><dd>Generador central de patrones: circuito que produce el ritmo de las patas por sí solo.</dd>
+    <dt>Algoritmo evolutivo</dt><dd>Forma de "entrenar" probando muchas versiones y quedándose con las mejores, como la selección natural.</dd>
+  </dl>
+</section>
+
+<p class="pie">Todo sale de los archivos del proyecto: código en <code>entregables/04-codigo-robot/</code>, medidas en <code>entregables/03-planos-solidworks/</code> y sentidos en <code>entregables/06-sentidos-y-fruta-baliza/</code>. Si una parte no te queda clara, pregunta en el hilo del proyecto y se explica con más detalle.</p>
+
+</div>

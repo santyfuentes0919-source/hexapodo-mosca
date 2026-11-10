@@ -1,0 +1,1172 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Simulador Mosca v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: banda de pista completa arriba; abajo vista de cerca + lecturas a la izquierda, controles en pestañas a la derecha.
+   Estética de plano técnico: papel gris azulado, tinta grafito; naranja = infrarrojo (antenas), verde = fruta, azul = tacto. */
+:root {
+  --papel: #edf0f2; --panel: #f8fafb; --tinta: #1c2530; --tinta-2: #5a6775; --regla: #c8d0d7; --regla-2: #dfe5ea;
+  --ir: #c4501a; --fruta: #2c9a46; --tacto: #3953c4; --bien: #2c8a4a; --aviso: #a86b12; --mal: #b8352a;
+  --pista: #e4e8eb; --rugosa: #c9ced3; --pared: #6f5b45;
+  --f-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-tit: "IBM Plex Sans Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --papel: #11161c; --panel: #182029; --tinta: #e2e7ed; --tinta-2: #97a4b2; --regla: #2d3844; --regla-2: #222b35;
+  --ir: #f0864a; --fruta: #4cc265; --tacto: #8098f2; --bien: #4cc265; --aviso: #e0a33f; --mal: #ef6b5e;
+  --pista: #1b232c; --rugosa: #2a333d; --pared: #a68a6b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --papel: #11161c; --panel: #182029; --tinta: #e2e7ed; --tinta-2: #97a4b2; --regla: #2d3844; --regla-2: #222b35;
+  --ir: #f0864a; --fruta: #4cc265; --tacto: #8098f2; --bien: #4cc265; --aviso: #e0a33f; --mal: #ef6b5e;
+  --pista: #1b232c; --rugosa: #2a333d; --pared: #a68a6b; color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--papel); color: var(--tinta); font: 14px/1.45 var(--f-ui); padding-inline: 16px; padding-block: 12px 32px; }
+.envoltura { max-width: 1280px; margin: 0 auto; display: grid; gap: 14px }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 10px 20px; border-bottom: 1px solid var(--regla); padding-bottom: 10px }
+h1 { font: 700 22px/1.1 var(--f-tit); margin: 0; letter-spacing: .01em; text-wrap: balance }
+h1 small { display: block; font: 500 12px/1.4 var(--f-ui); color: var(--tinta-2); letter-spacing: 0; margin-top: 3px }
+.estado { display: flex; flex-wrap: wrap; gap: 8px }
+.chip { display: grid; gap: 1px; padding: 5px 10px; border: 1px solid var(--regla); border-radius: 6px; background: var(--panel); min-width: 84px }
+.chip b { font: 500 10.5px/1.2 var(--f-ui); color: var(--tinta-2); text-transform: uppercase; letter-spacing: .06em }
+.chip span { font: 500 15px/1.25 var(--f-num); font-variant-numeric: tabular-nums }
+.chip.bien { border-color: var(--bien) } .chip.bien span { color: var(--bien) }
+.chip.mal { border-color: var(--mal) } .chip.mal span { color: var(--mal) }
+.chip.aviso { border-color: var(--aviso) } .chip.aviso span { color: var(--aviso) }
+canvas { display: block; width: 100%; }
+#cPista { border: 1px solid var(--regla); border-radius: 6px; background: var(--panel) }
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--tinta-2) }
+.leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px }
+.cuerpo { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: start }
+@media (max-width: 880px) { .cuerpo { grid-template-columns: minmax(0, 1fr) } }
+.col { display: grid; gap: 14px; min-width: 0 }
+.cerca { position: relative; border: 1px solid var(--regla); border-radius: 6px; background: var(--panel); overflow: hidden }
+#cCerca { aspect-ratio: 1 / 0.82; max-width: 100% }
+.lecturas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px }
+.grupo { min-width: 0 }
+.grupo h3, .seccion h3 { font: 600 12px/1.2 var(--f-tit); text-transform: uppercase; letter-spacing: .08em; color: var(--tinta-2); margin: 0 0 8px }
+.barra { display: grid; grid-template-columns: 92px minmax(0, 1fr) 46px; align-items: center; gap: 8px; font-size: 12.5px; padding-block: 2px }
+.barra .riel { height: 8px; background: var(--regla-2); border-radius: 4px; overflow: hidden }
+.barra .relleno { height: 100%; width: 0; border-radius: 4px; background: var(--tinta-2) }
+.barra output { font: 500 12px var(--f-num); font-variant-numeric: tabular-nums; text-align: right }
+.crudo { font: 400 11.5px/1.5 var(--f-num); color: var(--tinta-2); margin: 2px 0 8px 100px; font-variant-numeric: tabular-nums }
+.pestanas { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--regla) }
+.pestanas button { font: 600 13px var(--f-tit); letter-spacing: .03em; padding: 8px 14px; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; background: none; color: var(--tinta-2); cursor: pointer; margin-bottom: -1px }
+.pestanas button[aria-selected="true"] { background: var(--panel); border-color: var(--regla); color: var(--tinta) }
+.panel { background: var(--panel); border: 1px solid var(--regla); border-top: none; border-radius: 0 0 6px 6px; padding: 16px; display: grid; gap: 16px; min-width: 0 }
+.seccion { display: grid; gap: 8px; min-width: 0 }
+.fila { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+button.b { font: 500 13px var(--f-ui); padding: 7px 12px; border-radius: 6px; border: 1px solid var(--regla); background: var(--papel); color: var(--tinta); cursor: pointer }
+button.b:hover { border-color: var(--tinta-2) }
+button.b.prim { background: var(--tinta); color: var(--panel); border-color: var(--tinta) }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--tacto); outline-offset: 2px }
+label.chk { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; cursor: pointer }
+select, input[type=number], textarea { font: 13px var(--f-ui); color: var(--tinta); background: var(--papel); border: 1px solid var(--regla); border-radius: 5px; padding: 5px 7px }
+input[type=number] { width: 90px; font-family: var(--f-num) }
+.nota { font-size: 12.5px; color: var(--tinta-2); margin: 0; max-width: 62ch }
+.resultado { font: 500 13px/1.5 var(--f-num); padding: 8px 10px; border-radius: 6px; background: var(--papel); border: 1px dashed var(--regla); min-height: 38px }
+.ajustes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px 18px }
+.ajuste { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; padding-block: 3px; border-bottom: 1px solid var(--regla-2) }
+.ajuste small { display: block; color: var(--tinta-2); font-size: 11.5px }
+textarea { width: 100%; min-height: 150px; font: 12px/1.4 var(--f-num); resize: vertical }
+.tabla { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--regla-2); white-space: nowrap }
+th { font: 600 11px var(--f-tit); text-transform: uppercase; letter-spacing: .06em; color: var(--tinta-2) }
+td.n { font-family: var(--f-num); text-align: right; font-variant-numeric: tabular-nums }
+td.d { white-space: normal; color: var(--tinta-2) }
+#cEvo { aspect-ratio: 1 / 0.42; border: 1px solid var(--regla-2); border-radius: 6px; background: var(--papel) }
+.kpis { display: flex; flex-wrap: wrap; gap: 8px }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important } }
+</style>
+
+<div class="envoltura">
+  <header>
+    <h1>Simulador Mosca v3<small>Hexápodo con cerebro de mosca · medidas de los planos · sensores como en el robot real</small></h1>
+    <div class="estado" aria-live="polite">
+      <div class="chip" id="chEstado"><b>Estado</b><span id="vEstado">Listo</span></div>
+      <div class="chip"><b>Tiempo</b><span id="vTiempo">0.0 s</span></div>
+      <div class="chip"><b>Falta a la meta</b><span id="vFalta">—</span></div>
+      <div class="chip"><b>Velocidad</b><span id="vVel">0 mm/s</span></div>
+      <div class="chip" id="chPared"><b>Tocando pared</b><span id="vPared">0.0 s</span></div>
+    </div>
+  </header>
+
+  <canvas id="cPista" aria-label="Vista de toda la pista"></canvas>
+  <div class="leyenda">
+    <span><i style="background:var(--fruta)"></i>Fruta-baliza (luz verde + infrarrojo)</span>
+    <span><i style="background:var(--ir)"></i>Antenas (infrarrojo)</span>
+    <span><i style="background:var(--tacto)"></i>Tacto (VL53L0X)</span>
+    <span><i style="background:var(--rugosa)"></i>Zona rugosa</span>
+    <span><i style="background:var(--pared)"></i>Paredes del carril</span>
+  </div>
+
+  <div class="cuerpo">
+    <div class="col">
+      <div class="cerca"><canvas id="cCerca" aria-label="Vista de cerca del robot"></canvas></div>
+      <div class="lecturas">
+        <div class="grupo">
+          <h3>Sentidos (entran al cerebro)</h3>
+          <div id="barrasSens"></div>
+        </div>
+        <div class="grupo">
+          <h3>Neuronas y marcha</h3>
+          <div id="barrasNeu"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="pestanas" role="tablist">
+        <button role="tab" aria-selected="true" data-p="carrera" id="t-carrera">Carrera</button>
+        <button role="tab" aria-selected="false" data-p="entrenar" id="t-entrenar">Entrenar</button>
+        <button role="tab" aria-selected="false" data-p="cerebro" id="t-cerebro">Cerebro</button>
+        <button role="tab" aria-selected="false" data-p="ajustes" id="t-ajustes">Ajustes</button>
+      </div>
+
+      <section class="panel" id="p-carrera" role="tabpanel">
+        <div class="seccion">
+          <div class="fila">
+            <button class="b prim" id="bCorrer">Pausar</button>
+            <button class="b" id="bRepetir">Repetir carrera</button>
+            <button class="b" id="bNueva">Nueva carrera</button>
+            <label class="chk">Velocidad
+              <select id="selVel"><option value="1">1×</option><option value="2">2×</option><option value="5" selected>5×</option><option value="20">20×</option></select></label>
+          </div>
+          <p class="nota">Cada carrera nueva cambia al azar la posición de salida (±20 mm, ±5°), la diferencia entre lados del robot y la calibración real de los sensores, como pasará en la pista.</p>
+        </div>
+        <div class="seccion">
+          <h3>Pruebas</h3>
+          <div class="fila">
+            <label class="chk"><input type="checkbox" id="pCiegas">A ciegas (6 entradas en 0)</label>
+            <label class="chk"><input type="checkbox" id="pSinBaliza">Baliza apagada</label>
+            <label class="chk"><input type="checkbox" id="pSinOjos">Sin cámara</label>
+            <label class="chk"><input type="checkbox" id="pSinTacto">Sin tacto</label>
+          </div>
+          <div class="fila">
+            <label class="chk">Paredes del carril
+              <select id="selParedes"><option value="si">Sí</option><option value="no">No (salirse descalifica)</option></select></label>
+          </div>
+        </div>
+        <div class="seccion">
+          <h3>Prueba de 30 carreras</h3>
+          <div class="fila"><button class="b" id="bPrueba">Correr 30 carreras</button></div>
+          <div class="resultado" id="resPrueba">Corre 30 carreras con el cerebro y las pruebas de arriba, y da el promedio.</div>
+        </div>
+      </section>
+
+      <section class="panel" id="p-entrenar" role="tabpanel" hidden>
+        <div class="seccion">
+          <div class="fila">
+            <button class="b prim" id="bEntrenar">Empezar a entrenar</button>
+            <button class="b" id="bUsarMejor">Usar el mejor en la carrera</button>
+          </div>
+          <div class="fila">
+            <label class="chk">Población <input type="number" id="nPob" value="40" min="10" max="200" step="2"></label>
+            <label class="chk">Carreras por cerebro <input type="number" id="nPruebas" value="8" min="2" max="40"></label>
+            <label class="chk">Paredes <select id="selParEnt"><option value="mixto" selected>Mitad sí, mitad no</option><option value="si">Sí</option><option value="no">No</option></select></label>
+          </div>
+          <p class="nota">Empieza desde el cerebro cargado. Cada generación prueba a todos en las mismas carreras al azar y se quedan los 8 mejores. Usa los ajustes de la pestaña Ajustes.</p>
+        </div>
+        <div class="kpis">
+          <div class="chip"><b>Generación</b><span id="vGen">—</span></div>
+          <div class="chip"><b>Mejor aptitud</b><span id="vApt">—</span></div>
+          <div class="chip"><b>Llegan</b><span id="vLlegan">—</span></div>
+          <div class="chip"><b>Tiempo</b><span id="vTEnt">—</span></div>
+        </div>
+        <canvas id="cEvo" aria-label="Aptitud por generación"></canvas>
+        <p class="nota">Aptitud de una carrera: si llega, 100 + 100 × (1 − tiempo / 45 s); si no llega, 100 × fracción recorrida; si se sale del carril, −50 (descalificado). Se resta 1 por cada segundo tocando pared.</p>
+      </section>
+
+      <section class="panel" id="p-cerebro" role="tabpanel" hidden>
+        <div class="seccion">
+          <h3>Cerebros incluidos</h3>
+          <div class="fila">
+            <button class="b" id="bV3">v3 entrenado</button>
+            <button class="b" id="bBase">Base v3 (a mano)</button>
+            <button class="b" id="b3514">Gen 3514 (v2)</button>
+          </div>
+          <p class="nota" id="notaCerebro"></p>
+        </div>
+        <div class="seccion">
+          <h3>Cargar o copiar un cerebro</h3>
+          <textarea id="txtCerebro" spellcheck="false" aria-label="JSON del cerebro"></textarea>
+          <div class="fila">
+            <button class="b prim" id="bCargar">Cargar desde texto</button>
+            <button class="b" id="bCopiar">Copiar JSON</button>
+            <span class="nota" id="msgCerebro"></span>
+          </div>
+        </div>
+        <div class="seccion">
+          <h3>Pesos</h3>
+          <div class="tabla"><table><thead><tr><th>Peso</th><th>Qué conecta</th><th>Valor</th><th>Rango</th></tr></thead><tbody id="tbPesos"></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="panel" id="p-ajustes" role="tabpanel" hidden>
+        <div class="seccion"><h3>Pista</h3><div class="ajustes" id="ajPista"></div></div>
+        <div class="seccion"><h3>Sensores (iguales a sentidos.py)</h3><div class="ajustes" id="ajSens"></div></div>
+        <div class="seccion"><h3>Robot</h3><div class="ajustes" id="ajRobot"></div></div>
+        <div class="fila">
+          <button class="b" id="bCopiarPy">Copiar constantes para sentidos.py</button>
+          <button class="b" id="bRestaurar">Restaurar valores</button>
+          <span class="nota" id="msgAj"></span>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script id="motor">
+/* motor.js — Hexápodo mosca v3: cerebro, cuerpo, sensores, pista y evolución.
+   La función paso() es idéntica a Cerebro.paso() de cerebro.py (mismas ecuaciones, mismo orden).
+   Unidades: mm, s, grados (salvo donde dice rad). Pista: +Y hacia la meta, +X a la derecha.
+   Cuerpo: +Y al frente, +X a la derecha, origen al centro (igual que los planos de SolidWorks). */
+(function (raiz) {
+  'use strict';
+  const DEG = Math.PI / 180, DOS_PI = 2 * Math.PI;
+
+  // ================= CEREBRO =================
+  const NOMBRES = ['w_ant_dnp', 'w_ant_pfl', 'w_vis_pfl', 'w_vis_pfl_x', 'w_pfl_dna', 'w_pfl_dna_x',
+    'w_mech_mdn', 'w_mech_dnp', 'w_mech_dna_x', 'w_mech_dna', 'w_mech_pfl', 'bias_dnp', 'w_dn_cpg',
+    'c_couple', 'k_turn', 'w_coxa', 'w_femur', 'w_tibia', 'w_dna_dnp'];
+  // Rango permitido de cada peso al entrenar. c_couple queda fijo: el trípode ya va acoplado.
+  const RANGOS = {
+    w_ant_dnp: [-3, 3], w_ant_pfl: [-3, 3], w_vis_pfl: [-3, 3], w_vis_pfl_x: [-3, 3],
+    w_pfl_dna: [-3, 3], w_pfl_dna_x: [-3, 3], w_mech_mdn: [0, 4], w_mech_dnp: [-3, 3],
+    w_mech_dna_x: [-3, 3], w_mech_dna: [-3, 3], w_mech_pfl: [-3, 3], bias_dnp: [-1, 3],
+    w_dn_cpg: [0, 8], c_couple: [1, 1], k_turn: [-4, 4], w_coxa: [0, 15], w_femur: [0, 35],
+    w_tibia: [0, 30], w_dna_dnp: [-3, 3]
+  };
+  const CEREBRO = {
+    TAU: 0.08,          // s, constante de tiempo de las neuronas
+    F_MAX: 2.0,         // Hz, pasos por segundo como máximo
+    VEL_MAX: 450,       // grados/s que puede girar un servo con carga
+    A_MAX: [15, 35, 30],// amplitud máxima coxa, fémur, tibia (grados)
+    LIM: [[-20, 20], [-45, 60], [-45, 45]] // límites de los planos: coxa, fémur, tibia
+  };
+
+  function f(x) { const t = Math.tanh(x); return t > 0 ? t : 0; }
+  function recorta(x, a, b) { return x < a ? a : (x > b ? b : x); }
+
+  function nuevoEstado() {
+    return {
+      pfl_l: 0, pfl_r: 0, dna_l: 0, dna_r: 0, dnp: 0, mdn: 0, fase: 0, frec: 0, s_izq: 0, s_der: 0,
+      ang: [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    };
+  }
+
+  /** Un paso del cerebro. s: 6 entradas de 0 a 1. w: pesos. dt: segundos.
+      Devuelve e.ang: 6 patas × [coxa, fémur, tibia] en grados desde la postura de pie.
+      Coxa + = pata hacia adelante. Fémur + = levantar. Tibia + = punta hacia el cuerpo. */
+  function paso(e, s, w, dt) {
+    const aL = s.ant_izq, aR = s.ant_der, vL = s.vis_izq, vR = s.vis_der, mL = s.mec_izq, mR = s.mec_der;
+    const mMax = Math.max(mL, mR);
+    // Objetivos de cada neurona (con los valores del paso anterior: actualización simultánea)
+    const pL = f(w.w_ant_pfl * aL + w.w_vis_pfl * vL + w.w_vis_pfl_x * vR + w.w_mech_pfl * mL);
+    const pR = f(w.w_ant_pfl * aR + w.w_vis_pfl * vR + w.w_vis_pfl_x * vL + w.w_mech_pfl * mR);
+    const dL = f(w.w_pfl_dna * e.pfl_l + w.w_pfl_dna_x * e.pfl_r + w.w_mech_dna * mL + w.w_mech_dna_x * mR);
+    const dR = f(w.w_pfl_dna * e.pfl_r + w.w_pfl_dna_x * e.pfl_l + w.w_mech_dna * mR + w.w_mech_dna_x * mL);
+    const dp = f(w.bias_dnp + w.w_ant_dnp * (aL + aR) / 2 + w.w_mech_dnp * mMax + w.w_dna_dnp * (e.dna_l + e.dna_r));
+    const md = f(w.w_mech_mdn * mMax - 1);
+    const k = Math.min(1, dt / CEREBRO.TAU);
+    e.pfl_l += k * (pL - e.pfl_l); e.pfl_r += k * (pR - e.pfl_r);
+    e.dna_l += k * (dL - e.dna_l); e.dna_r += k * (dR - e.dna_r);
+    e.dnp += k * (dp - e.dnp); e.mdn += k * (md - e.mdn);
+    // Motor: avance (DNp menos reversa MDN) y giro (DNa izq − der; + = gira a la izquierda)
+    const v = e.dnp * (1 - e.mdn) - e.mdn;
+    const giro = w.k_turn * (e.dna_l - e.dna_r);
+    let sL = v - giro, sR = v + giro;
+    const m = Math.max(1, Math.abs(sL), Math.abs(sR));
+    sL /= m; sR /= m;
+    const impulso = Math.max(Math.abs(sL), Math.abs(sR));
+    e.frec = CEREBRO.F_MAX * Math.tanh(Math.max(0, w.w_dn_cpg) * impulso);
+    e.fase = (e.fase + DOS_PI * e.frec * dt) % DOS_PI;
+    e.s_izq = sL; e.s_der = sR;
+    // Trípode fijo: A = patas 0, 2, 4 ; B = patas 1, 3, 5 (media vuelta después)
+    const amp = [recorta(w.w_coxa, 0, CEREBRO.A_MAX[0]), recorta(w.w_femur, 0, CEREBRO.A_MAX[1]),
+      recorta(w.w_tibia, 0, CEREBRO.A_MAX[2])];
+    const alto = Math.min(1, 10 * impulso);
+    const lim = CEREBRO.VEL_MAX * dt;
+    for (let i = 0; i < 6; i++) {
+      const psi = e.fase + ((i === 1 || i === 3 || i === 5) ? Math.PI : 0);
+      const lado = i < 3 ? sR : sL;
+      const lev = Math.max(0, -Math.sin(psi)) * alto;
+      const obj = [amp[0] * lado * Math.cos(psi), amp[1] * lev, amp[2] * lev];
+      for (let j = 0; j < 3; j++) {
+        const t = recorta(obj[j], CEREBRO.LIM[j][0], CEREBRO.LIM[j][1]);
+        const d = t - e.ang[i][j];
+        e.ang[i][j] += d > lim ? lim : (d < -lim ? -lim : d);
+      }
+    }
+    return e.ang;
+  }
+
+  function normalizaPesos(p) {
+    const w = {};
+    for (const n of NOMBRES) {
+      const r = RANGOS[n];
+      const x = (p && typeof p[n] === 'number' && isFinite(p[n])) ? p[n] : (r[0] + r[1]) / 2;
+      w[n] = recorta(x, r[0], r[1]);
+    }
+    return w;
+  }
+
+  // ================= GEOMETRÍA (de los planos) =================
+  const GEO = {
+    ejes: [[38, 55], [42, 0], [38, -55], [-38, 55], [-42, 0], [-38, -55]],
+    alfa: [45, 0, -45, 135, 180, 225],
+    R: 25 + 45 * Math.cos(15 * DEG), // 68.5 mm: eje de coxa al pie, de pie
+    rPie: 4,                          // da 229 mm de ancho total, como los planos
+    esquinas: [[-56, -69], [56, -69], [56, 69], [-56, 69]],
+    antenas: [[-27, 42], [27, 42]],   // izquierda, derecha (centro de las dos bases)
+    camara: [0, 44],
+    tof: [[-20, 70], [20, 70]],
+    tofCono: 25,                      // grados
+    camFov: 130, camPx: 320, mitadPx: 160 * 240,
+    baliza: { esfera: 35, base: 55 }
+  };
+
+  function piesCuerpo(ang) { // posición de cada pie en el cuerpo (mm)
+    const out = [];
+    for (let i = 0; i < 6; i++) {
+      const sg = i < 3 ? 1 : -1;
+      const th = (GEO.alfa[i] + sg * ang[i][0]) * DEG;
+      out.push([GEO.ejes[i][0] + GEO.R * Math.cos(th), GEO.ejes[i][1] + GEO.R * Math.sin(th), th]);
+    }
+    return out;
+  }
+
+  // ================= CONFIGURACIÓN =================
+  const CFG_DEFECTO = {
+    pista: { ancho: 300, meta: 2000, baliza: 300, rug_ini: 800, rug_largo: 400, paredes: 'si' }, // paredes: 'si' | 'no' | 'mixto'
+    sens: {
+      amp_cerca: 0.40, amp_fondo: 0.002, ant_giro: 20, ant_sigma: 25, ant_periodo: 0.25,
+      frac_max: 0.05, area_min: 4, tof_giro: 30, patas_en_cono: true, ruido: true
+    },
+    robot: { asim: 0.10, eta: 0.92, eta_rug: 0.65, yaw: 3, yaw_rug: 25, aleatorizar: true },
+    prueba: { t_max: 45, ciegas: false, sin_baliza: false, sin_ojos: false, sin_tacto: false, parar_en_meta: true }
+  };
+  function copia(o) { return JSON.parse(JSON.stringify(o)); }
+
+  // ================= AZAR CON SEMILLA =================
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function gauss(r) {
+    let u = 0; while (u === 0) u = r();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(DOS_PI * r());
+  }
+
+  // ================= SIMULACIÓN DE UNA CARRERA =================
+  function envuelve(a) { while (a > Math.PI) a -= DOS_PI; while (a < -Math.PI) a += DOS_PI; return a; }
+  function rumbo(dx, dy) { return Math.atan2(-dx, dy); } // ángulo desde +Y, + hacia la izquierda
+  function aMundo(sim, p) {
+    const c = Math.cos(sim.h), s = Math.sin(sim.h);
+    return [sim.x + p[0] * c - p[1] * s, sim.y + p[0] * s + p[1] * c];
+  }
+  function areaIzq(xc, rho, x0) { // área del disco (centro xc, radio rho) con x < x0
+    if (rho <= 0) return 0;
+    const u = recorta((x0 - xc) / rho, -1, 1);
+    return rho * rho * (Math.PI - Math.acos(u) + u * Math.sqrt(1 - u * u));
+  }
+
+  function nuevaCarrera(cfg, pesos, semilla) {
+    const r = mulberry32(semilla >>> 0);
+    const frente0 = 55 + GEO.R * Math.sin(45 * DEG) + GEO.rPie;
+    const sim = {
+      cfg, w: normalizaPesos(pesos), r, e: nuevoEstado(),
+      x: (r() * 2 - 1) * 20, y: -frente0 - 5, h: (r() * 2 - 1) * 5 * DEG,
+      eps: (r() * 2 - 1) * cfg.robot.asim, t: 0, ruidoW: 0,
+      coxaPrev: [0, 0, 0, 0, 0, 0], suelo: [true, true, true, true, true, true],
+      sens: { ant_izq: 0, ant_der: 0, vis_izq: 0, vis_der: 0, mec_izq: 0, mec_der: 0 },
+      visPend: null, antSuma: [0, 0], antN: 0, tAnt: 0, tVis: 0, tTof: 0,
+      crudo: { amp: [0, 0], px: [0, 0], mm: [0, 0] },
+      contacto: false, tPared: 0, frente: 0, llego: false, tLlegada: null, v: 0, fin: false,
+      pies: piesCuerpo(nuevoEstado().ang),
+      piesTmp: [0, 1, 2, 3, 4, 5].map(() => [0, 0, GEO.rPie]).concat(GEO.esquinas.map(q => [q[0], q[1], 0]))
+    };
+    // Aleatorización: el mundo real no coincide con la calibración. La física usa estos factores,
+    // pero las fórmulas de los sensores siguen con los valores nominales (como sentidos.py).
+    const u = (a, b) => a + (b - a) * r();
+    sim.dr = cfg.robot.aleatorizar
+      ? { kC: u(0.6, 1.4), kS: u(0.8, 1.2), kF: u(0.6, 2.0), kV: u(0.6, 1.4), kE: u(0.9, 1.1) }
+      : { kC: 1, kS: 1, kF: 1, kV: 1, kE: 1 };
+    sim.paredes = cfg.pista.paredes === 'mixto' ? r() < 0.5 : cfg.pista.paredes !== 'no';
+    sim.fuera = false;
+    sim.balizaY = cfg.pista.meta + cfg.pista.baliza;
+    sim.finY = sim.balizaY + 150;
+    return sim;
+  }
+
+  function entradasCerebro(sim) {
+    const p = sim.cfg.prueba;
+    if (p.ciegas) return { ant_izq: 0, ant_der: 0, vis_izq: 0, vis_der: 0, mec_izq: 0, mec_der: 0 };
+    return sim.sens;
+  }
+
+  // --- Antenas ---
+  function ampAntenas(sim) {
+    const c = sim.cfg.sens, out = [0, 0];
+    if (sim.cfg.prueba.sin_baliza) return out;
+    for (let k = 0; k < 2; k++) {
+      const P = aMundo(sim, GEO.antenas[k]);
+      const dx = 0 - P[0], dy = sim.balizaY - P[1];
+      const dist = Math.max(50, Math.hypot(dx, dy));
+      const eje = sim.h + (k === 0 ? 1 : -1) * c.ant_giro * DEG;
+      const d = envuelve(rumbo(dx, dy) - eje) / DEG, sg = c.ant_sigma * sim.dr.kS;
+      out[k] = c.amp_cerca * sim.dr.kC * Math.exp(-(d / sg) * (d / sg)) * (200 / dist) * (200 / dist);
+    }
+    return out;
+  }
+  function olor(sim, A) {
+    const c = sim.cfg.sens;
+    let a = A;
+    if (c.ruido) { const s = 0.798 * c.amp_fondo * sim.dr.kF; a = Math.hypot(A + s * gauss(sim.r), s * gauss(sim.r)); }
+    if (a <= c.amp_fondo) return { v: 0, a };
+    return { v: recorta(Math.log(a / c.amp_fondo) / Math.log(c.amp_cerca / c.amp_fondo), 0, 1), a };
+  }
+
+  // --- Ojos ---
+  function verFruta(sim) {
+    const c = sim.cfg.sens;
+    if (sim.cfg.prueba.sin_baliza || sim.cfg.prueba.sin_ojos) return { v: [0, 0], px: [0, 0] };
+    const P = aMundo(sim, GEO.camara);
+    const dx = 0 - P[0], dy = sim.balizaY - P[1];
+    const dist = Math.max(60, Math.hypot(dx, dy));
+    const b = envuelve(rumbo(dx, dy) - sim.h) / DEG;
+    const pxg = GEO.camPx / GEO.camFov;
+    const rho = Math.atan(GEO.baliza.esfera / dist) / DEG * pxg;
+    const xc = 160 - b * pxg;
+    let px = [areaIzq(xc, rho, 160) - areaIzq(xc, rho, 0), areaIzq(xc, rho, 320) - areaIzq(xc, rho, 160)].map(p => p * sim.dr.kV);
+    if (c.ruido) px = px.map(p => p > 0 ? Math.max(0, p * (1 + 0.1 * gauss(sim.r)) + gauss(sim.r)) : 0);
+    if (px[0] + px[1] < c.area_min) return { v: [0, 0], px: [0, 0] };
+    const fmin = c.area_min / GEO.mitadPx, den = Math.log(1 + c.frac_max / fmin);
+    return { v: px.map(p => recorta(Math.log(1 + (p / GEO.mitadPx) / fmin) / den, 0, 1)), px };
+  }
+
+  // --- Tacto (VL53L0X) ---
+  function rayo(sim, P, phi, pies) {
+    const ux = -Math.sin(phi), uy = Math.cos(phi), W = sim.cfg.pista.ancho / 2;
+    let t = Infinity;
+    const plano = (num, den) => { if (Math.abs(den) > 1e-9) { const q = num / den; if (q > 0 && q < t) t = q; } };
+    if (sim.paredes) { plano(W - P[0], ux); plano(-W - P[0], ux); }
+    plano(sim.finY - P[1], uy);
+    const circ = (cx, cy, rr) => {
+      const ox = P[0] - cx, oy = P[1] - cy, b = ux * ox + uy * oy, c = ox * ox + oy * oy - rr * rr;
+      const disc = b * b - c;
+      if (disc >= 0) { const q = -b - Math.sqrt(disc); if (q > 0 && q < t) t = q; }
+    };
+    circ(0, sim.balizaY, GEO.baliza.base);
+    if (pies) for (const p of pies) circ(p[0], p[1], 5);
+    return t;
+  }
+  function tocar(sim) {
+    const c = sim.cfg.sens, out = { v: [0, 0], mm: [0, 0] };
+    if (sim.cfg.prueba.sin_tacto) return out;
+    const pies = c.patas_en_cono ? sim.pies.map(p => aMundo(sim, p)) : null;
+    for (let k = 0; k < 2; k++) {
+      const P = aMundo(sim, GEO.tof[k]);
+      const centro = sim.h + (k === 0 ? 1 : -1) * c.tof_giro * DEG;
+      let d = Infinity;
+      for (let j = -2; j <= 2; j++) d = Math.min(d, rayo(sim, P, centro + j * (GEO.tofCono / 4) * DEG, pies));
+      if (c.ruido && isFinite(d)) {
+        if (sim.r() < 0.02) d = Infinity; else d = d * (1 + 0.02 * gauss(sim.r)) + 3 * gauss(sim.r);
+      }
+      out.mm[k] = isFinite(d) && d < 1200 ? d : 0;
+      out.v[k] = out.mm[k] > 0 ? recorta((150 - out.mm[k]) / 120, 0, 1) : 0;
+    }
+    return out;
+  }
+
+  // --- Cuerpo: avance a partir de los pies apoyados (mínimos cuadrados) ---
+  function cinematica(sim, ang, dt) {
+    const pies = piesCuerpo(ang);
+    sim.pies = pies;
+    let n = 0, Spx = 0, Spy = 0, Spp = 0, B0 = 0, B1 = 0, B2 = 0;
+    for (let i = 0; i < 6; i++) {
+      const sg = i < 3 ? 1 : -1;
+      const thd = sg * (ang[i][0] - sim.coxaPrev[i]) / dt * DEG;
+      sim.coxaPrev[i] = ang[i][0];
+      sim.suelo[i] = ang[i][1] <= 2;
+      if (!sim.suelo[i]) continue;
+      const esc = i < 3 ? 1 + sim.eps : 1 - sim.eps;
+      const p = pies[i], th = p[2];
+      const ux = -GEO.R * thd * Math.sin(th) * esc, uy = GEO.R * thd * Math.cos(th) * esc;
+      n++; Spx += p[0]; Spy += p[1]; Spp += p[0] * p[0] + p[1] * p[1];
+      B0 -= ux; B1 -= uy; B2 += p[1] * ux - p[0] * uy;
+    }
+    if (n < 2) return [0, 0, 0];
+    // [[n,0,-Spy],[0,n,Spx],[-Spy,Spx,Spp]] · [vx,vy,w] = [B0,B1,B2]
+    const den = Spp - (Spy * Spy + Spx * Spx) / n;
+    if (Math.abs(den) < 1e-6) return [0, 0, 0];
+    const w = (B2 + (Spy * B0 - Spx * B1) / n) / den;
+    return [(B0 + Spy * w) / n, (B1 - Spx * w) / n, w];
+  }
+
+  function avanzar(sim, dt) {
+    const cfg = sim.cfg, rob = cfg.robot;
+    const ang = paso(sim.e, entradasCerebro(sim), sim.w, dt);
+    let [vx, vy, w] = cinematica(sim, ang, dt);
+    const enRug = sim.y > cfg.pista.rug_ini && sim.y < cfg.pista.rug_ini + cfg.pista.rug_largo;
+    const eta = (enRug ? rob.eta_rug : rob.eta) * sim.dr.kE * (sim.contacto ? 0.6 : 1);
+    vx *= eta; vy *= eta; w *= eta;
+    // Desvío lento al azar (piso, juego en las piezas)
+    const sig = enRug ? rob.yaw_rug : rob.yaw, tc = 0.3;
+    sim.ruidoW += -sim.ruidoW * dt / tc + sig * Math.sqrt(2 * dt / tc) * gauss(sim.r);
+    w += sim.ruidoW * DEG * Math.min(1, Math.hypot(vx, vy) / 100);
+    const c = Math.cos(sim.h), s = Math.sin(sim.h);
+    sim.x += (vx * c - vy * s) * dt; sim.y += (vx * s + vy * c) * dt; sim.h += w * dt;
+    sim.v = vy;
+    // Choques con las paredes del carril y el fondo. Empujar una pared con una pata
+    // hace girar el cuerpo (la pared lo alinea), como pasa con el robot real.
+    const W = cfg.pista.ancho / 2;
+    const puntos = sim.piesTmp;
+    for (let i = 0; i < 6; i++) { puntos[i][0] = sim.pies[i][0]; puntos[i][1] = sim.pies[i][1]; }
+    let toca = false, frente = -Infinity;
+    for (let pasada = 0; pasada < 3; pasada++) {
+      const ch = Math.cos(sim.h), sh = Math.sin(sim.h);
+      for (const q of puntos) {
+        const mx = sim.x + q[0] * ch - q[1] * sh, my = sim.y + q[0] * sh + q[1] * ch;
+        const derecha = mx + q[2] - W, izquierda = -W - (mx - q[2]);
+        if (!sim.paredes) { if (derecha > 0 || izquierda > 0) sim.fuera = true; }
+        else if (derecha > 0) { sim.x -= derecha; sim.h += 2 * derecha * q[1] / 10000; toca = true; }
+        if (izquierda > 0) { sim.x += izquierda; sim.h -= 2 * izquierda * q[1] / 10000; toca = true; }
+        const fondo = my + q[2] - sim.finY;
+        if (fondo > 0) { sim.y -= fondo; toca = true; }
+        if (pasada === 2) frente = Math.max(frente, my + q[2]);
+      }
+    }
+    sim.frente = frente;
+    sim.contacto = toca;
+    if (toca) sim.tPared += dt;
+    // Sensores con sus tiempos reales
+    const A = ampAntenas(sim);
+    sim.antSuma[0] += A[0]; sim.antSuma[1] += A[1]; sim.antN++;
+    sim.t += dt;
+    if (sim.t >= sim.tAnt + cfg.sens.ant_periodo) {
+      sim.tAnt += cfg.sens.ant_periodo;
+      const o0 = olor(sim, sim.antSuma[0] / sim.antN), o1 = olor(sim, sim.antSuma[1] / sim.antN);
+      sim.sens.ant_izq = o0.v; sim.sens.ant_der = o1.v; sim.crudo.amp = [o0.a, o1.a];
+      sim.antSuma = [0, 0]; sim.antN = 0;
+    }
+    if (sim.t >= sim.tVis + 0.05) { // 20 cuadros por segundo, con un cuadro de retraso
+      sim.tVis += 0.05;
+      if (sim.visPend) { sim.sens.vis_izq = sim.visPend.v[0]; sim.sens.vis_der = sim.visPend.v[1]; sim.crudo.px = sim.visPend.px; }
+      sim.visPend = verFruta(sim);
+    }
+    if (sim.t >= sim.tTof + 1 / 30) {
+      sim.tTof += 1 / 30;
+      const tc2 = tocar(sim);
+      sim.sens.mec_izq = tc2.v[0]; sim.sens.mec_der = tc2.v[1]; sim.crudo.mm = tc2.mm;
+    }
+    if (!sim.llego && sim.frente >= cfg.pista.meta) { sim.llego = true; sim.tLlegada = sim.t; }
+    if (sim.fuera && !sim.llego) sim.fin = true;
+    if ((sim.llego && cfg.prueba.parar_en_meta) || sim.t >= cfg.prueba.t_max) sim.fin = true;
+  }
+
+  function aptitudCarrera(sim) {
+    const cfg = sim.cfg;
+    // Salirse del carril descalifica: vale menos que no avanzar nada.
+    if (sim.fuera && !sim.llego) return -50;
+    const base = sim.llego ? 100 + 100 * (1 - sim.tLlegada / cfg.prueba.t_max)
+      : 100 * recorta(sim.frente / cfg.pista.meta, 0, 1);
+    return base - sim.tPared;
+  }
+
+  function correr(cfg, pesos, semilla, dt) {
+    const sim = nuevaCarrera(cfg, pesos, semilla);
+    dt = dt || 0.02;
+    while (!sim.fin) avanzar(sim, dt);
+    return { aptitud: aptitudCarrera(sim), llego: sim.llego, t: sim.tLlegada, avance: sim.frente, pared: sim.tPared, fuera: sim.fuera };
+  }
+
+  function evaluar(cfg, pesos, semillas) {
+    let suma = 0, llegan = 0, tiempos = 0, pared = 0, fuera = 0;
+    for (const s of semillas) {
+      const r = correr(cfg, pesos, s);
+      suma += r.aptitud; pared += r.pared; if (r.fuera) fuera++;
+      if (r.llego) { llegan++; tiempos += r.t; }
+    }
+    const n = semillas.length;
+    return { aptitud: suma / n, llegan: llegan / n, tiempo: llegan ? tiempos / llegan : null, pared: pared / n, fuera: fuera / n };
+  }
+
+  // ================= EVOLUCIÓN =================
+  class Evolucion {
+    constructor(cfg, semillaPesos, op) {
+      op = op || {};
+      this.cfg = cfg;
+      this.pob = op.pob || 40;
+      this.pruebas = op.pruebas || 4;
+      this.elite = op.elite || 8;
+      this.sigma = op.sigma || 1;
+      this.gen = op.gen || 0;
+      this.r = mulberry32(op.semilla || 12345);
+      this.historia = [];
+      const base = normalizaPesos(semillaPesos);
+      this.individuos = [{ w: base, apt: null }];
+      while (this.individuos.length < this.pob) this.individuos.push({ w: this.mutar(base, 1.5), apt: null });
+      this.mejor = { w: base, apt: -Infinity, llegan: 0, tiempo: null };
+      this.prepararGeneracion();
+    }
+    mutar(w, escala) {
+      const n = Object.assign({}, w);
+      for (const k of NOMBRES) {
+        const r = RANGOS[k];
+        if (r[0] === r[1] || this.r() > 0.3) continue;
+        n[k] = recorta(n[k] + gauss(this.r) * (r[1] - r[0]) * 0.08 * this.sigma * (escala || 1), r[0], r[1]);
+      }
+      return n;
+    }
+    cruzar(a, b) {
+      const n = {};
+      for (const k of NOMBRES) n[k] = this.r() < 0.5 ? a[k] : b[k];
+      return n;
+    }
+    prepararGeneracion() {
+      this.semillas = [];
+      for (let k = 0; k < this.pruebas; k++) this.semillas.push((this.gen * 7919 + k * 104729 + 17) >>> 0);
+      this.cola = this.individuos.map((ind, i) => ({ i, k: 0, suma: 0, llegan: 0, tiempos: 0 }));
+      this.pendientes = this.individuos.length * this.pruebas;
+      this.idx = 0;
+    }
+    /** Trabaja hasta agotar 'ms' milisegundos (o todo, si ms = Infinity). Devuelve true al cerrar una generación. */
+    trabajar(ms) {
+      const t0 = Date.now();
+      while (this.idx < this.cola.length) {
+        const c = this.cola[this.idx];
+        const r = correr(this.cfg, this.individuos[c.i].w, this.semillas[c.k]);
+        c.suma += r.aptitud;
+        if (r.llego) { c.llegan++; c.tiempos += r.t; }
+        c.k++;
+        if (c.k >= this.pruebas) {
+          const ind = this.individuos[c.i];
+          ind.apt = c.suma / this.pruebas; ind.llegan = c.llegan / this.pruebas;
+          ind.tiempo = c.llegan ? c.tiempos / c.llegan : null;
+          this.idx++;
+        }
+        if (Date.now() - t0 > ms) return false;
+      }
+      this.cerrarGeneracion();
+      return true;
+    }
+    cerrarGeneracion() {
+      const ord = this.individuos.slice().sort((a, b) => b.apt - a.apt);
+      const media = ord.reduce((s, x) => s + x.apt, 0) / ord.length;
+      const top = ord[0];
+      this.historia.push({ gen: this.gen, mejor: top.apt, media, llegan: top.llegan, tiempo: top.tiempo });
+      this.mejor = { w: Object.assign({}, top.w), apt: top.apt, llegan: top.llegan, tiempo: top.tiempo, gen: this.gen };
+      const elites = ord.slice(0, this.elite);
+      const nueva = elites.map(e => ({ w: e.w, apt: null }));
+      while (nueva.length < this.pob) {
+        const a = elites[Math.floor(this.r() * elites.length)].w;
+        const b = elites[Math.floor(this.r() * elites.length)].w;
+        const hijo = this.r() < 0.3 ? this.cruzar(a, b) : a;
+        nueva.push({ w: this.mutar(hijo, 1), apt: null });
+      }
+      this.individuos = nueva;
+      this.sigma = Math.max(0.3, this.sigma * 0.995);
+      this.gen++;
+      this.prepararGeneracion();
+    }
+  }
+
+  // ================= CEREBROS INCLUIDOS =================
+  const CEREBRO_BASE = {
+    w_ant_dnp: 0.5, w_ant_pfl: 2.0, w_vis_pfl: 1.5, w_vis_pfl_x: -0.8, w_pfl_dna: 2.0, w_pfl_dna_x: -1.5,
+    w_mech_mdn: 1.2, w_mech_dnp: -0.8, w_mech_dna_x: 2.0, w_mech_dna: -1.0, w_mech_pfl: 0.0,
+    bias_dnp: 2.0, w_dn_cpg: 4.0, c_couple: 1, k_turn: 0.6, w_coxa: 15, w_femur: 25, w_tibia: 15, w_dna_dnp: -0.3
+  };
+  const GEN3514 = {
+    w_ant_dnp: 2.2862, w_ant_pfl: -1.6151, w_vis_pfl: 1.4072, w_vis_pfl_x: -1.3676, w_pfl_dna: -0.5389,
+    w_pfl_dna_x: 1.8501, w_mech_mdn: 1.7202, w_mech_dnp: 0.0932, w_mech_dna_x: -1.1199, w_mech_dna: 2.8589,
+    w_mech_pfl: 0.7065, bias_dnp: 0.1274, w_dn_cpg: 5.3151, c_couple: 0.0001, k_turn: -2.7278, w_coxa: 6.011,
+    w_femur: 4.3542, w_tibia: 1.4239, w_dna_dnp: -0.5371
+  };
+
+  const Motor = {
+    DEG, NOMBRES, RANGOS, CEREBRO, GEO, CFG_DEFECTO, CEREBRO_BASE, GEN3514,
+    f, recorta, nuevoEstado, paso, normalizaPesos, piesCuerpo, copia, mulberry32, gauss,
+    nuevaCarrera, avanzar, aptitudCarrera, correr, evaluar, Evolucion, aMundo, envuelve, rumbo
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = Motor;
+  else raiz.Motor = Motor;
+})(typeof self !== 'undefined' ? self : this);
+
+</script>
+<script>
+(() => {
+'use strict';
+const M = window.Motor;
+const DEG = M.DEG;
+const CEREBRO_V3 = {
+ "modelo": "mosca-hexapodo-v3",
+ "nombre": "v3 entrenado",
+ "sensores": 6,
+ "generacion": 98,
+ "aptitud": 142.74,
+ "entrenado_en": "carril de 300 mm, carrera de 2000 mm, fruta 300 mm después de la meta, zona rugosa de 400 mm; mitad de las carreras con paredes y mitad sin paredes; ruido y calibración real al azar",
+ "validacion": {
+  "con_paredes": {
+   "llegan": 1,
+   "tiempo_promedio_s": 25.8,
+   "se_salen": 0,
+   "tocando_pared_s": 0
+  },
+  "sin_paredes": {
+   "llegan": 0.988,
+   "tiempo_promedio_s": 25.7,
+   "se_salen": 0.013,
+   "tocando_pared_s": 0
+  },
+  "a_ciegas": {
+   "llegan": 1,
+   "tiempo_promedio_s": 25.8,
+   "se_salen": 0,
+   "tocando_pared_s": 6.6
+  },
+  "baliza_apagada": {
+   "llegan": 1,
+   "tiempo_promedio_s": 26.8,
+   "se_salen": 0,
+   "tocando_pared_s": 7.1
+  },
+  "sin_camara": {
+   "llegan": 1,
+   "tiempo_promedio_s": 26.8,
+   "se_salen": 0,
+   "tocando_pared_s": 7.1
+  },
+  "sin_paredes_ciegas": {
+   "llegan": 0,
+   "tiempo_promedio_s": null,
+   "se_salen": 1,
+   "tocando_pared_s": 0
+  },
+  "fondo_x3": {
+   "llegan": 1,
+   "tiempo_promedio_s": 25.7,
+   "se_salen": 0,
+   "tocando_pared_s": 0
+  }
+ },
+ "nota": "Cerebro v3 (simulador v3). Se carga en el simulador con «Cargar desde texto» y en el robot con cerebro.py.",
+ "pesos": {
+  "w_ant_dnp": -0.4174,
+  "w_ant_pfl": 0.6704,
+  "w_vis_pfl": 3,
+  "w_vis_pfl_x": -0.6039,
+  "w_pfl_dna": 0.3649,
+  "w_pfl_dna_x": -3,
+  "w_mech_mdn": 0.7172,
+  "w_mech_dnp": -2.4286,
+  "w_mech_dna_x": 2.3321,
+  "w_mech_dna": -0.3403,
+  "w_mech_pfl": 1.0639,
+  "bias_dnp": 2.9854,
+  "w_dn_cpg": 6.0461,
+  "c_couple": 1,
+  "k_turn": 1.7261,
+  "w_coxa": 15,
+  "w_femur": 19.8509,
+  "w_tibia": 23.6873,
+  "w_dna_dnp": -1.3126
+ }
+};
+const $ = id => document.getElementById(id);
+
+// ---------- Estado ----------
+let cfg = M.copia(M.CFG_DEFECTO);
+let cerebro = CEREBRO_V3 ? M.copia(CEREBRO_V3) : { modelo: 'mosca-hexapodo-v3', generacion: 0, pesos: M.copia(M.CEREBRO_BASE) };
+let semilla = 1, sim = null, corriendo = true, rastro = [], velSuave = 0;
+
+function nuevaSim(nueva) {
+  if (nueva) semilla = (Math.random() * 1e9) >>> 0;
+  sim = M.nuevaCarrera(cfg, cerebro.pesos, semilla);
+  rastro = []; velSuave = 0;
+}
+
+// ---------- Lecturas ----------
+const SENS = [
+  ['ant_izq', 'Antena izq', 'ir'], ['ant_der', 'Antena der', 'ir'],
+  ['vis_izq', 'Ojo izq', 'fruta'], ['vis_der', 'Ojo der', 'fruta'],
+  ['mec_izq', 'Tacto izq', 'tacto'], ['mec_der', 'Tacto der', 'tacto']];
+const NEU = [['pfl_l', 'PFL izq'], ['pfl_r', 'PFL der'], ['dna_l', 'DNa izq (giro)'], ['dna_r', 'DNa der (giro)'],
+  ['dnp', 'DNp (avance)'], ['mdn', 'MDN (reversa)']];
+function barra(cont, id, txt, color) {
+  const d = document.createElement('div'); d.className = 'barra';
+  d.innerHTML = `<span>${txt}</span><div class="riel"><div class="relleno" id="r_${id}" style="background:var(--${color})"></div></div><output id="o_${id}">0.00</output>`;
+  cont.appendChild(d);
+}
+SENS.forEach(([k, t, c], i) => {
+  barra($('barrasSens'), k, t, c);
+  if (i % 2 === 1) { const p = document.createElement('div'); p.className = 'crudo'; p.id = 'crudo_' + i; $('barrasSens').appendChild(p); }
+});
+NEU.forEach(([k, t]) => barra($('barrasNeu'), k, t, 'tinta-2'));
+barra($('barrasNeu'), 'frec', 'Ritmo (Hz)', 'tinta');
+barra($('barrasNeu'), 'sizq', 'Paso izq', 'tinta');
+barra($('barrasNeu'), 'sder', 'Paso der', 'tinta');
+function pon(id, v, max, txt) {
+  const r = $('r_' + id); if (r) r.style.width = (Math.max(0, Math.min(1, Math.abs(v) / (max || 1))) * 100).toFixed(1) + '%';
+  $('o_' + id).textContent = txt != null ? txt : v.toFixed(2);
+}
+function actualizarLecturas() {
+  const ent = cfg.prueba.ciegas ? null : sim.sens;
+  SENS.forEach(([k]) => pon(k, ent ? ent[k] : 0, 1));
+  const c = sim.crudo;
+  $('crudo_1').textContent = `amplitud ${c.amp[0].toFixed(4)} / ${c.amp[1].toFixed(4)} V`;
+  $('crudo_3').textContent = `mancha ${c.px[0].toFixed(0)} / ${c.px[1].toFixed(0)} px`;
+  $('crudo_5').textContent = `distancia ${c.mm[0] ? c.mm[0].toFixed(0) : '—'} / ${c.mm[1] ? c.mm[1].toFixed(0) : '—'} mm`;
+  const e = sim.e;
+  NEU.forEach(([k]) => pon(k, e[k], 1));
+  pon('frec', e.frec, M.CEREBRO.F_MAX, e.frec.toFixed(2));
+  pon('sizq', e.s_izq, 1, e.s_izq.toFixed(2)); pon('sder', e.s_der, 1, e.s_der.toFixed(2));
+}
+function actualizarChips() {
+  $('vTiempo').textContent = sim.t.toFixed(1) + ' s';
+  const falta = Math.max(0, cfg.pista.meta - sim.frente);
+  $('vFalta').textContent = (falta / 10).toFixed(0) + ' cm';
+  $('vVel').textContent = velSuave.toFixed(0) + ' mm/s';
+  $('vPared').textContent = sim.tPared.toFixed(1) + ' s';
+  $('chPared').className = 'chip' + (sim.contacto ? ' aviso' : '');
+  let txt = corriendo ? 'Corriendo' : 'En pausa', cls = 'chip';
+  if (sim.llego) { txt = 'Llegó: ' + sim.tLlegada.toFixed(1) + ' s'; cls += ' bien'; }
+  else if (sim.fuera) { txt = 'Se salió del carril'; cls += ' mal'; }
+  else if (sim.fin) { txt = 'Se acabó el tiempo'; cls += ' mal'; }
+  $('vEstado').textContent = txt; $('chEstado').className = cls;
+}
+
+// ---------- Dibujo ----------
+function colores() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue('--' + n).trim();
+  return { papel: g('papel'), panel: g('panel'), tinta: g('tinta'), tinta2: g('tinta-2'), regla: g('regla'), regla2: g('regla-2'),
+    ir: g('ir'), fruta: g('fruta'), tacto: g('tacto'), pista: g('pista'), rugosa: g('rugosa'), pared: g('pared'), mal: g('mal') };
+}
+function ajustarCanvas(cv, alto) {
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth;
+  const h = alto ? alto(w) : cv.clientHeight;
+  if (alto) cv.style.height = h + 'px';
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+// Mundo (x a la derecha del carril, y hacia la meta) -> pantalla (la pista corre de izquierda a derecha)
+function vista(sx, ox, oy) { return (X, Y) => [ox + Y * sx, oy + X * sx]; }
+
+function dibujarPista(ctx, P, C, s, detalle) {
+  const W = cfg.pista.ancho / 2, meta = cfg.pista.meta, ini = -400, fin = sim.finY;
+  const a = P(-W, ini), b = P(W, fin);
+  ctx.fillStyle = C.pista; ctx.fillRect(a[0], a[1], b[0] - a[0], b[1] - a[1]);
+  const r0 = P(-W, cfg.pista.rug_ini), r1 = P(W, cfg.pista.rug_ini + cfg.pista.rug_largo);
+  ctx.fillStyle = C.rugosa; ctx.fillRect(r0[0], r0[1], r1[0] - r0[0], r1[1] - r0[1]);
+  if (detalle) { // textura de la zona rugosa
+    ctx.save(); ctx.beginPath(); ctx.rect(r0[0], r0[1], r1[0] - r0[0], r1[1] - r0[1]); ctx.clip();
+    ctx.strokeStyle = C.regla; ctx.lineWidth = 1;
+    for (let x = r0[0] - 400; x < r1[0]; x += 9) { ctx.beginPath(); ctx.moveTo(x, r0[1]); ctx.lineTo(x + 300, r1[1]); ctx.stroke(); }
+    ctx.restore();
+  }
+  // línea de salida y meta
+  ctx.strokeStyle = C.tinta2; ctx.lineWidth = 1.5;
+  let q = P(-W, 0), q2 = P(W, 0); ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q2[0], q2[1]); ctx.stroke();
+  q = P(-W, meta); q2 = P(W, meta);
+  const cuad = Math.max(3, 20 * s), n = Math.max(2, Math.round((q2[1] - q[1]) / cuad));
+  for (let i = 0; i < n; i++) { ctx.fillStyle = i % 2 ? C.tinta : C.panel; ctx.fillRect(q[0] - cuad / 2, q[1] + i * (q2[1] - q[1]) / n, cuad / 2, (q2[1] - q[1]) / n); ctx.fillStyle = i % 2 ? C.panel : C.tinta; ctx.fillRect(q[0], q[1] + i * (q2[1] - q[1]) / n, cuad / 2, (q2[1] - q[1]) / n); }
+  // paredes y fondo
+  ctx.strokeStyle = C.pared; ctx.lineWidth = sim.paredes ? Math.max(2, 18 * s) : 1;
+  if (!sim.paredes) ctx.setLineDash([6, 5]);
+  for (const X of [-W, W]) { const p0 = P(X, ini), p1 = P(X, fin); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); }
+  ctx.setLineDash([]);
+  ctx.lineWidth = Math.max(2, 18 * s); const f0 = P(-W, fin), f1 = P(W, fin); ctx.beginPath(); ctx.moveTo(f0[0], f0[1]); ctx.lineTo(f1[0], f1[1]); ctx.stroke();
+  // fruta-baliza
+  const bz = P(0, sim.balizaY);
+  if (!cfg.prueba.sin_baliza) {
+    ctx.strokeStyle = C.ir; ctx.globalAlpha = 0.35; ctx.lineWidth = 1;
+    for (const r of [90, 160, 240]) { ctx.beginPath(); ctx.arc(bz[0], bz[1], r * s, 0, 2 * Math.PI); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = C.regla; ctx.beginPath(); ctx.arc(bz[0], bz[1], M.GEO.baliza.base * s, 0, 2 * Math.PI); ctx.fill();
+  ctx.fillStyle = cfg.prueba.sin_baliza ? C.tinta2 : C.fruta; ctx.beginPath(); ctx.arc(bz[0], bz[1], Math.max(2.5, M.GEO.baliza.esfera * s), 0, 2 * Math.PI); ctx.fill();
+}
+
+function dibujarRobot(ctx, P, C, s, detalle) {
+  const ch = Math.cos(sim.h), sh = Math.sin(sim.h);
+  const aM = p => P(sim.x + p[0] * ch - p[1] * sh, sim.y + p[0] * sh + p[1] * ch);
+  const pies = M.piesCuerpo(sim.e.ang);
+  if (detalle) {
+    // conos del tacto (hasta 150 mm) con intensidad según la lectura
+    for (let k = 0; k < 2; k++) {
+      const o = M.GEO.tof[k], dir = (k === 0 ? 1 : -1) * cfg.sens.tof_giro, val = k === 0 ? sim.sens.mec_izq : sim.sens.mec_der;
+      const pts = [o];
+      for (const da of [-M.GEO.tofCono / 2, M.GEO.tofCono / 2]) { const ang = (dir + da) * DEG; pts.push([o[0] - 150 * Math.sin(ang), o[1] + 150 * Math.cos(ang)]); }
+      ctx.fillStyle = C.tacto; ctx.globalAlpha = 0.10 + 0.45 * val; ctx.beginPath();
+      pts.map(aM).forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    // ejes de las antenas
+    for (let k = 0; k < 2; k++) {
+      const o = M.GEO.antenas[k], ang = (k === 0 ? 1 : -1) * cfg.sens.ant_giro * DEG, val = k === 0 ? sim.sens.ant_izq : sim.sens.ant_der;
+      const p0 = aM(o), p1 = aM([o[0] - 70 * Math.sin(ang), o[1] + 70 * Math.cos(ang)]);
+      ctx.strokeStyle = C.ir; ctx.lineWidth = 1.5 + 3 * val; ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    }
+    // campo de la cámara
+    const c0 = M.GEO.camara; ctx.strokeStyle = C.fruta; ctx.globalAlpha = 0.5; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    for (const a of [-65, 65]) { const p0 = aM(c0), p1 = aM([c0[0] - 260 * Math.sin(a * DEG), c0[1] + 260 * Math.cos(a * DEG)]); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); }
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
+  // patas
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 6; i++) {
+    const e = aM(M.GEO.ejes[i]), p = aM(pies[i]);
+    ctx.strokeStyle = C.tinta2; ctx.lineWidth = Math.max(1, 8 * s);
+    ctx.beginPath(); ctx.moveTo(e[0], e[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
+    ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(1.6, 7 * s), 0, 2 * Math.PI);
+    if (sim.suelo[i]) { ctx.fillStyle = C.tinta; ctx.fill(); } else { ctx.fillStyle = C.panel; ctx.fill(); ctx.strokeStyle = C.tinta; ctx.lineWidth = 1.2; ctx.stroke(); }
+  }
+  // cuerpo (placa de 112 × 138 mm)
+  ctx.fillStyle = C.panel; ctx.strokeStyle = C.tinta; ctx.lineWidth = detalle ? 1.5 : 1;
+  ctx.beginPath(); M.GEO.esquinas.map(aM).forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // flecha del frente
+  const f0 = aM([0, 20]), f1 = aM([0, 60]);
+  ctx.strokeStyle = C.tinta; ctx.lineWidth = detalle ? 2 : 1; ctx.beginPath(); ctx.moveTo(f0[0], f0[1]); ctx.lineTo(f1[0], f1[1]); ctx.stroke();
+  const fa = aM([-10, 45]), fb = aM([10, 45]); ctx.beginPath(); ctx.moveTo(fa[0], fa[1]); ctx.lineTo(f1[0], f1[1]); ctx.lineTo(fb[0], fb[1]); ctx.stroke();
+}
+
+function dibujar() {
+  const C = colores();
+  // Pista completa
+  const cv = $('cPista'), ini = -400, largo = sim.finY - ini + 60, margen = 70;
+  const { ctx, w, h } = ajustarCanvas(cv, w => Math.max(70, Math.round(w * (cfg.pista.ancho + 2 * margen) / largo)));
+  const s = w / largo, P = vista(s, (-ini + 30) * s, h / 2);
+  ctx.fillStyle = C.panel; ctx.fillRect(0, 0, w, h);
+  dibujarPista(ctx, P, C, s, false);
+  ctx.strokeStyle = C.tacto; ctx.lineWidth = 1.2; ctx.beginPath();
+  rastro.forEach((p, i) => { const q = P(p[0], p[1]); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.stroke();
+  dibujarRobot(ctx, P, C, s, false);
+  ctx.fillStyle = C.tinta2; ctx.font = '11px ' + getComputedStyle(document.body).fontFamily;
+  const tx = P(-cfg.pista.ancho / 2, 0); ctx.fillText('salida', tx[0] + 3, Math.max(11, tx[1] - 4));
+  const tm = P(-cfg.pista.ancho / 2, cfg.pista.meta); ctx.fillText('meta ' + (cfg.pista.meta / 10) + ' cm', tm[0] + 6, Math.max(11, tm[1] - 4));
+  // Vista de cerca
+  const cv2 = $('cCerca'); const d = ajustarCanvas(cv2);
+  const vis = 720, s2 = Math.min(d.w, d.h * 1.22) / vis;
+  const P2 = vista(s2, 0.4 * d.w - sim.y * s2, d.h / 2);
+  d.ctx.fillStyle = C.panel; d.ctx.fillRect(0, 0, d.w, d.h);
+  dibujarPista(d.ctx, P2, C, s2, true);
+  dibujarRobot(d.ctx, P2, C, s2, true);
+  // escala de 10 cm
+  d.ctx.strokeStyle = C.tinta; d.ctx.fillStyle = C.tinta; d.ctx.lineWidth = 1.5;
+  const L = 100 * s2, bx = 14, by = d.h - 14;
+  d.ctx.beginPath(); d.ctx.moveTo(bx, by); d.ctx.lineTo(bx + L, by); d.ctx.moveTo(bx, by - 4); d.ctx.lineTo(bx, by + 4); d.ctx.moveTo(bx + L, by - 4); d.ctx.lineTo(bx + L, by + 4); d.ctx.stroke();
+  d.ctx.font = '11px ' + getComputedStyle(document.body).fontFamily; d.ctx.fillText('10 cm', bx + L + 6, by + 4);
+  d.ctx.fillStyle = C.tinta2; d.ctx.fillText('pie apoyado ●  pie en el aire ○', 14, 18);
+}
+
+// ---------- Bucle ----------
+let tPrev = performance.now();
+function cuadro(ahora) {
+  const dtR = Math.min(0.1, (ahora - tPrev) / 1000); tPrev = ahora;
+  if (corriendo && !sim.fin) {
+    const n = Math.min(500, Math.round(dtR * (+$('selVel').value) / 0.02));
+    const y0 = sim.y, t0 = sim.t;
+    for (let k = 0; k < n && !sim.fin; k++) {
+      M.avanzar(sim, 0.02);
+      if (Math.round(sim.t / 0.02) % 5 === 0) rastro.push([sim.x, sim.y]);
+    }
+    if (sim.t > t0) velSuave += (((sim.y - y0) / (sim.t - t0)) - velSuave) * Math.min(1, (sim.t - t0) / 0.6);
+  }
+  dibujar(); actualizarLecturas(); actualizarChips();
+  requestAnimationFrame(cuadro);
+}
+
+// ---------- Controles de carrera ----------
+$('bCorrer').onclick = () => { corriendo = !corriendo; $('bCorrer').textContent = corriendo ? 'Pausar' : 'Correr'; if (sim.fin) { nuevaSim(false); corriendo = true; $('bCorrer').textContent = 'Pausar'; } };
+$('bRepetir').onclick = () => { nuevaSim(false); corriendo = true; $('bCorrer').textContent = 'Pausar'; };
+$('bNueva').onclick = () => { nuevaSim(true); corriendo = true; $('bCorrer').textContent = 'Pausar'; };
+const pruebas = { pCiegas: 'ciegas', pSinBaliza: 'sin_baliza', pSinOjos: 'sin_ojos', pSinTacto: 'sin_tacto' };
+for (const [id, k] of Object.entries(pruebas)) $(id).onchange = e => { cfg.prueba[k] = e.target.checked; nuevaSim(false); };
+$('selParedes').onchange = e => { cfg.pista.paredes = e.target.value; nuevaSim(false); };
+$('bPrueba').onclick = () => {
+  $('resPrueba').textContent = 'Corriendo 30 carreras…';
+  setTimeout(() => {
+    const sem = Array.from({ length: 30 }, (_, i) => 500000 + i * 7919);
+    const r = M.evaluar(cfg, cerebro.pesos, sem);
+    $('resPrueba').textContent = `Llegan ${(r.llegan * 100).toFixed(0)} % · tiempo promedio ${r.tiempo ? r.tiempo.toFixed(1) + ' s' : '—'} · tocando pared ${r.pared.toFixed(1)} s · se salen ${(r.fuera * 100).toFixed(0)} % · aptitud ${r.aptitud.toFixed(1)}`;
+  }, 30);
+};
+
+// ---------- Pestañas ----------
+document.querySelectorAll('.pestanas button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.pestanas button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
+  document.querySelectorAll('.panel').forEach(p => p.hidden = p.id !== 'p-' + b.dataset.p);
+  try { localStorage.setItem('mosca-v3-pestana', b.dataset.p); } catch (e) {}
+});
+try { const p = localStorage.getItem('mosca-v3-pestana'); if (p && $('t-' + p)) $('t-' + p).click(); } catch (e) {}
+
+// ---------- Cerebro ----------
+const DESC = {
+  w_ant_dnp: 'Antenas → avance (DNp)', w_ant_pfl: 'Antena → PFL del mismo lado', w_vis_pfl: 'Ojo → PFL del mismo lado',
+  w_vis_pfl_x: 'Ojo → PFL del lado contrario', w_pfl_dna: 'PFL → DNa del mismo lado', w_pfl_dna_x: 'PFL → DNa del lado contrario',
+  w_mech_mdn: 'Tacto → reversa (MDN)', w_mech_dnp: 'Tacto → avance (DNp)', w_mech_dna_x: 'Tacto → DNa del lado contrario',
+  w_mech_dna: 'Tacto → DNa del mismo lado', w_mech_pfl: 'Tacto → PFL del mismo lado', bias_dnp: 'Impulso base de avance',
+  w_dn_cpg: 'Avance → ritmo de pasos', c_couple: 'Acoplamiento de patas (fijo: trípode)', k_turn: 'Ganancia de giro (DNa izq − der)',
+  w_coxa: 'Amplitud de la coxa (°)', w_femur: 'Altura del paso, fémur (°)', w_tibia: 'Recogida de la tibia (°)', w_dna_dnp: 'Giro → frena el avance'
+};
+function jsonCerebro() {
+  const w = M.normalizaPesos(cerebro.pesos), p = {};
+  for (const n of M.NOMBRES) p[n] = Math.round(w[n] * 10000) / 10000;
+  const o = Object.assign({}, cerebro, { modelo: 'mosca-hexapodo-v3', sensores: 6, pesos: p });
+  return JSON.stringify(o, null, 1);
+}
+function mostrarCerebro() {
+  const w = M.normalizaPesos(cerebro.pesos);
+  $('tbPesos').innerHTML = M.NOMBRES.map(n => `<tr><td>${n}</td><td class="d">${DESC[n]}</td><td class="n">${w[n].toFixed(3)}</td><td class="n">${M.RANGOS[n][0]} a ${M.RANGOS[n][1]}</td></tr>`).join('');
+  $('txtCerebro').value = jsonCerebro();
+  const g = cerebro.generacion != null ? 'generación ' + cerebro.generacion : 'sin generación';
+  $('notaCerebro').textContent = `Cargado: ${cerebro.nombre || cerebro.modelo || 'cerebro'} (${g}).` +
+    (cerebro.modelo === 'mosca-hexapodo-v2' || cerebro.generacion === 3514 ? ' Ojo: la gen 3514 se entrenó con las ecuaciones del simulador anterior; aquí solo sirve como punto de partida para reentrenar.' : '');
+}
+function usarCerebro(c, msg) {
+  cerebro = c; mostrarCerebro(); nuevaSim(false); corriendo = true; $('bCorrer').textContent = 'Pausar';
+  if (msg) $('msgCerebro').textContent = msg;
+}
+$('bV3').onclick = () => CEREBRO_V3 ? usarCerebro(M.copia(CEREBRO_V3), 'Cargado el v3 entrenado.') : null;
+$('bBase').onclick = () => usarCerebro({ modelo: 'mosca-hexapodo-v3', nombre: 'base v3 (a mano)', generacion: 0, pesos: M.copia(M.CEREBRO_BASE) }, 'Cargado el cerebro base.');
+$('b3514').onclick = () => usarCerebro({ modelo: 'mosca-hexapodo-v2', nombre: 'gen 3514', generacion: 3514, pesos: M.copia(M.GEN3514) }, 'Cargada la gen 3514.');
+$('bCargar').onclick = () => {
+  try {
+    const o = JSON.parse($('txtCerebro').value);
+    const p = o.pesos || o;
+    if (!M.NOMBRES.some(n => typeof p[n] === 'number')) throw new Error('no trae pesos');
+    usarCerebro(o.pesos ? o : { modelo: 'mosca-hexapodo-v3', pesos: p }, 'Cerebro cargado.');
+  } catch (e) { $('msgCerebro').textContent = 'No se pudo leer: revisen que sea el JSON completo del cerebro (' + e.message + ').'; }
+};
+function copiar(txt, el, ok) {
+  const listo = () => { el.textContent = ok; };
+  try { navigator.clipboard.writeText(txt).then(listo, () => { $('txtCerebro').value = txt; $('txtCerebro').select(); el.textContent = 'Seleccionado: copien con Ctrl+C.'; }); }
+  catch (e) { $('txtCerebro').value = txt; $('txtCerebro').select(); el.textContent = 'Seleccionado: copien con Ctrl+C.'; }
+}
+$('bCopiar').onclick = () => copiar(jsonCerebro(), $('msgCerebro'), 'JSON copiado.');
+
+// ---------- Ajustes ----------
+const AJ = {
+  ajPista: [['pista', 'ancho', 'Ancho del carril', 'mm', 10], ['pista', 'meta', 'Largo de la carrera', 'mm', 50],
+    ['pista', 'baliza', 'Fruta después de la meta', 'mm', 10], ['pista', 'rug_ini', 'Zona rugosa empieza en', 'mm', 50],
+    ['pista', 'rug_largo', 'Largo de la zona rugosa', 'mm', 50], ['prueba', 't_max', 'Tiempo máximo', 's', 5]],
+  ajSens: [['sens', 'amp_cerca', 'AMP_CERCA (fruta a 20 cm en el eje)', 'V', 0.01], ['sens', 'amp_fondo', 'AMP_FONDO (fruta apagada)', 'V', 0.0005],
+    ['sens', 'ant_giro', 'Giro de cada antena', '°', 1], ['sens', 'ant_sigma', 'Apertura de cada antena (σ)', '°', 1],
+    ['sens', 'ant_periodo', 'Ventana de las antenas', 's', 0.05], ['sens', 'frac_max', 'FRAC_MAX (fruta a 20 cm)', '', 0.005],
+    ['sens', 'area_min', 'AREA_MIN de la mancha', 'px', 1], ['sens', 'tof_giro', 'Giro de cada VL53L0X', '°', 1],
+    ['sens', 'patas_en_cono', 'Las patas pueden verse en el tacto', 'bool'], ['sens', 'ruido', 'Ruido en los sensores', 'bool']],
+  ajRobot: [['robot', 'asim', 'Diferencia máxima entre lados', '', 0.01], ['robot', 'eta', 'Agarre en piso liso', '', 0.01],
+    ['robot', 'eta_rug', 'Agarre en zona rugosa', '', 0.01], ['robot', 'yaw', 'Desvío al azar', '°/s', 1],
+    ['robot', 'yaw_rug', 'Desvío en zona rugosa', '°/s', 1], ['robot', 'aleatorizar', 'Calibración real distinta a la nominal', 'bool']]
+};
+function construirAjustes() {
+  for (const [cont, lista] of Object.entries(AJ)) {
+    $(cont).innerHTML = '';
+    for (const [g, k, txt, u, paso] of lista) {
+      const id = `aj_${g}_${k}`, d = document.createElement('label'); d.className = 'ajuste'; d.htmlFor = id;
+      if (u === 'bool') { d.innerHTML = `<span>${txt}</span><input type="checkbox" id="${id}">`; }
+      else d.innerHTML = `<span>${txt}${u ? ` <small>${u}</small>` : ''}</span><input type="number" id="${id}" step="${paso}">`;
+      $(cont).appendChild(d);
+      const inp = d.querySelector('input');
+      if (u === 'bool') inp.checked = !!cfg[g][k]; else inp.value = cfg[g][k];
+      inp.onchange = () => {
+        if (u === 'bool') cfg[g][k] = inp.checked;
+        else { const v = parseFloat(inp.value); if (isFinite(v)) cfg[g][k] = v; else inp.value = cfg[g][k]; }
+        $('msgAj').textContent = 'Ajuste aplicado a una carrera nueva.'; nuevaSim(false);
+      };
+    }
+  }
+}
+$('bRestaurar').onclick = () => { const p = cfg.prueba, par = cfg.pista.paredes; cfg = M.copia(M.CFG_DEFECTO); cfg.prueba = Object.assign(cfg.prueba, { ciegas: p.ciegas, sin_baliza: p.sin_baliza, sin_ojos: p.sin_ojos, sin_tacto: p.sin_tacto }); cfg.pista.paredes = par; construirAjustes(); nuevaSim(false); $('msgAj').textContent = 'Valores restaurados.'; };
+$('bCopiarPy').onclick = () => {
+  const s = cfg.sens;
+  const txt = `AMP_CERCA = ${s.amp_cerca}\nAMP_FONDO = ${s.amp_fondo}\nVENTANA = ${s.ant_periodo}\nFRAC_MAX = ${s.frac_max}\nAREA_MIN = ${s.area_min}\n`;
+  copiar(txt, $('msgAj'), 'Constantes copiadas. Péguenlas en la sección de calibración de sentidos.py.');
+};
+
+// ---------- Entrenamiento (en un hilo aparte para no trabar la página) ----------
+let trabajador = null, evLocal = null, entrenando = false, historia = [], mejorEnt = null, temporizador = null;
+function codigoTrabajador() {
+  return $('motor').textContent + `
+;let ev = null, activo = false;
+function ciclo() { if (!activo) return; ev.trabajar(Infinity); self.postMessage({ h: ev.historia[ev.historia.length - 1], mejor: ev.mejor }); setTimeout(ciclo, 0); }
+self.onmessage = m => { const d = m.data;
+  if (d.tipo === 'iniciar') { ev = new Motor.Evolucion(d.cfg, d.pesos, d.op); activo = true; ciclo(); }
+  else if (d.tipo === 'pausar') activo = false;
+  else if (d.tipo === 'seguir') { if (ev && !activo) { activo = true; ciclo(); } } };`;
+}
+function recibirGen(h, mejor) {
+  historia.push(h); mejorEnt = mejor;
+  $('vGen').textContent = h.gen; $('vApt').textContent = h.mejor.toFixed(1);
+  $('vLlegan').textContent = (h.llegan * 100).toFixed(0) + ' %'; $('vTEnt').textContent = h.tiempo ? h.tiempo.toFixed(1) + ' s' : '—';
+  dibujarEvo();
+}
+function opcionesEnt() {
+  const c = M.copia(cfg); c.pista.paredes = $('selParEnt').value; c.prueba.ciegas = false; c.prueba.parar_en_meta = true;
+  return { cfg: c, pesos: M.normalizaPesos(cerebro.pesos),
+    op: { pob: Math.max(10, +$('nPob').value || 40), pruebas: Math.max(2, +$('nPruebas').value || 8), elite: 8, gen: (cerebro.generacion || 0) + 1, semilla: (Math.random() * 1e9) >>> 0 } };
+}
+function cicloLocal() {
+  if (!entrenando || !evLocal) return;
+  if (evLocal.trabajar(25)) recibirGen(evLocal.historia[evLocal.historia.length - 1], evLocal.mejor);
+  temporizador = setTimeout(cicloLocal, 5);
+}
+$('bEntrenar').onclick = () => {
+  if (entrenando) {
+    entrenando = false; $('bEntrenar').textContent = 'Seguir entrenando';
+    if (trabajador) trabajador.postMessage({ tipo: 'pausar' }); clearTimeout(temporizador); return;
+  }
+  entrenando = true; $('bEntrenar').textContent = 'Pausar entrenamiento';
+  if (trabajador || evLocal) { if (trabajador) trabajador.postMessage({ tipo: 'seguir' }); else cicloLocal(); return; }
+  historia = []; const o = opcionesEnt();
+  try {
+    trabajador = new Worker(URL.createObjectURL(new Blob([codigoTrabajador()], { type: 'text/javascript' })));
+    trabajador.onmessage = m => recibirGen(m.data.h, m.data.mejor);
+    trabajador.onerror = () => { trabajador = null; evLocal = new M.Evolucion(o.cfg, o.pesos, o.op); cicloLocal(); };
+    trabajador.postMessage(Object.assign({ tipo: 'iniciar' }, o));
+  } catch (e) { trabajador = null; evLocal = new M.Evolucion(o.cfg, o.pesos, o.op); cicloLocal(); }
+};
+$('bUsarMejor').onclick = () => {
+  if (!mejorEnt) return;
+  usarCerebro({ modelo: 'mosca-hexapodo-v3', nombre: 'entrenado aquí', generacion: mejorEnt.gen, aptitud: Math.round(mejorEnt.apt * 100) / 100,
+    llegan: mejorEnt.llegan, tiempo_promedio_s: mejorEnt.tiempo && Math.round(mejorEnt.tiempo * 10) / 10,
+    entrenado_en: `carril ${cfg.pista.ancho} mm, paredes ${$('selParEnt').value}, carrera ${cfg.pista.meta} mm`, pesos: Object.assign({}, mejorEnt.w) }, 'Usando el mejor de la generación ' + mejorEnt.gen + '.');
+  if (trabajador) { trabajador.terminate(); trabajador = null; } evLocal = null; entrenando = false; clearTimeout(temporizador);
+  $('bEntrenar').textContent = 'Empezar a entrenar';
+};
+function dibujarEvo() {
+  const C = colores(), { ctx, w, h } = ajustarCanvas($('cEvo'));
+  ctx.fillStyle = C.papel; ctx.fillRect(0, 0, w, h);
+  const izq = 40, der = 12, arr = 12, aba = 22;
+  ctx.font = '11px ' + getComputedStyle(document.body).fontFamily;
+  const ymin = -50, ymax = 200;
+  const Y = v => arr + (1 - (v - ymin) / (ymax - ymin)) * (h - arr - aba);
+  ctx.strokeStyle = C.regla2; ctx.fillStyle = C.tinta2; ctx.lineWidth = 1;
+  for (const v of [-50, 0, 50, 100, 150, 200]) { ctx.beginPath(); ctx.moveTo(izq, Y(v)); ctx.lineTo(w - der, Y(v)); ctx.stroke(); ctx.fillText(v, 8, Y(v) + 4); }
+  ctx.fillText('100 = llega a la meta', izq + 4, Y(100) - 4);
+  if (!historia.length) { ctx.fillText('Aún no hay generaciones.', izq + 4, Y(40)); return; }
+  const n = Math.max(2, historia.length), X = i => izq + i / (n - 1) * (w - izq - der);
+  const linea = (k, col, ancho) => { ctx.strokeStyle = col; ctx.lineWidth = ancho; ctx.beginPath(); historia.forEach((p, i) => { const y = Y(Math.max(ymin, Math.min(ymax, p[k]))); i ? ctx.lineTo(X(i), y) : ctx.moveTo(X(i), y); }); ctx.stroke(); };
+  linea('media', C.tinta2, 1); linea('mejor', C.ir, 2);
+  const u = historia[historia.length - 1]; ctx.fillStyle = C.ir; ctx.beginPath(); ctx.arc(X(historia.length - 1), Y(u.mejor), 3.5, 0, 2 * Math.PI); ctx.fill();
+  ctx.fillStyle = C.tinta2; ctx.fillText('gen ' + historia[0].gen, izq, h - 6); ctx.fillText('gen ' + u.gen, w - der - 50, h - 6);
+  ctx.fillStyle = C.ir; ctx.fillText('mejor', w - der - 90, arr + 10); ctx.fillStyle = C.tinta2; ctx.fillText('promedio', w - der - 50, arr + 10);
+}
+
+// ---------- Arranque ----------
+construirAjustes(); mostrarCerebro(); nuevaSim(false); dibujarEvo();
+window.addEventListener('resize', dibujarEvo);
+requestAnimationFrame(cuadro);
+})();
+</script>
+
+</body></html>
