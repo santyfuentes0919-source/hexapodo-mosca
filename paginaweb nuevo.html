@@ -156,7 +156,7 @@
   }
   @keyframes rebote { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
 
-  #desarme { display: block; height: 420vh; padding: 0 4vw; }
+  #desarme { display: block; height: 620vh; padding: 0 4vw; }
   #escena { transition: opacity 0.4s; }
   .paso { height: 100vh; display: flex; align-items: center; }
   .paso:first-child { padding-top: 10vh; }
@@ -347,7 +347,21 @@
       <div class="panel">
         <div class="numero">7.4 V</div>
         <h2>La energía</h2>
-        <p>Una pila <strong>LiPo de 2500 mAh</strong>, con fusible e interruptor. Dos reguladores <strong>XL4015</strong> la bajan a 5.8 V para los servos y un <strong>LM7805</strong> alimenta solo a la ESP32, para que no se reinicie cuando los motores jalan corriente.</p>
+        <p>Una pila <strong>LiPo de 1200 mAh</strong>, con fusible e interruptor. Dos reguladores <strong>XL4015</strong>, uno por lado, la bajan a 5.8 V para los servos y un <strong>LM7805</strong> alimenta solo a la ESP32, para que no se reinicie cuando los motores jalan corriente.</p>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="panel">
+        <div class="numero">2</div>
+        <h2>Sensores láser VL53L0X</h2>
+        <p>Van al frente, abajo, uno <strong>un poco a la izquierda</strong> y otro <strong>un poco a la derecha</strong>. Miden la distancia con un rayo de luz infrarroja. Si algo está cerca, la araña se frena, gira hacia el lado con más espacio y sigue: <strong>esquiva sola</strong>.</p>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="panel">
+        <div class="numero">1</div>
+        <h2>Placa PCB hecha por nosotros</h2>
+        <p>Una placa de <strong>una sola cara</strong> que hicimos en casa con la técnica de <strong>planchado</strong> en placa fenólica. Reúne la ESP32, las clemas de la pila y los reguladores, el medidor de pila y los conectores de las PCA9685 y de los sensores, sin protoboard ni cables sueltos.</p>
       </div>
     </div>
   </section>
@@ -359,7 +373,7 @@
       <p>Recorrer una pista de madera de 2 a 3 metros, con zonas rugosas, en menos de 3 minutos.</p>
       <div class="tabla">
         <div class="dato"><b>23.9 × 22.9</b><small>cm de pie (límite 25 × 25)</small></div>
-        <div class="dato"><b>12.7 cm</b><small>de alto (límite 25)</small></div>
+        <div class="dato"><b>≈ 15 cm</b><small>de alto con la placa arriba (límite 25)</small></div>
         <div class="dato"><b>6 patas</b><small>marcha estable de insecto</small></div>
         <div class="dato"><b>1.5 kg</b><small>peso máximo permitido</small></div>
       </div>
@@ -388,7 +402,9 @@
         <li><strong>Cinemática inversa:</strong> decide dónde poner cada pie y calcula los ángulos con la ley de cosenos.</li>
         <li><strong>Control desde el celular</strong> por WiFi, con una pantalla tipo control de Xbox.</li>
         <li><strong>4 velocidades</strong> y una marcha lenta de onda, una pata a la vez.</li>
-        <li><strong>Seguridad:</strong> si pierde la señal 0.6 s, se frena solo.</li>
+        <li><strong>Modo automático:</strong> camina solo y esquiva obstáculos con los 2 sensores VL53L0X.</li>
+        <li><strong>Modo subida:</strong> pasos más cortos y el cuerpo más bajo para rampas.</li>
+        <li><strong>Seguridad:</strong> si pierde la señal 0.6 s, se frena solo; si la pila baja de 6.4 V, se sienta.</li>
       </ul>
     </div>
   </section>
@@ -420,6 +436,8 @@
         <div><b>27 de octubre</b> · Primera pata completa</div>
         <div><b>30 de octubre</b> · Un lado caminando</div>
         <div><b>31 de octubre</b> · Prueba del robot completo</div>
+        <div><b>12 al 15 de noviembre</b> · Placa PCB casera por planchado, con sensores</div>
+        <div><b>16 de noviembre</b> · Programa final: esquiva obstáculos solo</div>
       </div>
     </div>
   </section>
@@ -428,7 +446,7 @@
     <div class="panel">
       <span class="etiqueta-seccion">Lo que sigue</span>
       <h2>Un cerebro de mosca</h2>
-      <p>La versión final usará una <strong>Raspberry Pi</strong> con cámara (ojos), 2 sensores de distancia VL53L0X (tacto) y antenas infrarrojas (olfato). Un cerebro inspirado en el <strong>conectoma de la mosca de la fruta</strong> decidirá solo cómo llegar a la meta. En el simulador ya llegó en las 8 pruebas.</p>
+      <p>Hoy la araña ya tiene <strong>tacto</strong>: los 2 sensores VL53L0X y la ESP32 la hacen esquivar sola. El siguiente paso es una <strong>Raspberry Pi</strong> con cámara (ojos) y antenas infrarrojas (olfato), para que un cerebro inspirado en el <strong>conectoma de la mosca de la fruta</strong> decida solo cómo llegar a la meta. En el simulador ya llegó en las 8 pruebas.</p>
     </div>
   </section>
 
@@ -436,7 +454,7 @@
     <div class="panel">
       <span class="etiqueta-seccion">Ensamblaje final</span>
       <h2>Así queda armado</h2>
-      <p>Todas las piezas vuelven a su lugar: 6 patas, 18 servos, 2 placas de control, la ESP32 y la pila, en un cuerpo de 24 × 23 cm.</p>
+      <p>Todas las piezas vuelven a su lugar: 6 patas, 18 servos, las 2 PCA9685, los 2 reguladores, la pila, los 2 sensores al frente y, hasta arriba, nuestra placa PCB con la ESP32, en un cuerpo de 24 × 23 cm.</p>
       <div class="equipo">
         <div class="persona">Santiago Fuentes Campos<span>Hardware</span></div>
         <div class="persona">Julián Álvarez<span>Electrónica</span></div>
@@ -453,6 +471,7 @@
       <span class="etiqueta-seccion">El cerebro de la mosca</span>
       <h2>Cómo decide hacia dónde caminar</h2>
       <p>Copiamos un pedacito del cerebro de la mosca de la fruta: las mismas clases de neuronas que usa ella para encontrar comida y esquivar cosas. Son <strong>4 tipos de neuronas</strong> de la mosca (PFL, DNa, DNp y MDN), un reloj que marca el paso y <strong>19 números</strong> que el robot aprendió solo. <strong>Toca cada círculo</strong> para ver qué hace.</p>
+      <p>Este cerebro vive por ahora en el <strong>simulador</strong>, con los sensores de la versión con Raspberry Pi (cámara, antenas y sensores de distancia). El robot de hoy usa la ESP32 con una versión más sencilla: avanza, gira o retrocede según lo que miden sus 2 sensores.</p>
     </div>
 
     <div class="caja estudio">
@@ -937,7 +956,21 @@ const mat = {
   borne: std(0x2f7fe0, 0.45),
   lima:  std(0xb6ff3b, 0.5),
   led:   std(0xff4d3d, 0.4, 0, { emissive: 0xff2a1a, emissiveIntensity: 2 }),
+  morado: std(0x4b2a8c, 0.5),
+  vidrio: std(0x222a33, 0.15, 0.3),
+  capacitor: std(0x1d2230, 0.45),
+  fenolica: std(0xb98a4e, 0.7),
+  cobreAbajo: std(0xc9743a, 0.35, 0.7),
+  placaArriba: std(0xc6a06a, 0.7),
 };
+// La cara de arriba de nuestra placa PCB usa la imagen de la placa hecha en casa (si no carga, queda del color de la fenólica)
+new THREE.TextureLoader().load('./placa-pcb-arriba.jpg', (tex) => {
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  mat.placaArriba.map = tex;
+  mat.placaArriba.color.set(0xffffff);
+  mat.placaArriba.needsUpdate = true;
+});
 const filo = {
   pla:   new THREE.LineBasicMaterial({ color: 0x16226a, transparent: true, opacity: 0.85 }),
   servo: new THREE.LineBasicMaterial({ color: 0x5b5e68, transparent: true, opacity: 0.7 }),
@@ -1013,27 +1046,32 @@ function pines(grupo, puntos, alto, y) {
 }
 
 // ---------- Electrónica (no viene en los planos: se modela aparte) ----------
+// Medidas de los módulos reales, en mm. Ejes del modelo: +X = derecha del robot, -Z = frente, +Y = arriba.
 function crearBateria() {
+  // LiPo 2S 7.4 V 1200 mAh (unos 70 × 35 × 13 mm), acostada en la cuna de la placa inferior
   const g = new THREE.Group();
-  malla(g, caja(36, 12.4, 72), mat.bat);
-  malla(g, caja(36.4, 12.8, 30), mat.esp, 0, 0, -8);
-  malla(g, caja(36.5, 12.9, 3), mat.lima, 0, 0, 10);
-  for (const [x, m] of [[-4.5, mat.rojo], [4.5, mat.negro]]) malla(g, cil(1.4, 11, 10), m, x, 0, 41).rotation.x = Math.PI / 2;
-  malla(g, caja(15.5, 8, 12), mat.amarillo, 0, 0, 52.5);
+  malla(g, caja(35, 12.4, 70), mat.bat);
+  malla(g, caja(35.4, 12.8, 30), mat.esp, 0, 0, -8);
+  malla(g, caja(35.5, 12.9, 3), mat.lima, 0, 0, 10);
+  // Los cables salen por atrás, donde la cuna está abierta
+  for (const [x, m] of [[-4.5, mat.rojo], [4.5, mat.negro]]) malla(g, cil(1.4, 11, 10), m, x, 0, 40).rotation.x = Math.PI / 2;
+  malla(g, caja(15.5, 8, 12), mat.amarillo, 0, 0, 51.5);
   return g;
 }
 function crearRegulador() {
+  // Módulo XL4015 de 5 A: tarjeta azul de 51 × 26 mm, acostada a lo largo del robot
   const g = new THREE.Group();
-  malla(g, caja(30, 1.5, 17), mat.xl);
-  malla(g, new THREE.TorusGeometry(4, 2.2, 10, 28), mat.cobre, -7.5, 3, 1.2).rotation.x = Math.PI / 2;
-  malla(g, cil(2.3, 4.4, 16), mat.chip, -7.5, 2.95, 1.2);
-  for (const x of [4.5, 11]) {
-    malla(g, cil(2.7, 7, 20), mat.chip, x, 4.25, -4.4);
-    malla(g, cil(2.3, 0.3, 20), mat.metal, x, 7.85, -4.4);
+  malla(g, caja(26, 1.6, 51), mat.xl);
+  malla(g, new THREE.TorusGeometry(6, 3, 10, 28), mat.cobre, 0, 4, -8).rotation.x = Math.PI / 2;
+  malla(g, cil(3.4, 6.6, 16), mat.chip, 0, 4.1, -8);
+  for (const [x, z] of [[-7, 10], [7, 10]]) {
+    malla(g, cil(4, 11, 20), mat.chip, x, 6.3, z);
+    malla(g, cil(3.4, 0.3, 20), mat.metal, x, 11.9, z);
   }
-  malla(g, caja(8.5, 2.6, 6.6), mat.chip, 3.5, 2.05, 4.4);
-  malla(g, caja(4.6, 4.6, 4.6), mat.borne, 11.6, 3.05, 4.8);
-  malla(g, cil(1, 0.8, 12), mat.oro, 11.6, 5.7, 4.8);
+  malla(g, caja(10, 4.5, 10), mat.chip, 0, 3, 8.5);              // chip XL4015 con su disipador
+  malla(g, caja(4.6, 9.5, 9.5), mat.borne, 8, 5.5, 19);           // potenciómetro azul (ajuste a 5.8 V)
+  malla(g, cil(1.1, 0.8, 12), mat.oro, 8, 10.6, 19);
+  for (const z of [-23.5, 23.5]) for (const x of [-10, 10]) malla(g, cil(1, 1.2, 10), mat.oro, x, 1.4, z); // IN y OUT
   return g;
 }
 function crearPCA(lado) {
@@ -1046,6 +1084,7 @@ function crearPCA(lado) {
     malla(g, caja(2.4, 2.5, 41), m, x, 2.05, -4);
     for (let j = 0; j < 16; j++) puntos.push([x, -4 - 19.05 + j * 2.54]);
   });
+  // Conector de control (GND OE SCL SDA VCC V+) al frente, hacia la ESP32
   malla(g, caja(2.4, 2.5, 15.6), mat.negro, -lado * 2, 2.05, -29.4).rotation.y = Math.PI / 2;
   for (let j = 0; j < 6; j++) puntos.push([-lado * 2 - 6.35 + j * 2.54, -29.4]);
   pines(g, puntos, 6, 5.3);
@@ -1057,42 +1096,153 @@ function crearPCA(lado) {
   return g;
 }
 function crearESP32() {
+  // ESP32 DevKit V1 de 30 pines (28 × 51 mm). El módulo WROOM y su antena van al frente, el USB atrás.
   const g = new THREE.Group();
   malla(g, caja(28, 1.6, 51), mat.esp);
-  for (const x of [-12.7, 12.7]) malla(g, caja(2.5, 8.5, 38.4), mat.chip, x, -5.05, 1);
-  malla(g, caja(7.6, 2.7, 5.8), mat.metal, 0, 2.15, 23.2);
+  for (const x of [-12.7, 12.7]) malla(g, caja(2.5, 2.5, 38.1), mat.chip, x, -2.05, 3.5); // tiras de pines
+  malla(g, caja(18, 0.8, 25.5), mat.esp, 0, 1.2, -12.2);                                  // módulo WROOM-32
+  malla(g, caja(16, 3.2, 18), mat.metal, 0, 3.2, -8.7);                                   // blindaje metálico
+  malla(g, caja(7.6, 2.7, 5.8), mat.metal, 0, 2.15, 23.2);                                // USB
   for (const x of [-8.5, 8.5]) {
-    malla(g, caja(3.6, 1.6, 4.4), mat.metal, x, 1.6, 21);
-    malla(g, cil(0.9, 0.7, 10), mat.chip, x, 2.6, 21);
+    malla(g, caja(3.6, 1.6, 4.4), mat.metal, x, 1.6, 19.5);                               // botones EN y BOOT
+    malla(g, cil(0.9, 0.7, 10), mat.chip, x, 2.6, 19.5);
   }
   malla(g, caja(4.2, 1.2, 4.2), mat.chip, 0, 1.4, 10);
-  malla(g, caja(6, 1.6, 3.4), mat.chip, 6.5, 1.6, 15);
   malla(g, caja(1.8, 0.8, 1), mat.led, -6.5, 1.2, 14.5);
-  malla(g, caja(18, 0.5, 6), mat.chip, 0, 1.05, -22.2);
   return g;
+}
+function crearSensor(lado) {
+  // VL53L0X (tarjeta morada GY-530 de 25 × 10.7 mm) en el soporte de los planos,
+  // girado unos 15° hacia su lado y 12° hacia arriba, como pide el programa
+  const g = new THREE.Group();
+  malla(g, caja(14, 3, 17), mat.pla, 0, 1.5, -0.5);                // base sobre la placa inferior
+  const cara = new THREE.Group();
+  cara.position.set(0, 3, -8);
+  cara.rotation.set(0.21, -lado * 0.26, 0);
+  g.add(cara);
+  malla(cara, caja(26, 25, 3), mat.pla, 0, 12.5, 1.5);             // pared del soporte
+  malla(cara, caja(10.7, 25, 1.6), mat.morado, 0, 13.4, -0.8);    // tarjeta del sensor
+  malla(cara, caja(4.4, 2.4, 1), mat.chip, 0, 18.4, -2.1);         // el sensor (emisor y receptor)
+  for (const x of [-1.1, 1.1]) malla(cara, caja(0.9, 0.9, 0.3), mat.vidrio, x, 18.4, -2.7);
+  return g;
+}
+function crearPlacaPCB() {
+  // Nuestra placa de una cara (100 × 80 mm, placa fenólica). Arriba se ven los letreros y abajo las pistas de cobre.
+  // Coordenadas de la placa (px, py) en mm desde la esquina de arriba a la izquierda, como en KiCad:
+  // la orilla de arriba (PILA, INTERRUPTOR) va al frente y "IZQ" queda del lado izquierdo del robot.
+  const g = new THREE.Group();
+  const P = (px, py) => [px - 50, py - 40];
+  const lados = [mat.fenolica, mat.fenolica, mat.placaArriba, mat.cobreAbajo, mat.fenolica, mat.fenolica];
+  malla(g, caja(100, 1.6, 80), lados);
+  // Clemas azules: pila, interruptor, entradas y salidas de los XL4015, y V+ de cada PCA
+  const clema = (px, py, giro) => {
+    const [x, z] = P(px, py);
+    const c = malla(g, caja(10.2, 10, 7.6), mat.borne, x, 5.8, z);
+    c.rotation.y = giro;
+    for (const d of [-2.54, 2.54]) {
+      const t = malla(g, cil(1.6, 0.6, 12), mat.metal, x + (giro ? 0 : d), 11.1, z + (giro ? d : 0));
+    }
+  };
+  clema(16.5, 6.4, 0); clema(29.5, 6.4, 0);
+  for (const py of [20.5, 34.4, 56.4]) { clema(6.3, py, Math.PI / 2); clema(93.7, py, Math.PI / 2); }
+  // Capacitores de 1000 µF
+  for (const [px, py] of [[18, 43.5], [81.9, 57.4]]) {
+    const [x, z] = P(px, py);
+    malla(g, cil(5, 16, 24), mat.capacitor, x, 8.8, z);
+    malla(g, cil(4.6, 0.3, 24), mat.metal, x, 16.9, z);
+  }
+  // LM7805 parado (TO-220)
+  {
+    const [x, z] = P(24.5, 63.9);
+    malla(g, caja(10, 9, 4.5), mat.chip, x, 7.3, z);
+    malla(g, caja(10, 6.5, 1.3), mat.metal, x, 15, z + 1.6);
+  }
+  // Zócalos de la ESP32 (filas A y B) y tiras de 6 pines: PCA DER, PCA IZQ, SENS, SENS
+  for (const px of [37, 62.4]) { const [x, z] = P(px, 39 + 7 * 2.54); malla(g, caja(2.5, 8.5, 38.1), mat.negro, x, 5.05, z); }
+  const tiras = [];
+  for (const px of [70.7, 75.8, 80.9, 86]) {
+    const [x, z] = P(px, 36.4 + 2.5 * 2.54);
+    malla(g, caja(2.5, 2.5, 15.2), mat.negro, x, 2.05, z);
+    for (let j = 0; j < 6; j++) tiras.push([x, P(px, 36.4 + j * 2.54)[1]]);
+  }
+  { const [x, z] = P(65.9, 51.6); malla(g, caja(2.5, 2.5, 5.1), mat.negro, x, 2.05, z + 1.27);
+    tiras.push([x, z], [x, z + 2.54]); }
+  pines(g, tiras, 6, 4.3);
+  // LED de encendido
+  { const [x, z] = P(85.2, 26); malla(g, cil(1.5, 4, 12), mat.led, x, 2.8, z); }
+  return g;
+}
+// Cable: un tubo que pasa por varios puntos (en mm, coordenadas del modelo)
+const cables = new THREE.Group();
+function cable(puntos, material, grueso = 1.1) {
+  const curva = new THREE.CatmullRomCurve3(puntos.map((p) => new THREE.Vector3(...p)));
+  const m = new THREE.Mesh(new THREE.TubeGeometry(curva, 64, grueso, 8, false), material);
+  m.castShadow = true;
+  cables.add(m);
 }
 
 // ---------- Cuerpo ----------
 const cuerpo = Object.fromEntries(CAD.body.map((d) => [d.part, d]));
 const placaInf = piezaCad(modelo, cuerpo.placaInf, [0, -105, 0], [0.15, 0, 0]);
 const placaSup = piezaCad(modelo, cuerpo.placaSup, [0, 30, 0], [-0.1, 0, 0]);
-const cubierta = piezaCad(modelo, cuerpo.placaElec, [0, 112, 0], [0, 0.4, 0]);
-const bateria  = pieza(modelo, crearBateria(), [0, 9.3, 0], [0, -52, -20], [0, 0, 0], [0, -0.3, 0]);
-const xlD = pieza(modelo, crearRegulador(), [17, 43.5, -41.5], [26, 192, -30]);
-const xlI = pieza(modelo, crearRegulador(), [-17, 43.5, -41.5], [-26, 192, -30], [0, Math.PI, 0]);
-const esp32 = pieza(modelo, crearESP32(), [0, 28.3, 2], [0, 72, 0], [0, 0, 0], [0, 0.6, 0]);
-pieza(modelo, malla(new THREE.Group(), caja(16, 3.2, 18), mat.metal), [0, 30.7, -9.5], [0, 75, -12]); // módulo WROOM
-const pcaD = pieza(modelo, crearPCA(1), [21.5, 43.8, 14], [48, 152, 0], [0, 0, 0], [0, 0, -0.3]);
-const pcaI = pieza(modelo, crearPCA(-1), [-21.5, 43.8, 14], [-48, 152, 0], [0, 0, 0], [0, 0, 0.3]);
+const cubierta = piezaCad(modelo, cuerpo.placaElec, [0, 105, 0], [0, 0.4, 0]);
+
+// Abajo: la pila en su cuna y los 2 sensores al frente, en los barrenos de la placa inferior (X ±16 y ±24, 64 mm al frente)
+const bateria = pieza(modelo, crearBateria(), [0, 9.3, 0], [0, -52, 20], [0, 0, 0], [0, -0.3, 0]);
+const sensI = pieza(modelo, crearSensor(-1), [-20, 3, -67.5], [-30, -40, -70], [0, 0, 0], [0, 0.4, 0]);
+const sensD = pieza(modelo, crearSensor(1), [20, 3, -67.5], [30, -40, -70], [0, 0, 0], [0, -0.4, 0]);
+
+// Entre la placa superior y la de electrónica: las 2 PCA9685, una por lado, cerca de los servos de su lado
+const pcaD = pieza(modelo, crearPCA(1), [13, 22, 0], [70, 62, 0], [0, 0, 0], [0, 0, -0.3]);
+const pcaI = pieza(modelo, crearPCA(-1), [-13, 22, 0], [-70, 62, 0], [0, 0, 0], [0, 0, 0.3]);
 // Separadores entre la placa superior y la de electrónica (en los 4 barrenos que comparten las placas)
 for (const x of [-30, 30]) for (const z of [-12, 12]) pieza(modelo, malla(new THREE.Group(), cil(2.8, 20, 6), mat.laton), [x, 29, z], [0, 52, 0]);
 
-etiqueta(cubierta, 'Cubierta · PLA+');
+// Sobre la placa de electrónica: los 2 XL4015, uno por lado, debajo de la placa PCB
+const xlI = pieza(modelo, crearRegulador(), [-17.5, 42.3, -4], [-55, 135, 0], [0, 0, 0], [0, 0, 0.3]);
+const xlD = pieza(modelo, crearRegulador(), [17.5, 42.3, -4], [55, 135, 0], [0, 0, 0], [0, 0, -0.3]);
+
+// Hasta arriba: la placa PCB, sobre 4 separadores M3 (dos de 20 mm por esquina) que salen de la placa superior
+const pcb = pieza(modelo, crearPlacaPCB(), [0, 58.3, 0], [0, 165, 0], [0, 0, 0], [0.12, 0, 0]);
+for (const x of [-45.4, 45.4]) for (const z of [-35.4, 35.4]) pieza(modelo, malla(new THREE.Group(), cil(2.8, 38.5, 6), mat.laton), [x, 38.25, z], [0, 120, 0]);
+// La ESP32 enchufada en los zócalos de la placa (fila B, USB hacia atrás)
+const esp32 = pieza(modelo, crearESP32(), [-0.3, 71.6, 13.3], [0, 200, 0], [0, 0, 0], [0, 0.6, 0]);
+
+// Cables (solo se ven con el robot armado)
+const bus = [mat.negro, mat.lima, mat.amarillo, mat.rojo];        // GND, SCL, SDA, 3.3 V
+// PCB → PCA DER y PCA IZQ: salen por el frente de la placa, pasan entre los dos XL4015
+// y bajan por la ranura de cables de la placa de electrónica hasta el conector de cada PCA
+[[20.7, 1], [25.8, -1]].forEach(([x0, lado], k) => bus.forEach((m, j) => {
+  const dx = (j - 1.5) * 1.5, h = k * 2;
+  cable([[x0, 66, -3.6 + j * 2.54], [x0 + 2, 70 + h, -20], [x0 - 4, 66 + h, -44 - h], [dx, 52, -38], [dx + lado * 1.5, 50, 0],
+         [dx + lado * 2, 44, 16], [dx + lado * 2, 36, 16], [lado * 8 + dx, 33, -10], [lado * 11 + dx * 0.6, 31, -29.4]], m, 0.6);
+}));
+// PCB → sensores: también por el frente, y bajan por delante de la placa superior hasta atrás de cada sensor
+[[30.9, -1], [36, 1]].forEach(([x0, lado], k) => bus.forEach((m, j) => {
+  const dx = (j - 1.5) * 1.5, h = k * 2;
+  cable([[x0, 66, -3.6 + j * 2.54], [x0 + 2, 72 + h, -22], [x0 + 4, 64 + h, -46 - h], [lado * 22 + dx, 48 + h, -56], [lado * 21 + dx, 36, -66], [lado * 20 + dx * 0.6, 30, -71]], m, 0.6);
+}));
+// Pila → fusible → clema PILA (cable rojo y negro): sale por atrás de la cuna y sube por el lado izquierdo
+for (const [dx, m] of [[-2.5, mat.rojo], [2.5, mat.negro]]) {
+  cable([[dx, 9.3, 58], [dx, 14, 74], [-25 + dx, 40, 64], [-57 + dx * 0.3, 60, 30], [-57 + dx * 0.3, 64, -20], [-48, 66 + dx * 0.4, -46], [-33.5 + dx, 64, -42], [-33.5 + dx, 64, -37]], m, 1.1);
+}
+// Cada XL4015: de su clema de entrada a IN y de OUT a su clema de salida, rodeando la orilla de la PCB
+for (const lado of [-1, 1]) {
+  for (const [dz, m] of [[-1.3, mat.rojo], [1.3, mat.negro]]) {
+    cable([[lado * 47.5, 64, -20.5 + dz], [lado * 53, 60, -20.5 + dz], [lado * 52, 50, -24 + dz], [lado * 36, 46, -27.5 + dz], [lado * 26, 44, -27.5 + dz]], m, 0.9);
+    cable([[lado * 47.5, 64, -6.6 + dz], [lado * 53, 60, -6.6 + dz], [lado * 52, 50, 10 + dz], [lado * 36, 46, 19.5 + dz], [lado * 26, 44, 19.5 + dz]], m, 0.9);
+  }
+}
+modelo.add(cables);
+
+etiqueta(pcb, 'Placa PCB casera');
 etiqueta(esp32, 'ESP32 · el cerebro');
-etiqueta(pcaD, 'PCA9685 · lado derecho');
-etiqueta(placaSup, 'Placa superior');
-etiqueta(bateria, 'Pila LiPo 7.4 V');
 etiqueta(xlI, 'Regulador XL4015');
+etiqueta(pcaD, 'PCA9685 · lado derecho');
+etiqueta(cubierta, 'Placa de electrónica');
+etiqueta(placaSup, 'Placa superior');
+etiqueta(bateria, 'Pila LiPo 7.4 V · 1200 mAh');
+etiqueta(sensD, 'Sensor VL53L0X');
 etiqueta(placaInf, 'Placa inferior');
 
 // ---------- Patas ----------
@@ -1157,6 +1307,7 @@ function cuadro() {
   const objetivo = avanceDesarme();
   t += (objetivo - t) * 0.08; // movimiento suave
 
+  cables.visible = t < 0.03; // los cables solo se ven con el robot armado
   for (const p of piezas) {
     p.obj.position.copy(p.base).addScaledVector(p.off, t);
     p.obj.rotation.set(p.giro0.x + p.giroX.x * t, p.giro0.y + p.giroX.y * t, p.giro0.z + p.giroX.z * t);
@@ -1173,8 +1324,8 @@ function cuadro() {
   sol.target.position.set(robot.position.x, 0, 0);
 
   const dist = 6.3 + 4.3 * t;
-  camera.position.set(0, 2.3 + 1.5 * t, dist);
-  camera.lookAt(0, 0.25 + 0.1 * t, 0);
+  camera.position.set(0, 2.3 + 1.8 * t, dist);
+  camera.lookAt(0, 0.25 + 0.45 * t, 0);
 
   // En la galería y en el cerebro el contenido ocupa todo el ancho: el robot se desvanece para no estorbar
   let enAncha = false;
