@@ -374,8 +374,8 @@
     <div class="paso">
       <div class="panel">
         <div class="numero">1</div>
-        <h2>Placa PCB hecha por nosotros</h2>
-        <p>Una placa de <strong>una sola cara</strong> que hicimos en casa con la técnica de <strong>planchado</strong> en placa fenólica. Reúne la ESP32, las clemas de la pila y los reguladores, el medidor de pila y los conectores de las PCA9685 y de los sensores, sin protoboard ni cables sueltos.</p>
+        <h2>Todo en una protoboard</h2>
+        <p>Toda la electrónica va en una <strong>protoboard</strong>, hasta arriba del robot: la ESP32 al centro, el <strong>LM7805</strong> con sus capacitores, el LED de encendido, el medidor de pila y el bus que va a las <strong>PCA9685</strong> y a los <strong>sensores</strong>. Así podemos cambiar cualquier conexión sin soldar.</p>
       </div>
     </div>
   </section>
@@ -387,7 +387,7 @@
       <p>Recorrer una pista de madera de 2 a 3 metros, con zonas rugosas, en menos de 3 minutos.</p>
       <div class="tabla">
         <div class="dato"><b>23.9 × 22.9</b><small>cm de pie (límite 25 × 25)</small></div>
-        <div class="dato"><b>≈ 15 cm</b><small>de alto con la placa arriba (límite 25)</small></div>
+        <div class="dato"><b>≈ 16 cm</b><small>de alto con la protoboard arriba (límite 25)</small></div>
         <div class="dato"><b>6 patas</b><small>marcha estable de insecto</small></div>
         <div class="dato"><b>1.5 kg</b><small>peso máximo permitido</small></div>
       </div>
@@ -451,7 +451,7 @@
         <div><b>27 de octubre</b> · Primera pata completa</div>
         <div><b>30 de octubre</b> · Un lado caminando</div>
         <div><b>31 de octubre</b> · Prueba del robot completo</div>
-        <div><b>12 al 15 de noviembre</b> · Placa PCB casera por planchado, con sensores</div>
+        <div><b>12 al 15 de noviembre</b> · Sensores láser y electrónica en protoboard</div>
         <div><b>16 de noviembre</b> · Esquiva obstáculos sola y Perry se vuelve el cerebro</div>
       </div>
     </div>
@@ -469,7 +469,7 @@
     <div class="panel">
       <span class="etiqueta-seccion">Ensamblaje final</span>
       <h2>Así queda armado</h2>
-      <p>Todas las piezas vuelven a su lugar: 6 patas, 18 servos, las 2 PCA9685, los 2 reguladores, la pila, los 2 sensores al frente y, hasta arriba, nuestra placa PCB con la ESP32, en un cuerpo de 24 × 23 cm.</p>
+      <p>Todas las piezas vuelven a su lugar: 6 patas, 18 servos, las 2 PCA9685, los 2 reguladores, la pila, los 2 sensores al frente y, hasta arriba, la protoboard con la ESP32, en un cuerpo de 24 × 23 cm.</p>
       <div class="equipo">
         <div class="persona">Santiago Fuentes Campos<span>Hardware</span></div>
         <div class="persona">Julián Álvarez<span>Electrónica</span></div>
@@ -1090,18 +1090,14 @@ const mat = {
   morado: std(0x4b2a8c, 0.5),
   vidrio: std(0x222a33, 0.15, 0.3),
   capacitor: std(0x1d2230, 0.45),
-  fenolica: std(0xb98a4e, 0.7),
-  cobreAbajo: std(0xc9743a, 0.35, 0.7),
-  placaArriba: std(0xc6a06a, 0.7),
+  proto: std(0xf1f1ec, 0.65),
+  canal: std(0xc9c9c2, 0.8),
+  hoyo:  std(0x3a3a3e, 0.9),
+  resistencia: std(0xd9c39a, 0.6),
+  gris:  std(0x9aa0aa, 0.5),
+  naranja: std(0xf08a24, 0.55),
+  azul:  std(0x2f6fd6, 0.55),
 };
-// La cara de arriba de nuestra placa PCB usa la imagen de la placa hecha en casa (si no carga, queda del color de la fenólica)
-new THREE.TextureLoader().load('./placa-pcb-arriba.jpg', (tex) => {
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
-  mat.placaArriba.map = tex;
-  mat.placaArriba.color.set(0xffffff);
-  mat.placaArriba.needsUpdate = true;
-});
 const filo = {
   pla:   new THREE.LineBasicMaterial({ color: 0x16226a, transparent: true, opacity: 0.85 }),
   servo: new THREE.LineBasicMaterial({ color: 0x5b5e68, transparent: true, opacity: 0.7 }),
@@ -1227,10 +1223,10 @@ function crearPCA(lado) {
   return g;
 }
 function crearESP32() {
-  // ESP32 DevKit V1 de 30 pines (28 × 51 mm). El módulo WROOM y su antena van al frente, el USB atrás.
+  // ESP32 DevKit V1 de 30 pines (25.5 × 51 mm). El módulo WROOM y su antena van al frente, el USB atrás.
   const g = new THREE.Group();
-  malla(g, caja(28, 1.6, 51), mat.esp);
-  for (const x of [-12.7, 12.7]) malla(g, caja(2.5, 2.5, 38.1), mat.chip, x, -2.05, 3.5); // tiras de pines
+  malla(g, caja(25.5, 1.6, 51), mat.esp);
+  for (const x of [-11.43, 11.43]) malla(g, caja(2.5, 2.5, 38.1), mat.chip, x, -2.05, 3.5); // tiras de pines (0.9")
   malla(g, caja(18, 0.8, 25.5), mat.esp, 0, 1.2, -12.2);                                  // módulo WROOM-32
   malla(g, caja(16, 3.2, 18), mat.metal, 0, 3.2, -8.7);                                   // blindaje metálico
   malla(g, caja(7.6, 2.7, 5.8), mat.metal, 0, 2.15, 23.2);                                // USB
@@ -1257,50 +1253,86 @@ function crearSensor(lado) {
   for (const x of [-1.1, 1.1]) malla(cara, caja(0.9, 0.9, 0.3), mat.vidrio, x, 18.4, -2.7);
   return g;
 }
-function crearPlacaPCB() {
-  // Nuestra placa de una cara (100 × 80 mm, placa fenólica). Arriba se ven los letreros y abajo las pistas de cobre.
-  // Coordenadas de la placa (px, py) en mm desde la esquina de arriba a la izquierda, como en KiCad:
-  // la orilla de arriba (PILA, INTERRUPTOR) va al frente y "IZQ" queda del lado izquierdo del robot.
+function crearProtoboard() {
+  // Protoboard de 400 puntos (83.5 × 54.5 × 8.5 mm) pegada sobre una base de PLA de 100 × 80 mm,
+  // que se atornilla a los mismos 4 separadores. Ejes: +X = derecha del robot, -Z = frente.
+  // 30 columnas (X) y filas A–J (de adelante hacia atrás); rieles de 5 V al frente y de 7.4 V atrás.
   const g = new THREE.Group();
-  const P = (px, py) => [px - 50, py - 40];
-  const lados = [mat.fenolica, mat.fenolica, mat.placaArriba, mat.cobreAbajo, mat.fenolica, mat.fenolica];
-  malla(g, caja(100, 1.6, 80), lados);
-  // Clemas azules: pila, interruptor, entradas y salidas de los XL4015, y V+ de cada PCA
-  const clema = (px, py, giro) => {
-    const [x, z] = P(px, py);
-    const c = malla(g, caja(10.2, 10, 7.6), mat.borne, x, 5.8, z);
-    c.rotation.y = giro;
-    for (const d of [-2.54, 2.54]) {
-      const t = malla(g, cil(1.6, 0.6, 12), mat.metal, x + (giro ? 0 : d), 11.1, z + (giro ? d : 0));
+  malla(g, caja(100, 2, 80), mat.pla);
+  const T = 9.5;                                                   // altura de la cara de arriba
+  malla(g, caja(83.5, 8.5, 54.5), mat.proto, 0, 5.25, 0);
+  malla(g, caja(81, 0.2, 2.2), mat.canal, 0, T + 0.02, 0);         // canal del centro
+  const X = (c) => (c - 14.5) * 2.54;                               // columna 0–29
+  const fila = { A: -13.97, B: -11.43, C: -8.89, D: -6.35, E: -3.81, F: 3.81, G: 6.35, H: 8.89, I: 11.43, J: 13.97 };
+  const riel = { m5: -19.69, p5: -22.23, gnd: 19.69, p74: 22.23 };  // − y + del frente (5 V) y de atrás (7.4 V)
+  const hoyos = [];
+  for (let c = 0; c < 30; c++) {
+    for (const z of Object.values(fila)) hoyos.push([X(c), z]);
+    if (c % 6 !== 5) for (const z of Object.values(riel)) hoyos.push([X(c), z]);
+  }
+  const im = new THREE.InstancedMesh(caja(0.8, 0.12, 0.8), mat.hoyo, hoyos.length);
+  const M = new THREE.Matrix4();
+  hoyos.forEach(([x, z], k) => im.setMatrixAt(k, M.makeTranslation(x, T + 0.03, z)));
+  g.add(im);
+  for (const s of [-1, 1]) {                                        // líneas roja (+) y azul (−) de los rieles
+    malla(g, caja(76, 0.1, 0.5), mat.rojo, 0, T + 0.03, s * 24.4);
+    malla(g, caja(76, 0.1, 0.5), mat.borne, 0, T + 0.03, s * 17.6);
+  }
+  // Jumper: patita en el primer hoyo, recorrido a una altura y patita en el último
+  const jumper = (pts, m, alto = 2) => {
+    const p = [[pts[0][0], T - 1, pts[0][1]], [pts[0][0], T + alto * 0.6, pts[0][1]]];
+    pts.forEach(([x, z], k) => { if (k > 0 && k < pts.length - 1) p.push([x, T + alto, z]); });
+    if (pts.length === 2) {
+      const [[ax, az], [bx, bz]] = pts;
+      p.push([ax + (bx - ax) * 0.2, T + alto, az + (bz - az) * 0.2], [ax + (bx - ax) * 0.8, T + alto, az + (bz - az) * 0.8]);
     }
+    const u = pts[pts.length - 1];
+    p.push([u[0], T + alto * 0.6, u[1]], [u[0], T - 1, u[1]]);
+    const curva = new THREE.CatmullRomCurve3(p.map((q) => new THREE.Vector3(...q)), false, 'centripetal');
+    malla(g, new THREE.TubeGeometry(curva, 48, 0.5, 6, false), m);
   };
-  clema(16.5, 6.4, 0); clema(29.5, 6.4, 0);
-  for (const py of [20.5, 34.4, 56.4]) { clema(6.3, py, Math.PI / 2); clema(93.7, py, Math.PI / 2); }
-  // Capacitores de 1000 µF
-  for (const [px, py] of [[18, 43.5], [81.9, 57.4]]) {
-    const [x, z] = P(px, py);
-    malla(g, cil(5, 16, 24), mat.capacitor, x, 8.8, z);
-    malla(g, cil(4.6, 0.3, 24), mat.metal, x, 16.9, z);
-  }
-  // LM7805 parado (TO-220)
-  {
-    const [x, z] = P(24.5, 63.9);
-    malla(g, caja(10, 9, 4.5), mat.chip, x, 7.3, z);
-    malla(g, caja(10, 6.5, 1.3), mat.metal, x, 15, z + 1.6);
-  }
-  // Zócalos de la ESP32 (filas A y B) y tiras de 6 pines: PCA DER, PCA IZQ, SENS, SENS
-  for (const px of [37, 62.4]) { const [x, z] = P(px, 39 + 7 * 2.54); malla(g, caja(2.5, 8.5, 38.1), mat.negro, x, 5.05, z); }
-  const tiras = [];
-  for (const px of [70.7, 75.8, 80.9, 86]) {
-    const [x, z] = P(px, 36.4 + 2.5 * 2.54);
-    malla(g, caja(2.5, 2.5, 15.2), mat.negro, x, 2.05, z);
-    for (let j = 0; j < 6; j++) tiras.push([x, P(px, 36.4 + j * 2.54)[1]]);
-  }
-  { const [x, z] = P(65.9, 51.6); malla(g, caja(2.5, 2.5, 5.1), mat.negro, x, 2.05, z + 1.27);
-    tiras.push([x, z], [x, z + 2.54]); }
-  pines(g, tiras, 6, 4.3);
-  // LED de encendido
-  { const [x, z] = P(85.2, 26); malla(g, cil(1.5, 4, 12), mat.led, x, 2.8, z); }
+  const resistencia = (a, b) => {                                   // acostada, con sus patitas
+    jumper([a, b], mat.metal, 1.6);
+    const [ax, az] = a, [bx, bz] = b;
+    const r = malla(g, new THREE.CapsuleGeometry(1.1, 4, 4, 10), mat.resistencia, (ax + bx) / 2, T + 1.6, (az + bz) / 2);
+    r.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(bx - ax, 0, bz - az).normalize());
+  };
+  const capacitor = (x, z) => {                                     // 1000 µF parado
+    malla(g, cil(4, 12, 24), mat.capacitor, x, T + 7, z);
+    malla(g, cil(3.7, 0.3, 24), mat.metal, x, T + 13.1, z);
+    malla(g, caja(0.6, 11.8, 2), mat.gris, x + 3.75, T + 7, z);            // franja del lado negativo
+  };
+
+  // LM7805 parado (TO-220) atrás a la derecha: entrada, tierra y salida en las columnas 22, 23 y 24, fila H
+  malla(g, caja(10, 9, 4.5), mat.chip, X(23), T + 6.5, fila.H);
+  malla(g, caja(10, 6.5, 1.3), mat.metal, X(23), T + 14.2, fila.H + 1.6);
+  pines(g, [[X(22), fila.H], [X(23), fila.H], [X(24), fila.H]], 2.6, T + 0.8);
+  capacitor(X(20), fila.F);                                          // a la entrada del LM7805
+  capacitor(X(29), (riel.m5 + riel.p5) / 2);                        // a la salida, entre los rieles de 5 V
+  jumper([[X(22), fila.J], [X(22), riel.p74]], mat.rojo);            // 7.4 V → entrada
+  jumper([[X(23), fila.J], [X(23), riel.gnd]], mat.negro);           // tierra
+  jumper([[X(24), fila.F], [X(24), riel.p5]], mat.naranja, 5);       // salida → riel de 5 V del frente
+  // La ESP32 toma 5 V del riel del frente (VIN y GND, columnas 0 y 1)
+  jumper([[X(0), riel.p5], [X(0), fila.A]], mat.naranja);
+  jumper([[X(1), fila.A], [X(1), riel.m5]], mat.negro);
+  // Medidor de pila: divisor de 2 resistencias de 7.4 V a tierra; el punto del centro va al GPIO34 de la ESP32
+  jumper([[X(19), riel.p74], [X(19), fila.E]], mat.rojo, 15);
+  resistencia([X(19), fila.D], [X(22), fila.D]);
+  resistencia([X(22), fila.B], [X(22), riel.m5]);
+  jumper([[X(22), fila.A], [X(11), fila.A]], mat.azul, 1.6);
+  // LED de encendido con su resistencia, en el riel de 5 V
+  malla(g, cil(1.5, 4, 12), mat.led, (X(25) + X(26)) / 2, T + 4, fila.C);
+  malla(g, new THREE.SphereGeometry(1.5, 12, 8), mat.led, (X(25) + X(26)) / 2, T + 6, fila.C);
+  pines(g, [[X(25), fila.C], [X(26), fila.C]], 2.4, T + 0.9);
+  resistencia([X(25), fila.A], [X(25), riel.p5]);
+  jumper([[X(26), fila.A], [X(26), riel.m5]], mat.negro);
+  // Bus I2C (GND, SCL, SDA, 3.3 V) en las columnas 26 a 29: la ESP32 entra por la fila J
+  // y las 2 PCA9685 y los 2 sensores se conectan en las filas F, G, H e I
+  const bus = [mat.negro, mat.lima, mat.amarillo, mat.rojo];
+  [1, 13, 10, 0].forEach((c, j) => {
+    const lane = 15.1 + j * 1.15;
+    jumper([[X(c), fila.J], [X(c) + 1, lane], [X(26 + j) - 1.2, lane], [X(26 + j), fila.J]], bus[j], 1.8 + j * 0.3);
+  });
   return g;
 }
 // Cable: un tubo que pasa por varios puntos (en mm, coordenadas del modelo)
@@ -1329,44 +1361,52 @@ const pcaI = pieza(modelo, crearPCA(-1), [-13, 22, 0], [-70, 62, 0], [0, 0, 0], 
 // Separadores entre la placa superior y la de electrónica (en los 4 barrenos que comparten las placas)
 for (const x of [-30, 30]) for (const z of [-12, 12]) pieza(modelo, malla(new THREE.Group(), cil(2.8, 20, 6), mat.laton), [x, 29, z], [0, 52, 0]);
 
-// Sobre la placa de electrónica: los 2 XL4015, uno por lado, debajo de la placa PCB
+// Sobre la placa de electrónica: los 2 XL4015, uno por lado, debajo de la protoboard
 const xlI = pieza(modelo, crearRegulador(), [-17.5, 42.3, -4], [-55, 135, 0], [0, 0, 0], [0, 0, 0.3]);
 const xlD = pieza(modelo, crearRegulador(), [17.5, 42.3, -4], [55, 135, 0], [0, 0, 0], [0, 0, -0.3]);
 
-// Hasta arriba: la placa PCB, sobre 4 separadores M3 (dos de 20 mm por esquina) que salen de la placa superior
-const pcb = pieza(modelo, crearPlacaPCB(), [0, 58.3, 0], [0, 165, 0], [0, 0, 0], [0.12, 0, 0]);
+// Hasta arriba: la protoboard en su base, sobre 4 separadores M3 (dos de 20 mm por esquina) que salen de la placa superior
+const proto = pieza(modelo, crearProtoboard(), [0, 58.3, 0], [0, 165, 0], [0, 0, 0], [0.12, 0, 0]);
 for (const x of [-45.4, 45.4]) for (const z of [-35.4, 35.4]) pieza(modelo, malla(new THREE.Group(), cil(2.8, 38.5, 6), mat.laton), [x, 38.25, z], [0, 120, 0]);
-// La ESP32 enchufada en los zócalos de la placa (fila B, USB hacia atrás)
-const esp32 = pieza(modelo, crearESP32(), [-0.3, 71.6, 13.3], [0, 200, 0], [0, 0, 0], [0, 0.6, 0]);
+// La ESP32 enchufada en la protoboard, cruzando el canal del centro (filas B e I), con el USB hacia la izquierda
+const esp32 = pieza(modelo, crearESP32(), [-15.55, 71.1, 0], [0, 200, 0], [0, -Math.PI / 2, 0], [0, 0.6, 0]);
 
-// Cables (solo se ven con el robot armado)
+// Cables (solo se ven con el robot armado). La cara de arriba de la protoboard queda en Y = 67.8
 const bus = [mat.negro, mat.lima, mat.amarillo, mat.rojo];        // GND, SCL, SDA, 3.3 V
-// PCB → PCA DER y PCA IZQ: salen por el frente de la placa, pasan entre los dos XL4015
+const colBus = (j) => 29.21 + j * 2.54;                            // columnas 26 a 29 del bus I2C
+// Del bus salen 4 juegos de cables: PCA DER (fila F), PCA IZQ (G), sensor izquierdo (H) y sensor derecho (I).
+// Van por la orilla derecha de la base hacia el frente y de ahí bajan como antes
+const salida = (x, z, j, k) => [[x, 67, z], [x, 70.6 + k * 0.7, z], [x + 4, 71 + k * 0.7, z - 1],
+  [44.2 + j * 1.3, 62.2 + k * 1.3, z - 5], [44.2 + j * 1.3, 61 + k * 1.3, -26], [42 + j * 1.3, 61.5 + k * 1.3, -42 - k]];
+// → PCA DER y PCA IZQ: bajan por el frente, pasan entre los dos XL4015
 // y bajan por la ranura de cables de la placa de electrónica hasta el conector de cada PCA
-[[20.7, 1], [25.8, -1]].forEach(([x0, lado], k) => bus.forEach((m, j) => {
+[1, -1].forEach((lado, k) => bus.forEach((m, j) => {
   const dx = (j - 1.5) * 1.5, h = k * 2;
-  cable([[x0, 66, -3.6 + j * 2.54], [x0 + 2, 70 + h, -20], [x0 - 4, 66 + h, -44 - h], [dx, 52, -38], [dx + lado * 1.5, 50, 0],
+  cable([...salida(colBus(j), 3.81 + k * 2.54, j, k), [18 - k * 3, 55 + h, -45 - h], [dx, 52, -38], [dx + lado * 1.5, 50, 0],
          [dx + lado * 2, 44, 16], [dx + lado * 2, 36, 16], [lado * 8 + dx, 33, -10], [lado * 11 + dx * 0.6, 31, -29.4]], m, 0.6);
 }));
-// PCB → sensores: también por el frente, y bajan por delante de la placa superior hasta atrás de cada sensor
-[[30.9, -1], [36, 1]].forEach(([x0, lado], k) => bus.forEach((m, j) => {
-  const dx = (j - 1.5) * 1.5, h = k * 2;
-  cable([[x0, 66, -3.6 + j * 2.54], [x0 + 2, 72 + h, -22], [x0 + 4, 64 + h, -46 - h], [lado * 22 + dx, 48 + h, -56], [lado * 21 + dx, 36, -66], [lado * 20 + dx * 0.6, 30, -71]], m, 0.6);
+// → sensores: también por el frente, y bajan por delante de la placa superior hasta atrás de cada sensor
+[-1, 1].forEach((lado, i) => bus.forEach((m, j) => {
+  const k = i + 2, dx = (j - 1.5) * 1.5, h = i * 2;
+  cable([...salida(colBus(j), 3.81 + k * 2.54, j, k), [lado * 22 + dx, 48 + h, -56], [lado * 21 + dx, 36, -66], [lado * 20 + dx * 0.6, 30, -71]], m, 0.6);
 }));
-// Pila → fusible → clema PILA (cable rojo y negro): sale por atrás de la cuna y sube por el lado izquierdo
-for (const [dx, m] of [[-2.5, mat.rojo], [2.5, mat.negro]]) {
-  cable([[dx, 9.3, 58], [dx, 14, 74], [-25 + dx, 40, 64], [-57 + dx * 0.3, 60, 30], [-57 + dx * 0.3, 64, -20], [-48, 66 + dx * 0.4, -46], [-33.5 + dx, 64, -42], [-33.5 + dx, 64, -37]], m, 1.1);
+// Pila → fusible → interruptor → riel de 7.4 V de atrás (cable rojo y negro): sale por atrás de la cuna y sube por el lado izquierdo
+for (const [dx, m, x, z] of [[-2.5, mat.rojo, -31.75, 22.23], [2.5, mat.negro, -29.21, 19.69]]) {
+  cable([[dx, 9.3, 58], [dx, 14, 74], [-25 + dx, 40, 64], [-57 + dx * 0.3, 60, 30], [-47, 70, 27 + dx * 0.4], [x, 71, z + 1.5], [x, 67, z]], m, 1.1);
 }
-// Cada XL4015: de su clema de entrada a IN y de OUT a su clema de salida, rodeando la orilla de la PCB
+// Cada XL4015: su entrada (IN) sale del riel de 7.4 V de atrás y baja por su lado;
+// su salida (OUT) va directo a la clema V+ de la PCA de su lado, por la ranura de la placa de electrónica
 for (const lado of [-1, 1]) {
-  for (const [dz, m] of [[-1.3, mat.rojo], [1.3, mat.negro]]) {
-    cable([[lado * 47.5, 64, -20.5 + dz], [lado * 53, 60, -20.5 + dz], [lado * 52, 50, -24 + dz], [lado * 36, 46, -27.5 + dz], [lado * 26, 44, -27.5 + dz]], m, 0.9);
-    cable([[lado * 47.5, 64, -6.6 + dz], [lado * 53, 60, -6.6 + dz], [lado * 52, 50, 10 + dz], [lado * 36, 46, 19.5 + dz], [lado * 26, 44, 19.5 + dz]], m, 0.9);
+  for (const [dz, m, x, z] of [[-1.3, mat.rojo, 36.83, 22.23], [1.3, mat.negro, 34.29, 19.69]]) {
+    cable([[lado * x, 67, z], [lado * x, 70.5, z + 0.5], [lado * 45, 68, z + 4], [lado * 53, 61, 18 + dz], [lado * 54, 54, -2 + dz],
+           [lado * 52, 50, -24 + dz], [lado * 36, 46, -27.5 + dz], [lado * 26, 44, -27.5 + dz]], m, 0.9);
+    cable([[lado * 26, 44, 19.5 + dz], [lado * 20, 47, 23 + dz], [lado * 9, 46.5, 22 + dz], [lado * 6.5, 42, 17 + dz * 0.3],
+           [lado * 6.5, 36, 16 + dz * 0.3], [lado * 9, 32, 27], [lado * 11 + dz, 28, 30.5], [lado * 11 + dz, 25.5, 28.5]], m, 0.9);
   }
 }
 modelo.add(cables);
 
-etiqueta(pcb, 'Placa PCB casera');
+etiqueta(proto, 'Protoboard');
 etiqueta(esp32, 'ESP32 · la médula');
 etiqueta(xlI, 'Regulador XL4015');
 etiqueta(pcaD, 'PCA9685 · lado derecho');
