@@ -231,6 +231,20 @@
   .leyenda { display: flex; gap: 18px; font-size: 13px; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
   .leyenda span::before { content: ""; display: inline-block; width: 22px; height: 0; margin-right: 6px; vertical-align: middle; border-top: 2px solid rgba(182,255,59,0.7); }
   .leyenda span.inh::before { border-top: 2px dashed rgba(255,99,99,0.8); }
+  #red .dat { stroke: rgba(120,150,255,0.7); stroke-dasharray: 5 4; }
+  .leyenda span.dat::before { border-top: 2px dashed rgba(120,150,255,0.9); }
+  .quien { display: inline-block; font-family: var(--titulos); font-size: 12.5px; font-weight: 600; padding: 2px 8px; border-radius: 2px; margin-bottom: 10px; background: rgba(182,255,59,0.12); color: var(--lime); }
+  .quien.reflejo { background: rgba(120,150,255,0.16); color: #9fb2ff; }
+  .quien.alto { background: rgba(255,107,107,0.16); color: #ff8b8b; }
+  .control.check label { justify-content: flex-start; gap: 8px; cursor: pointer; }
+  .explorar { margin-top: 16px; max-width: 1240px; }
+  .explorar-grid { display: grid; grid-template-columns: 1fr 300px; gap: 18px; margin-top: 10px; align-items: start; }
+  #cuarto { width: 100%; height: auto; display: block; background: #0a0f0c; border: 1px solid var(--borde); border-radius: 2px; }
+  .explorar .leyenda span::before { display: none; }
+  .explorar .leyenda i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; border-radius: 1px; }
+  #cuenta { font-family: var(--titulos); font-size: 14px; color: var(--muted); margin: 10px 0; line-height: 1.7; }
+  #cuenta b { color: var(--lime); font-size: 16px; }
+  @media (max-width: 1000px) { .explorar-grid { grid-template-columns: 1fr; } }
   #info h2 { font-size: 26px; margin-bottom: 4px; }
   #info .tipo { color: var(--lime); font-family: var(--titulos); font-size: 13.5px; font-weight: 500; margin-bottom: 12px; }
   #info h4 { color: var(--text); font-family: var(--titulos); font-size: 14px; font-weight: 600; margin: 14px 0 3px; }
@@ -316,7 +330,7 @@
   <section class="hero" id="inicio">
     <span class="etiqueta-seccion">Competencia de Robot Insecto · 2026</span>
     <h1>Hexápodo<br><span>Mosca</span></h1>
-    <p class="sub">Un robot de 6 patas inspirado en la mosca de la fruta.</p>
+    <p class="sub">Un robot de 6 patas inspirado en la mosca de la fruta, con una inteligencia artificial como cerebro.</p>
     <p class="datos">Equipo <strong>La mosca encapsulada</strong> · CECyTEQ plantel Corregidora · Grupo 3TMEC-BM</p>
     <div class="bajar">Baja para desarmarlo ↓</div>
   </section>
@@ -339,8 +353,8 @@
     <div class="paso">
       <div class="panel">
         <div class="numero">50×</div>
-        <h2>El cerebro: ESP32</h2>
-        <p>Calcula el ángulo de cada motor <strong>50 veces por segundo</strong> y crea su propia red WiFi. Le manda las órdenes a <strong>2 placas PCA9685</strong>, una por cada lado del robot, con solo 2 cables.</p>
+        <h2>La médula: ESP32</h2>
+        <p>Calcula el ángulo de cada motor <strong>50 veces por segundo</strong> y le manda las órdenes a <strong>2 placas PCA9685</strong>, una por cada lado del robot, con solo 2 cables. Camina y frena sola; el que piensa es <strong>Perry</strong>, desde la compu, por WiFi.</p>
       </div>
     </div>
     <div class="paso">
@@ -388,7 +402,9 @@
         <li><strong>Cinemática inversa:</strong> decide dónde poner cada pie y calcula los ángulos con la ley de cosenos.</li>
         <li><strong>Control desde el celular</strong> por WiFi, con una pantalla tipo control de Xbox.</li>
         <li><strong>4 velocidades</strong> y una marcha lenta de onda, una pata a la vez.</li>
-        <li><strong>Seguridad:</strong> si pierde la señal 0.6 s, se frena solo.</li>
+        <li><strong>Modo AUTO:</strong> camina sola y esquiva obstáculos con sus 2 sensores láser.</li>
+        <li><strong>Modo SUBIDA</strong> para rampas: pasos cortos y el cuerpo más bajo para no voltearse.</li>
+        <li><strong>Seguridad:</strong> si pierde la señal 0.6 s, se frena sola, y el <strong>alto total</strong> la detiene al instante.</li>
       </ul>
     </div>
   </section>
@@ -404,6 +420,7 @@
         <li>Solo se movía un lado → pila con clemas y <strong>un regulador por lado</strong>.</li>
         <li>La ESP32 se reiniciaba → encendemos las patas <strong>una por una</strong>.</li>
         <li>Servos descentrados → <strong>tabla de calibración</strong> desde el celular.</li>
+        <li>El cerebro de mosca daba problemas con el microprocesador → ahora <strong>Perry</strong> piensa desde la compu y la ESP32 solo camina.</li>
       </ul>
     </div>
   </section>
@@ -420,6 +437,7 @@
         <div><b>27 de octubre</b> · Primera pata completa</div>
         <div><b>30 de octubre</b> · Un lado caminando</div>
         <div><b>31 de octubre</b> · Prueba del robot completo</div>
+        <div><b>16 de noviembre</b> · Perry se vuelve el cerebro</div>
       </div>
     </div>
   </section>
@@ -427,8 +445,8 @@
   <section id="sigue">
     <div class="panel">
       <span class="etiqueta-seccion">Lo que sigue</span>
-      <h2>Un cerebro de mosca</h2>
-      <p>La versión final usará una <strong>Raspberry Pi</strong> con cámara (ojos), 2 sensores de distancia VL53L0X (tacto) y antenas infrarrojas (olfato). Un cerebro inspirado en el <strong>conectoma de la mosca de la fruta</strong> decidirá solo cómo llegar a la meta. En el simulador ya llegó en las 8 pruebas.</p>
+      <h2>Un cerebro que habla</h2>
+      <p>El cerebro de la araña ahora es <strong>Perry</strong>, un asistente de inteligencia artificial que vive en la computadora. Perry piensa y da las órdenes por WiFi; la <strong>ESP32</strong> hace de médula espinal: camina, guarda el equilibrio y frena sola. Ya lo probamos en un simulador; lo siguiente es probarlo en la pista con el robot de verdad.</p>
     </div>
   </section>
 
@@ -450,58 +468,45 @@
   </section>
   <section class="ancha" id="cerebro">
     <div class="panel">
-      <span class="etiqueta-seccion">El cerebro de la mosca</span>
-      <h2>Cómo decide hacia dónde caminar</h2>
-      <p>Copiamos un pedacito del cerebro de la mosca de la fruta: las mismas clases de neuronas que usa ella para encontrar comida y esquivar cosas. Son <strong>4 tipos de neuronas</strong> de la mosca (PFL, DNa, DNp y MDN), un reloj que marca el paso y <strong>19 números</strong> que el robot aprendió solo. <strong>Toca cada círculo</strong> para ver qué hace.</p>
-    </div>
-
-    <div class="caja estudio">
-      <h3>El estudio de verdad: el conectoma de la mosca</h3>
-      <p>Los científicos del proyecto <strong>FlyWire</strong> cortaron el cerebro de una mosca en miles de rebanadas finísimas, las fotografiaron con un microscopio electrónico y reconstruyeron cada neurona y cada conexión. A ese mapa completo se le llama <strong>conectoma</strong>. Se publicó en la revista Nature en octubre de 2024: <strong>139,255 neuronas</strong> y <strong>más de 50 millones de conexiones</strong>.</p>
-      <div class="galeria">
-        <figure><img src="mosca_cerebro_completo.png" alt="Las 139,255 neuronas del cerebro de la mosca"><figcaption><b>El cerebro completo</b>Cada color es una neurona. A los lados están los lóbulos ópticos (lo que ve) y en medio el cerebro central (donde decide).</figcaption></figure>
-        <figure><img src="mosca_neurona.png" alt="Una neurona reconstruida con sus sinapsis"><figcaption><b>Una sola neurona</b>Sus ramas la conectan con otras. Los puntos rosas son por donde manda señales y los azules por donde las recibe.</figcaption></figure>
-        <figure><img src="mosca_sinapsis.png" alt="Una sinapsis vista al microscopio electrónico"><figcaption><b>Una sinapsis</b>La neurona rosa le pasa la señal a la azul. Nuestros 19 números imitan qué tan fuerte es cada conexión.</figcaption></figure>
-        <figure><img src="mosca_descendentes.png" alt="Neuronas descendentes de la mosca"><figcaption><b>Neuronas descendentes</b>Unas 1,300 bajan del cerebro al cuerpo y ordenan caminar, girar o retroceder. De aquí salen nuestras DNa, DNp y MDN.</figcaption></figure>
-      </div>
-      <p class="credito">Imágenes: Dorkenwald y colaboradores, «Neuronal wiring diagram of an adult brain», <em>Nature</em> 634 (2024), proyecto FlyWire. Licencia <a href="https://creativecommons.org/licenses/by/4.0/deed.es" target="_blank" rel="noopener">CC BY 4.0</a>; las imágenes están recortadas. <a href="https://doi.org/10.1038/s41586-024-07558-y" target="_blank" rel="noopener">Ver el estudio</a>.</p>
+      <span class="etiqueta-seccion">El cerebro: Perry</span>
+      <h2>Una IA que piensa, una ESP32 que camina</h2>
+      <p>El cerebro de la araña es <strong>Perry</strong>, un asistente de inteligencia artificial que vive en la computadora. Le hablamos como a una persona («explora el cuarto», «siéntate») y él decide qué hacer. La <strong>ESP32</strong> es la médula espinal: mueve las 18 patas y tiene reflejos para no chocar, sin esperar a que Perry piense. Se comunican por <strong>WiFi</strong>. <strong>Toca cada círculo</strong> para ver qué hace cada parte.</p>
     </div>
 
     <div class="cerebro-grid">
       <div class="caja">
-        <h3>El mapa de neuronas</h3>
-        <svg id="red" viewBox="0 0 760 400" role="img" aria-label="Diagrama del cerebro de la mosca"></svg>
-        <div class="leyenda"><span>Activa (empuja)</span><span class="inh">Frena (inhibe)</span><span>Más brillo = más activa</span></div>
+        <h3>Cómo se conecta todo</h3>
+        <svg id="red" viewBox="0 0 760 400" role="img" aria-label="Diagrama de cómo Perry controla a la araña"></svg>
+        <div class="leyenda"><span>Órdenes</span><span class="dat">Datos que regresan</span></div>
       </div>
       <div class="caja" id="info"></div>
     </div>
 
     <div class="prueba-grid">
       <div class="caja">
-        <h3>Pruébalo</h3>
+        <h3>Pruébalo: las reglas de seguridad</h3>
         <div class="control">
-          <label>¿Dónde está la fruta? <b id="t-pos">enfrente</b></label>
-          <input type="range" id="c-pos" min="-1" max="1" step="0.05" value="0">
+          <label>Sensor izquierdo <b id="t-di">libre</b></label>
+          <input type="range" id="c-di" min="40" max="1200" step="10" value="1200">
         </div>
         <div class="control">
-          <label>¿Qué tan cerca? <b id="t-cerca">lejos</b></label>
-          <input type="range" id="c-cerca" min="0" max="1" step="0.05" value="0.35">
+          <label>Sensor derecho <b id="t-dd">libre</b></label>
+          <input type="range" id="c-dd" min="40" max="1200" step="10" value="1200">
         </div>
         <div class="control">
-          <label>Pared a la izquierda <b id="t-pi">no hay</b></label>
-          <input type="range" id="c-pi" min="0" max="1" step="0.05" value="0">
+          <label>Pila <b id="t-pila">7.8 V</b></label>
+          <input type="range" id="c-pila" min="6.0" max="8.4" step="0.05" value="7.8">
         </div>
-        <div class="control">
-          <label>Pared a la derecha <b id="t-pd">no hay</b></label>
-          <input type="range" id="c-pd" min="0" max="1" step="0.05" value="0">
+        <div class="control check">
+          <label><input type="checkbox" id="c-alto"> Alto total puesto</label>
         </div>
         <div class="botones">
-          <button data-p="0,0,0,0">Nada a la vista</button>
-          <button data-p="-0.8,0.5,0,0">Fruta a la izquierda</button>
-          <button data-p="0.8,0.5,0,0">Fruta a la derecha</button>
-          <button data-p="0,0.95,0,0">Fruta muy cerca</button>
-          <button data-p="0,0.3,0,0.7">Pared a la derecha</button>
-          <button data-p="0,0.3,1,1">Choque de frente</button>
+          <button data-p="1200,1200,7.8,0">Camino libre</button>
+          <button data-p="350,330,7.8,0">Caja a lo lejos</button>
+          <button data-p="1200,160,7.8,0">Caja a la derecha</button>
+          <button data-p="80,90,7.8,0">Pegado a la pared</button>
+          <button data-p="1200,1200,6.8,0">Pila baja</button>
+          <button data-p="1200,1200,7.8,1">Alto total</button>
         </div>
       </div>
       <div class="caja">
@@ -509,21 +514,42 @@
         <canvas id="vista" width="280" height="280"></canvas>
       </div>
       <div class="caja">
-        <h3>Qué está pensando</h3>
-        <div id="estado">Camina derecho</div>
+        <h3>Qué decide</h3>
+        <div id="quien" class="quien">Lo decide Perry</div>
+        <div id="estado">Avanza</div>
         <p id="porque" style="font-size:14px"></p>
         <div id="medidores"></div>
       </div>
     </div>
 
+    <div class="caja explorar">
+      <h3>Explorar con memoria</h3>
+      <p>Perry no tiene GPS: calcula dónde está con las órdenes que manda (cuánto caminó y cuánto giró) y apunta en un mapa de cuadros de <strong>25 × 25 cm</strong> por dónde ya pasó y dónde los sensores vieron algo. Así busca lugares nuevos en vez de dar vueltas en el mismo lugar. Este es el mismo método que usa el programa <strong>arana.py</strong>, en un cuarto de 5 × 3 m con cajas, 3 veces más rápido.</p>
+      <div class="explorar-grid">
+        <canvas id="cuarto" width="720" height="432"></canvas>
+        <div>
+          <div id="cuenta"></div>
+          <div class="botones">
+            <button id="b-explorar">Explorar otra vez</button>
+            <button id="b-pausa">Pausa</button>
+          </div>
+          <div class="leyenda" style="margin-top:14px; flex-direction:column; gap:6px">
+            <span><i style="background:rgba(182,255,59,0.45)"></i>Cuadros donde ya pasó</span>
+            <span><i style="background:rgba(255,107,107,0.6)"></i>Donde vio algo</span>
+            <span><i style="background:transparent; border:1px solid #6b766b"></i>Cajas de verdad (Perry no las ve)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="caja aprendio">
-      <h3>Cómo aprendió</h3>
-      <p>Nadie le programó los números a mano. En el simulador 3D corrieron <strong>36 cerebros a la vez</strong> en la pista del reglamento; los <strong>7 mejores</strong> se mezclaban y se cambiaban un poquito al azar para formar la siguiente generación, como la evolución. Después de <strong>143 generaciones</strong>, con ruido y sensores con fallas a propósito, quedó el cerebro v4: llega a la meta en el <strong>100 % de las carreras</strong> de las 8 pruebas.</p>
+      <h3>Lo que encontramos en el simulador</h3>
+      <p>Hicimos un simulador de la araña en la computadora: una ESP32 de mentiras con cajas como obstáculos. El <strong>modo AUTO</strong> de la ESP32 caminó 1 minuto sin chocar, pero se quedaba en la misma zona porque no tiene memoria. Con la <strong>memoria de Perry</strong> recorrió el cuarto en 90 segundos. También descubrimos un problema: los sensores no cubren las <strong>esquinas del cuerpo</strong>, y de lado rozaba las cajas. La solución es abrir más el ángulo de los sensores o poner sensores a los lados.</p>
       <div class="tabla">
-        <div class="dato"><b>26.9 s</b><small>recta de 2 m</small></div>
-        <div class="dato"><b>37.9 s</b><small>recta de 3 m</small></div>
-        <div class="dato"><b>41.5 s</b><small>zona rugosa</small></div>
-        <div class="dato"><b>46.7 s</b><small>circuito completo</small></div>
+        <div class="dato"><b>90 s</b><small>explorando con memoria</small></div>
+        <div class="dato"><b>30</b><small>tramos caminados</small></div>
+        <div class="dato"><b>11</b><small>giros para buscar lugares nuevos</small></div>
+        <div class="dato"><b>3</b><small>obstáculos esquivados</small></div>
       </div>
     </div>
   </section>
@@ -547,299 +573,408 @@
 </script>
 
 <script>
-/* ===== Cerebro de la mosca: las mismas ecuaciones que motor4.js / cerebro.py, con los pesos del cerebro v4 ===== */
+/* ===== El cerebro: Perry (en la compu) + ESP32 (la médula). Mismas reglas que arana.py y arana_perry.ino ===== */
 (function () {
-  const W = { // cerebro-mosca-v4-competencia.json (generación 143)
-    w_ant_dnp: -1.8785, w_ant_pfl: 0.821, w_vis_pfl: 2.731, w_vis_pfl_x: -0.4062, w_pfl_dna: 0.3257,
-    w_pfl_dna_x: -3, w_mech_mdn: 1.2245, w_mech_dnp: -2.9704, w_mech_dna_x: 2.0785, w_mech_dna: -1.7257,
-    w_mech_pfl: -0.3046, bias_dnp: 2.8811, w_dn_cpg: 4.7712, k_turn: 1.7123,
-    w_coxa: 15, w_femur: 32.4206, w_tibia: 23.6185, w_dna_dnp: -1.8744
-  };
-  const TAU = 0.08, F_MAX = 2.0;
-  const f = x => { const t = Math.tanh(x); return t > 0 ? t : 0; };
-  const e = { pfl_l: 0, pfl_r: 0, dna_l: 0, dna_r: 0, dnp: 0, mdn: 0, fase: 0, frec: 0, s_izq: 0, s_der: 0 };
-  let S = { ant_izq: 0, ant_der: 0, vis_izq: 0, vis_der: 0, mec_izq: 0, mec_der: 0 };
+  const $ = id => document.getElementById(id);
 
-  function paso(dt) {
-    const aL = S.ant_izq, aR = S.ant_der, vL = S.vis_izq, vR = S.vis_der, mL = S.mec_izq, mR = S.mec_der;
-    const mMax = Math.max(mL, mR);
-    const pL = f(W.w_ant_pfl * aL + W.w_vis_pfl * vL + W.w_vis_pfl_x * vR + W.w_mech_pfl * mL);
-    const pR = f(W.w_ant_pfl * aR + W.w_vis_pfl * vR + W.w_vis_pfl_x * vL + W.w_mech_pfl * mR);
-    const dL = f(W.w_pfl_dna * e.pfl_l + W.w_pfl_dna_x * e.pfl_r + W.w_mech_dna * mL + W.w_mech_dna_x * mR);
-    const dR = f(W.w_pfl_dna * e.pfl_r + W.w_pfl_dna_x * e.pfl_l + W.w_mech_dna * mR + W.w_mech_dna_x * mL);
-    const dp = f(W.bias_dnp + W.w_ant_dnp * (aL + aR) / 2 + W.w_mech_dnp * mMax + W.w_dna_dnp * (e.dna_l + e.dna_r));
-    const md = f(W.w_mech_mdn * mMax - 1);
-    const k = Math.min(1, dt / TAU);
-    e.pfl_l += k * (pL - e.pfl_l); e.pfl_r += k * (pR - e.pfl_r);
-    e.dna_l += k * (dL - e.dna_l); e.dna_r += k * (dR - e.dna_r);
-    e.dnp += k * (dp - e.dnp); e.mdn += k * (md - e.mdn);
-    const v = e.dnp * (1 - e.mdn) - e.mdn;
-    const giro = W.k_turn * (e.dna_l - e.dna_r);
-    let sL = v - giro, sR = v + giro;
-    const m = Math.max(1, Math.abs(sL), Math.abs(sR));
-    sL /= m; sR /= m;
-    const impulso = Math.max(Math.abs(sL), Math.abs(sR));
-    e.frec = F_MAX * Math.tanh(Math.max(0, W.w_dn_cpg) * impulso);
-    e.fase = (e.fase + 2 * Math.PI * e.frec * dt) % (2 * Math.PI);
-    e.s_izq = sL; e.s_der = sR;
-    e.v = v; e.impulso = impulso;
-  }
-
-  // ---------- Textos de cada neurona ----------
+  // ---------- Diagrama: cómo se conecta todo ----------
   const NODOS = {
-    antenas: {
-      x: 90, y: 75, nombre: 'Antenas', sub: 'olfato', tipo: 'Sentido · entrada',
-      mosca: 'La mosca huele la fruta con sus antenas. Si el olor es más fuerte de un lado, sabe que la comida está de ese lado.',
-      robot: 'Dos fototransistores infrarrojos (940 nm), girados 20° hacia afuera, uno por lado. En la meta hay una «fruta-baliza» que parpadea luz infrarroja de 33 a 45 veces por segundo, y las antenas la «huelen».',
-      como: 'Cada antena da un número de 0 (nada) a 1 (muy fuerte), 4 veces por segundo. Con la fruta a 20 cm marca 0.88; a 1 metro, 0.27. Mandan su señal a las PFL y frenan a la DNp cuando ya está muy cerca.'
+    tu: {
+      x: 90, y: 80, nombre: 'Tú', sub: 'voz o texto', tipo: 'Entrada · el equipo',
+      que: 'Le hablamos a Perry con la voz o le escribimos, como a una persona: «explora el cuarto», «gira a la derecha», «siéntate».',
+      robot: 'No hace falta programar nada para manejar la araña: Perry entiende la orden y la convierte en movimientos.',
+      como: 'Perry escucha con el micrófono de la compu, pasa la voz a texto y contesta en voz alta lo que va haciendo.'
     },
-    ojos: {
-      x: 90, y: 200, nombre: 'Ojos', sub: 'vista', tipo: 'Sentido · entrada',
-      mosca: 'Los ojos compuestos de la mosca ven casi todo a su alrededor y detectan muy rápido dónde está algo que le interesa.',
-      robot: 'Una cámara OV5647 de unos 130° con imagen de 320 × 240. La imagen se parte en dos mitades, izquierda y derecha, y en cada una se busca la mancha verde más grande y redonda: la fruta.',
-      como: 'Revisa 20 veces por segundo. Entre más grande se ve la fruta en una mitad, más cerca de 1 vale ese ojo. La vista es la conexión más fuerte hacia las PFL (peso 2.73).'
+    perry: {
+      x: 280, y: 80, nombre: 'Perry', sub: 'el cerebro', tipo: 'Inteligencia artificial · en la compu',
+      que: 'Un asistente de inteligencia artificial que vive en la computadora. Funciona con Claude Code y necesita internet.',
+      robot: 'Decide qué hacer: hacia dónde ir, cuándo girar y cuándo parar. Antes de moverla siempre revisa cómo está la araña: sensores, pila y si tiene el alto puesto.',
+      como: 'Sigue reglas de seguridad: pasos cortos, no avanzar si un sensor marca menos de 20 cm, sentarla si la pila baja de 6.9 V y no caminar de lado, porque los sensores solo ven hacia adelante.'
     },
-    tacto: {
-      x: 90, y: 325, nombre: 'Tacto', sub: 'distancia', tipo: 'Sentido · entrada',
-      mosca: 'La mosca tiene pelitos sensibles que le avisan cuando algo la toca o está muy cerca.',
-      robot: 'Dos sensores láser VL53L0X, girados 30° hacia afuera y a 45 mm del piso. Miden la distancia a paredes y obstáculos.',
-      como: 'A 150 mm o más vale 0; a 30 mm vale 1. Lo leen 30 veces por segundo. Hace que gire hacia el lado contrario (DNa), que camine más lento (DNp) y, si el choque es inminente, que retroceda (MDN).'
+    memoria: {
+      x: 90, y: 300, nombre: 'Memoria', sub: 'mapa', tipo: 'Memoria · en la compu',
+      que: 'Un mapa del cuarto partido en cuadros de 25 × 25 cm.',
+      robot: 'Al explorar apunta por qué cuadros ya pasó y dónde los sensores vieron algo. Así busca lugares nuevos en vez de dar vueltas en el mismo lugar.',
+      como: 'Como no tiene GPS, calcula dónde está con las órdenes que mandó: cuánto tiempo caminó y cuánto giró. Este modo casi no gasta a Perry, porque corre solo sin que tenga que pensar cada paso.'
     },
-    pfl: {
-      x: 290, y: 140, nombre: 'PFL', sub: 'izq · der', tipo: 'Neurona del complejo central',
-      mosca: 'Las neuronas PFL están en el «complejo central», la brújula del cerebro de la mosca. Comparan hacia dónde va con hacia dónde está su meta.',
-      robot: 'Hay una PFL izquierda y una derecha. Cada una suma lo que huele y lo que ve su lado, y le resta un poco lo que ve el otro lado.',
-      como: 'Si la fruta está a la izquierda, la PFL izquierda se enciende y la derecha casi no. Ese contraste es el que después decide el giro.'
+    wifi: {
+      x: 470, y: 80, nombre: 'WiFi', sub: '2.4 GHz', tipo: 'Comunicación',
+      que: 'La red WiFi de la casa. Perry y la araña se hablan como si fueran una página web.',
+      robot: 'Perry manda órdenes cortas con el programa arana.py: moverse, apretar un botón o pedir el estado (sensores, pila y modo).',
+      como: 'Cada orden dura como máximo 10 segundos. Si Perry se traba o se cae el internet, la araña se detiene sola: nunca camina para siempre.'
     },
-    dna: {
-      x: 480, y: 80, nombre: 'DNa', sub: 'girar', tipo: 'Neurona descendente',
-      mosca: 'Las neuronas descendentes bajan del cerebro al cuerpo y llevan órdenes a las patas. En la mosca real, las DNa controlan los giros.',
-      robot: 'Una DNa izquierda y una derecha. Cada una recibe a su PFL y se apaga fuerte con la PFL del otro lado (peso −3): así gana solo el lado donde está la fruta. El tacto del lado contrario también la enciende, para alejarse de las paredes.',
-      como: 'Giro = 1.71 × (DNa izquierda − DNa derecha). Si gana la izquierda, las patas derechas dan pasos más largos que las izquierdas y el robot voltea a la izquierda.'
+    esp: {
+      x: 470, y: 250, nombre: 'ESP32', sub: 'la médula', tipo: 'Médula espinal · microcontrolador',
+      que: 'Un microcontrolador pequeño con WiFi. En los insectos, el cordón nervioso mueve las patas sin que el cerebro piense cada paso: eso hace la ESP32.',
+      robot: 'Hace la marcha, guarda el equilibrio y calcula el ángulo de los 18 motores 50 veces por segundo. También se puede manejar desde el celular.',
+      como: 'Tiene reflejos: si algo está a menos de 20 cm se detiene y gira, y a menos de 10 cm primero retrocede. Lo hace sin esperar a Perry, igual que cuando quitas la mano de algo caliente.'
     },
-    dnp: {
-      x: 480, y: 205, nombre: 'DNp', sub: 'avanzar', tipo: 'Neurona descendente',
-      mosca: 'Otra neurona descendente que da la orden de «camina hacia adelante».',
-      robot: 'Está casi siempre encendida, porque tiene un empujón propio (2.88): el robot quiere avanzar.',
-      como: 'Se frena con tres cosas: algo enfrente (tacto, −2.97), olor muy fuerte porque ya llegó (antenas, −1.88) y cuando está girando (DNa, −1.87), para no derrapar en las curvas.'
-    },
-    mdn: {
-      x: 480, y: 325, nombre: 'MDN', sub: 'reversa', tipo: 'Neurona descendente',
-      mosca: 'La neurona «moonwalker» (MDN) existe de verdad en la mosca: cuando se activa, la mosca camina hacia atrás, como el paso de baile de Michael Jackson.',
-      robot: 'Solo se enciende cuando el tacto marca más de 0.82, o sea, cuando un obstáculo está a menos de 5 cm.',
-      como: 'Cuando se activa, apaga a la DNp y cambia la dirección: el robot retrocede para despegarse del obstáculo y luego vuelve a intentar.'
-    },
-    cpg: {
-      x: 655, y: 145, nombre: 'CPG', sub: 'ritmo', tipo: 'Generador central de patrones',
-      mosca: 'En la mosca, el ritmo del paso no lo hace el cerebro: lo hacen circuitos en el cuerpo, llamados CPG, que oscilan solos como un reloj.',
-      robot: 'Un reloj que marca el paso: más rápido entre más fuerte es la orden de caminar, hasta 2 pasos por segundo.',
-      como: 'Reparte la marcha trípode: las patas 0, 2 y 4 van juntas, y las 1, 3 y 5 van al revés. Cada lado recibe su velocidad, la del lado izquierdo y la del derecho, por separado.'
+    sensores: {
+      x: 670, y: 120, nombre: 'Sensores', sub: '2 láser', tipo: 'Sentidos · entrada',
+      que: 'Dos sensores láser VL53L0X al frente, girados unos 12° hacia cada lado.',
+      robot: 'Miden la distancia a paredes y cajas hasta 1.2 metros. La ESP32 los usa para sus reflejos y Perry para decidir hacia dónde ir.',
+      como: 'Lanzan un rayo de luz infrarroja invisible y miden cuánto tarda en rebotar. Solo ven hacia adelante: por eso la araña gira, avanza y vuelve a girar en vez de caminar de lado.'
     },
     patas: {
-      x: 655, y: 300, nombre: 'Patas', sub: '18 servos', tipo: 'Salida · músculos',
-      mosca: 'Los músculos de las 6 patas.',
-      robot: '18 servos MG90S. La coxa mueve la pata adelante y atrás hasta 15°, el fémur la levanta hasta 32° y la tibia dobla la punta hasta 24°.',
-      como: 'Cada servo se mueve máximo 450° por segundo, para no dar tirones. Estos ángulos son los que el cerebro le manda a las placas PCA9685.'
+      x: 670, y: 330, nombre: 'Patas', sub: '18 servos', tipo: 'Salida · músculos',
+      que: 'Seis patas con 3 motores MG90S cada una: coxa, fémur y tibia.',
+      robot: 'Marcha trípode (rápida) o una pata a la vez (lenta). Modo SUBIDA para rampas: pasos cortos y el cuerpo bajo para no voltearse.',
+      como: 'Perry da órdenes simples (avanza, gira, detente) y la ESP32 las convierte en el movimiento de cada pata.'
+    },
+    pila: {
+      x: 280, y: 330, nombre: 'Pila', sub: '7.4 V', tipo: 'Energía',
+      que: 'Una pila LiPo de 7.4 V y 2500 mAh.',
+      robot: 'La ESP32 mide su voltaje 5 veces por segundo y se lo pasa a Perry en cada estado.',
+      como: 'Debajo de 6.9 V Perry la sienta y deja de explorar. Debajo de 6.4 V (nivel crítico) la ESP32 la sienta sola para no dañar la pila.'
     }
   };
   const ARISTAS = [
-    ['antenas', 'pfl', 'exc'], ['ojos', 'pfl', 'exc'], ['tacto', 'pfl', 'inh'],
-    ['antenas', 'dnp', 'inh'], ['tacto', 'dna', 'exc'], ['tacto', 'dnp', 'inh'], ['tacto', 'mdn', 'exc'],
-    ['pfl', 'dna', 'exc'], ['dna', 'dnp', 'inh'],
-    ['dna', 'cpg', 'exc'], ['dnp', 'cpg', 'exc'], ['mdn', 'cpg', 'inh'], ['cpg', 'patas', 'exc']
+    ['tu', 'perry', 'exc'], ['perry', 'tu', 'dat'], ['perry', 'memoria', 'exc'], ['memoria', 'perry', 'dat'],
+    ['perry', 'wifi', 'exc'], ['wifi', 'esp', 'exc'], ['esp', 'wifi', 'dat'],
+    ['sensores', 'esp', 'dat'], ['pila', 'esp', 'dat'], ['esp', 'patas', 'exc']
   ];
 
-  const svg = document.getElementById('red');
+  const svg = $('red');
   const NS = 'http://www.w3.org/2000/svg';
   const el = (tag, attrs, padre) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); (padre || svg).appendChild(n); return n; };
   const R = 40;
+  const defs = el('defs', {});
+  for (const [id, color] of [['exc', 'rgba(182,255,59,0.8)'], ['dat', 'rgba(120,150,255,0.9)']]) {
+    const m = el('marker', { id: 'flecha-' + id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M0,0 L10,5 L0,10 z', fill: color }, m);
+  }
+  const caminos = [];
   for (const [a, b, tipo] of ARISTAS) {
     const A = NODOS[a], B = NODOS[b];
     const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy);
     const x1 = A.x + dx / d * R, y1 = A.y + dy / d * R, x2 = B.x - dx / d * (R + 6), y2 = B.y - dy / d * (R + 6);
-    const mx = (x1 + x2) / 2 + dy / d * 14, my = (y1 + y2) / 2 - dx / d * 14;
-    el('path', { d: `M${x1},${y1} Q${mx},${my} ${x2},${y2}`, class: 'arista ' + tipo, 'marker-end': `url(#flecha-${tipo})` });
+    const mx = (x1 + x2) / 2 + dy / d * 16, my = (y1 + y2) / 2 - dx / d * 16;
+    const p = el('path', { d: `M${x1},${y1} Q${mx},${my} ${x2},${y2}`, class: 'arista ' + tipo, 'marker-end': `url(#flecha-${tipo})` });
+    caminos.push({ p, largo: p.getTotalLength(), punto: el('circle', { r: 3.5, fill: tipo === 'exc' ? '#b6ff3b' : '#9fb2ff', opacity: 0.9 }), desfase: Math.random() });
   }
-  const defs = el('defs', {});
-  for (const [id, color] of [['exc', 'rgba(182,255,59,0.8)'], ['inh', 'rgba(255,99,99,0.85)']]) {
-    const m = el('marker', { id: 'flecha-' + id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
-    el('path', { d: 'M0,0 L10,5 L0,10 z', fill: color }, m);
-  }
-  const brillo = {};
   for (const id in NODOS) {
     const n = NODOS[id];
     const g = el('g', { class: 'nodo', 'data-id': id, tabindex: 0 });
-    brillo[id] = el('circle', { cx: n.x, cy: n.y, r: R + 8, fill: '#b6ff3b', opacity: 0 }, g);
     el('circle', { cx: n.x, cy: n.y, r: R, class: 'fondo' }, g);
     el('text', { x: n.x, y: n.y - 2 }, g).textContent = n.nombre;
     el('text', { x: n.x, y: n.y + 13, class: 'sub' }, g).textContent = n.sub;
     g.addEventListener('click', () => mostrar(id));
     g.addEventListener('keydown', ev => { if (ev.key === 'Enter') mostrar(id); });
   }
-
-  const info = document.getElementById('info');
+  const info = $('info');
   function mostrar(id) {
     const n = NODOS[id];
     svg.querySelectorAll('.nodo').forEach(g => g.classList.toggle('activo', g.dataset.id === id));
-    info.innerHTML = `<h3>Neurona seleccionada</h3><h2>${n.nombre}</h2><div class="tipo">${n.tipo}</div>
-      <h4>En la mosca de verdad</h4><p>${n.mosca}</p>
-      <h4>En nuestro robot</h4><p>${n.robot}</p>
+    info.innerHTML = `<h3>Parte seleccionada</h3><h2>${n.nombre}</h2><div class="tipo">${n.tipo}</div>
+      <h4>Qué es</h4><p>${n.que}</p>
+      <h4>En nuestra araña</h4><p>${n.robot}</p>
       <h4>Cómo funciona</h4><p>${n.como}</p>`;
   }
-  mostrar('antenas');
+  mostrar('perry');
 
-  // ---------- Controles ----------
-  const $ = id => document.getElementById(id);
-  const ctl = { pos: $('c-pos'), cerca: $('c-cerca'), pi: $('c-pi'), pd: $('c-pd') };
-  function leer() {
-    const pos = +ctl.pos.value, cerca = +ctl.cerca.value, pi = +ctl.pi.value, pd = +ctl.pd.value;
-    // Como en el simulador: cada mitad de la cámara ve solo su lado, y cada antena
-    // apunta 20° hacia afuera (la señal cae rápido si la fruta no está frente a ella).
-    const cl = x => Math.max(0, Math.min(1, x));
-    const ang = -pos * 60; // grados, + = izquierda
-    const antena = eje => cerca * Math.exp(-Math.pow((ang - eje) / 30, 2));
-    S = {
-      vis_izq: cerca * cl(0.5 - pos), vis_der: cerca * cl(0.5 + pos),
-      ant_izq: antena(20), ant_der: antena(-20),
-      mec_izq: pi, mec_der: pd
-    };
-    $('t-pos').textContent = pos < -0.2 ? 'a la izquierda' : pos > 0.2 ? 'a la derecha' : 'enfrente';
-    $('t-cerca').textContent = cerca < 0.05 ? 'no se ve' : cerca < 0.45 ? 'lejos' : cerca < 0.8 ? 'cerca' : 'muy cerca';
-    const pared = v => v < 0.05 ? 'no hay' : v < 0.5 ? 'lejos' : v < 0.82 ? 'cerca' : 'pegada';
-    $('t-pi').textContent = pared(pi);
-    $('t-pd').textContent = pared(pd);
+  // ---------- Pruébalo: reglas de Perry y reflejos de la ESP32 ----------
+  const ctl = { di: $('c-di'), dd: $('c-dd'), pila: $('c-pila'), alto: $('c-alto') };
+  const LIBRE = 1200;
+  const texDist = d => d >= LIBRE ? 'libre' : (d / 10).toFixed(0) + ' cm';
+  let dec = { v: 0, w: 0, sentada: false };
+  function decidir() {
+    const dI = +ctl.di.value, dD = +ctl.dd.value, pila = +ctl.pila.value, alto = ctl.alto.checked;
+    const d = Math.min(dI, dD);
+    const libreLado = dI < dD ? 'derecha' : 'izquierda';
+    let quien = 'perry', estado, porque, v = 0, w = 0, sentada = false;
+    if (alto) {
+      quien = 'alto'; estado = 'Detenida';
+      porque = 'Con el alto total puesto ninguna orden la mueve, ni de Perry ni del celular. Es el botón de emergencia.';
+    } else if (pila < 6.4) {
+      quien = 'reflejo'; estado = 'Se sienta'; sentada = true;
+      porque = 'La pila está en nivel crítico. Si sigue así 5 segundos, la ESP32 la sienta sola y deja de moverse para no dañar la pila. Hay que cargarla ya.';
+    } else if (pila < 6.9) {
+      estado = 'Se sienta'; sentada = true;
+      porque = 'Regla de Perry: con la pila debajo de 6.9 V la sienta y deja de explorar.';
+    } else if (d < 100) {
+      quien = 'reflejo'; estado = 'Retrocede'; v = -0.6;
+      porque = `Algo está a menos de 10 cm. La ESP32 retrocede 1.5 segundos por reflejo, sin esperar a Perry, y luego gira hacia la ${libreLado}, el lado más libre.`;
+    } else if (d < 200) {
+      estado = `Gira a la ${libreLado}`; w = libreLado === 'derecha' ? 0.8 : -0.8;
+      porque = `Regla de Perry: nunca avanzar si un sensor marca menos de 20 cm. Gira en su lugar hacia la ${libreLado}, que está más libre, y vuelve a mirar.`;
+    } else if (d < 400) {
+      const desvia = Math.abs(dI - dD) > 40;
+      estado = desvia ? `Avanza despacio hacia la ${libreLado}` : 'Avanza despacio';
+      v = 0.45; w = desvia ? (libreLado === 'derecha' ? 0.3 : -0.3) : 0;
+      porque = 'Hay algo a menos de 40 cm: va más lento' + (desvia ? ' y se va desviando hacia el lado más libre.' : '.') + ' Perry da pasos cortos para no pasarse.';
+    } else {
+      estado = 'Avanza'; v = 1;
+      porque = 'Camino libre: Perry manda pasos cortos hacia adelante. Cada orden dura máximo 10 segundos, así que nunca camina para siempre.';
+    }
+    dec = { v, w, sentada };
+    const q = $('quien');
+    q.className = 'quien' + (quien === 'perry' ? '' : ' ' + quien);
+    q.textContent = quien === 'perry' ? 'Lo decide Perry' : quien === 'reflejo' ? 'Reflejo de la ESP32' : 'Botón de emergencia';
+    $('estado').textContent = estado;
+    $('porque').textContent = porque;
+    $('t-di').textContent = texDist(dI);
+    $('t-dd').textContent = texDist(dD);
+    $('t-pila').textContent = pila.toFixed(2) + ' V';
+    barras[0].i.style.width = (100 * (1 - Math.min(dI, LIBRE) / LIBRE)).toFixed(0) + '%'; barras[0].n.textContent = texDist(dI);
+    barras[1].i.style.width = (100 * (1 - Math.min(dD, LIBRE) / LIBRE)).toFixed(0) + '%'; barras[1].n.textContent = texDist(dD);
+    barras[2].i.style.width = (100 * Math.max(0, Math.min(1, (pila - 6.0) / 2.4))).toFixed(0) + '%'; barras[2].n.textContent = pila.toFixed(1) + ' V';
+    barras[2].fila.querySelector('.barra').classList.toggle('roja', pila < 6.9);
   }
-  Object.values(ctl).forEach(c => c.addEventListener('input', leer));
-  document.querySelectorAll('.botones button').forEach(b => b.addEventListener('click', () => {
-    const [p, c, i, d] = b.dataset.p.split(',').map(Number);
-    ctl.pos.value = p; ctl.cerca.value = c; ctl.pi.value = i; ctl.pd.value = d; leer();
-  }));
-  leer();
-
-  // ---------- Medidores ----------
-  const MED = [['PFL izq', 'pfl_l'], ['PFL der', 'pfl_r'], ['DNa izq', 'dna_l'], ['DNa der', 'dna_r'], ['DNp', 'dnp'], ['MDN', 'mdn', true]];
   const med = $('medidores');
-  const barras = MED.map(([nombre, k, roja]) => {
+  const barras = [['Sensor izq', true], ['Sensor der', true], ['Pila', false]].map(([nombre, roja]) => {
     const fila = document.createElement('div');
     fila.className = 'medidor';
-    fila.innerHTML = `<span>${nombre}</span><div class="barra${roja ? ' roja' : ''}"><i></i></div><span>0.00</span>`;
+    fila.style.gridTemplateColumns = '78px 1fr 54px';
+    fila.innerHTML = `<span>${nombre}</span><div class="barra${roja ? ' roja' : ''}"><i></i></div><span></span>`;
     med.appendChild(fila);
-    return { k, i: fila.querySelector('i'), n: fila.querySelectorAll('span')[1] };
+    return { fila, i: fila.querySelector('i'), n: fila.querySelectorAll('span')[1] };
   });
+  [ctl.di, ctl.dd, ctl.pila].forEach(c => c.addEventListener('input', decidir));
+  ctl.alto.addEventListener('change', decidir);
+  document.querySelectorAll('.prueba-grid .botones button').forEach(b => b.addEventListener('click', () => {
+    const [i, d, p, a] = b.dataset.p.split(',').map(Number);
+    ctl.di.value = i; ctl.dd.value = d; ctl.pila.value = p; ctl.alto.checked = !!a; decidir();
+  }));
+  decidir();
 
   // ---------- Vista desde arriba ----------
   const cv = $('vista'), cx = cv.getContext('2d');
   const EJES = [[38, 55], [42, 0], [38, -55], [-38, 55], [-42, 0], [-38, -55]];
   const ALFA = [45, 0, -45, 135, 180, 225];
-  function dibujar() {
-    const w = cv.width, h = cv.height, c0x = w / 2, c0y = 165, s = 0.75;
+  let fase = 0;
+  function dibujarVista(dt) {
+    const w = cv.width, h = cv.height, c0x = w / 2, c0y = 222, s = 0.4;
+    const esc = mm => 178 * Math.sqrt(Math.min(mm, LIBRE) / LIBRE); // escala estirada: lo cercano se ve más grande
+    const sy = c0y - 62 * s;
     cx.clearRect(0, 0, w, h);
-    // fruta y paredes según los controles
-    const pos = +ctl.pos.value, cerca = +ctl.cerca.value;
-    if (cerca > 0.04) {
-      const dist = 150 - cerca * 50, ang = pos * 60 * Math.PI / 180;
-      const fx = c0x + Math.sin(ang) * dist, fy = Math.max(16, c0y - Math.cos(ang) * dist);
-      cx.fillStyle = '#7CFC4A'; cx.beginPath(); cx.arc(fx, fy, 9, 0, 7); cx.fill();
-      cx.fillStyle = '#9aa59a'; cx.font = '11px Segoe UI'; cx.textAlign = 'center';
-      cx.fillText('fruta', fx, fy + 22);
+    // distancias de las reglas: 10, 20 y 40 cm
+    cx.font = '10.5px Segoe UI'; cx.textAlign = 'left';
+    for (const [mm, txt, col] of [[100, '10 cm', 'rgba(255,107,107,0.35)'], [200, '20 cm', 'rgba(255,190,90,0.3)'], [400, '40 cm', 'rgba(182,255,59,0.22)']]) {
+      cx.strokeStyle = col; cx.lineWidth = 1; cx.setLineDash([3, 4]);
+      cx.beginPath(); cx.arc(c0x, sy, esc(mm), Math.PI * 1.15, Math.PI * 1.85); cx.stroke();
+      cx.setLineDash([]); cx.fillStyle = col.replace(/[\d.]+\)$/, '0.85)');
+      cx.fillText(txt, c0x + Math.cos(Math.PI * 1.85) * esc(mm) + 4, sy + Math.sin(Math.PI * 1.85) * esc(mm) + 4);
     }
-    // Los dos sensores de tacto apuntan 30° hacia afuera: si los dos ven lo mismo, el obstáculo está enfrente
-    const pi = +ctl.pi.value, pd = +ctl.pd.value, frente = Math.min(pi, pd);
-    cx.fillStyle = '#ff6b6b';
-    if (frente > 0.04) cx.fillRect(c0x - 80, c0y - 150 + frente * 50, 160, 6);
-    if (pi - frente > 0.04) cx.fillRect(c0x - 134 + pi * 40, c0y - 95, 6, 150);
-    if (pd - frente > 0.04) cx.fillRect(c0x + 128 - pd * 40, c0y - 95, 6, 150);
-    // patas
+    // rayos de los sensores (±12°)
+    for (const [d, lado] of [[+ctl.di.value, -1], [+ctl.dd.value, 1]]) {
+      const a = lado * 12 * Math.PI / 180, ox = c0x + lado * 9;
+      const largo = esc(d);
+      const ex = ox + Math.sin(a) * largo, ey = sy - Math.cos(a) * largo;
+      cx.strokeStyle = d >= LIBRE ? 'rgba(182,255,59,0.25)' : 'rgba(255,107,107,0.75)';
+      cx.lineWidth = 2; cx.setLineDash(d >= LIBRE ? [4, 4] : []);
+      cx.beginPath(); cx.moveTo(ox, sy); cx.lineTo(ex, ey); cx.stroke(); cx.setLineDash([]);
+      if (d < LIBRE) {
+        cx.fillStyle = '#ff6b6b';
+        cx.save(); cx.translate(ex, ey); cx.rotate(a); cx.fillRect(-22, -4, 44, 6); cx.restore();
+      }
+    }
+    // patas (marcha trípode cuando camina)
+    const { v, w: giro, sentada } = dec;
+    const sL = v + giro, sR = v - giro;
+    const impulso = Math.max(Math.abs(sL), Math.abs(sR));
+    fase = (fase + 2 * Math.PI * 1.4 * impulso * dt) % (2 * Math.PI);
     for (let i = 0; i < 6; i++) {
       const sg = i < 3 ? 1 : -1;
-      const psi = e.fase + (i % 2 === 1 ? Math.PI : 0);
-      const lado = i < 3 ? e.s_der : e.s_izq;
-      const alto = Math.min(1, 10 * (e.impulso || 0));
-      const enAire = Math.max(0, -Math.sin(psi)) * alto > 0.05;
-      const coxa = W.w_coxa * lado * Math.cos(psi);
+      const psi = fase + (i % 2 === 1 ? Math.PI : 0);
+      const lado = i < 3 ? sR : sL;
+      const enAire = impulso > 0.05 && Math.max(0, -Math.sin(psi)) > 0.05;
+      const coxa = 15 * lado * Math.cos(psi);
       const th = (ALFA[i] + sg * coxa) * Math.PI / 180;
       const mx = c0x + EJES[i][0] * s, my = c0y - EJES[i][1] * s;
-      const px = mx + 68.5 * s * Math.cos(th), py = my - 68.5 * s * Math.sin(th);
-      cx.strokeStyle = '#4a6cf7'; cx.lineWidth = 4; cx.lineCap = 'round';
+      const L = (sentada ? 40 : 68.5) * s;
+      const px = mx + L * Math.cos(th), py = my - L * Math.sin(th);
+      cx.strokeStyle = sentada ? '#33427a' : '#4a6cf7'; cx.lineWidth = 4; cx.lineCap = 'round';
       cx.beginPath(); cx.moveTo(mx, my); cx.lineTo(px, py); cx.stroke();
-      cx.beginPath(); cx.arc(px, py, 5, 0, 7);
+      cx.beginPath(); cx.arc(px, py, 4.5, 0, 7);
       if (enAire) { cx.strokeStyle = '#b6ff3b'; cx.lineWidth = 2; cx.stroke(); }
       else { cx.fillStyle = '#b6ff3b'; cx.fill(); }
     }
-    // cuerpo
-    cx.fillStyle = '#3653d4';
+    cx.fillStyle = sentada ? '#2a3a8f' : '#3653d4';
     cx.fillRect(c0x - 46 * s, c0y - 62 * s, 92 * s, 124 * s);
-    cx.fillStyle = '#0d120e'; cx.fillRect(c0x - 8, c0y - 62 * s + 4, 16, 6);
+    cx.fillStyle = '#0d120e'; cx.fillRect(c0x - 13, sy + 2, 8, 4); cx.fillRect(c0x + 5, sy + 2, 8, 4);
     // flecha de movimiento
-    const v = e.v || 0, giro = (e.s_der - e.s_izq);
-    const largo = Math.min(1, Math.abs(v) + Math.abs(giro) * 0.3) * 45;
+    const largo = Math.min(1, Math.abs(v) + Math.abs(giro) * 0.6) * 40;
     if (largo > 4) {
-      const a = giro * 0.9 * (v < 0 ? -1 : 1);
+      const a = -giro * 0.9 * (v < 0 ? -1 : 1);
       const dir = v < 0 ? 1 : -1;
-      const x0 = c0x, y0 = c0y + dir * 52;
+      const x0 = c0x, y0 = c0y + dir * 34;
       const x1 = x0 - Math.sin(a) * largo, y1 = y0 + dir * Math.cos(a) * largo;
-      cx.strokeStyle = v < 0 ? '#ff6b6b' : '#e8efe6'; cx.fillStyle = cx.strokeStyle; cx.lineWidth = 4;
-      cx.beginPath(); cx.moveTo(x0, y0); cx.quadraticCurveTo(x0, y0 + dir * largo * 0.6, x1, y1); cx.stroke();
-      const ang = Math.atan2(y1 - (y0 + dir * largo * 0.6), x1 - x0);
-      cx.beginPath(); cx.moveTo(x1 + Math.cos(ang) * 10, y1 + Math.sin(ang) * 10);
-      cx.lineTo(x1 + Math.cos(ang + 2.3) * 10, y1 + Math.sin(ang + 2.3) * 10);
-      cx.lineTo(x1 + Math.cos(ang - 2.3) * 10, y1 + Math.sin(ang - 2.3) * 10); cx.fill();
+      cx.strokeStyle = v < 0 ? '#ff6b6b' : '#e8efe6'; cx.fillStyle = cx.strokeStyle; cx.lineWidth = 3.5;
+      if (Math.abs(v) < 0.05) {
+        // gira en su lugar: flecha curva alrededor del cuerpo
+        const r0 = 38, a0 = -Math.PI / 2, a1 = a0 + (giro > 0 ? 1 : -1) * 1.1;
+        cx.beginPath(); cx.arc(c0x, c0y, r0, Math.min(a0, a1), Math.max(a0, a1)); cx.stroke();
+        const ex = c0x + Math.cos(a1) * r0, ey = c0y + Math.sin(a1) * r0, t = a1 + (giro > 0 ? Math.PI / 2 : -Math.PI / 2);
+        cx.beginPath(); cx.moveTo(ex + Math.cos(t) * 9, ey + Math.sin(t) * 9);
+        cx.lineTo(ex + Math.cos(t + 2.3) * 9, ey + Math.sin(t + 2.3) * 9);
+        cx.lineTo(ex + Math.cos(t - 2.3) * 9, ey + Math.sin(t - 2.3) * 9); cx.fill();
+      } else {
+        cx.beginPath(); cx.moveTo(x0, y0); cx.quadraticCurveTo(x0, y0 + dir * largo * 0.6, x1, y1); cx.stroke();
+        const ang = Math.atan2(y1 - (y0 + dir * largo * 0.6), x1 - x0);
+        cx.beginPath(); cx.moveTo(x1 + Math.cos(ang) * 9, y1 + Math.sin(ang) * 9);
+        cx.lineTo(x1 + Math.cos(ang + 2.3) * 9, y1 + Math.sin(ang + 2.3) * 9);
+        cx.lineTo(x1 + Math.cos(ang - 2.3) * 9, y1 + Math.sin(ang - 2.3) * 9); cx.fill();
+      }
     }
-    // leyenda de pies
     cx.font = '11px Segoe UI'; cx.textAlign = 'left'; cx.fillStyle = '#9aa59a';
     cx.fillText('● pie apoyado   ○ pie en el aire', 8, h - 8);
   }
 
-  // ---------- Texto de lo que hace ----------
-  function explicar() {
-    const v = e.v, giro = e.s_der - e.s_izq;
-    const pi = +ctl.pi.value, pd = +ctl.pd.value, cerca = +ctl.cerca.value;
-    let estado, porque;
-    if (e.mdn > 0.1 && v < -0.05) {
-      estado = 'Retrocede';
-      porque = 'La neurona MDN («moonwalker») se encendió porque algo está pegado. Apaga a la DNp y lo hace caminar hacia atrás.';
-    } else if (Math.abs(v) < 0.2 && Math.abs(giro) < 0.2) {
-      estado = 'Casi se detiene';
-      porque = 'Las señales que frenan a la DNp son tan fuertes como su empujón propio.';
-    } else {
-      const lado = giro > 0.12 ? 'izquierda' : giro < -0.12 ? 'derecha' : null;
-      estado = lado ? `Camina y gira a la ${lado}` : 'Camina derecho';
-      if (lado && Math.max(pi, pd) > 0.15 && ((lado === 'izquierda' && pd > pi) || (lado === 'derecha' && pi > pd)))
-        porque = `El sensor de tacto ${pd > pi ? 'derecho' : 'izquierdo'} enciende la DNa del otro lado: se aleja de la pared.`;
-      else if (lado && cerca > 0.04)
-        porque = `La fruta se ve más del lado ${lado}: gana la PFL ${lado === 'izquierda' ? 'izquierda' : 'derecha'}, enciende su DNa y apaga a la otra. Las patas del lado contrario dan pasos más largos.`;
-      else if (cerca > 0.85)
-        porque = 'La fruta está enfrente y muy cerca: el olor fuerte frena un poco a la DNp para llegar despacio.';
-      else if (cerca > 0.04)
-        porque = 'La fruta está enfrente: las dos PFL están igual, ninguna DNa gana y sigue derecho.';
-      else
-        porque = 'No ve ni huele nada: la DNp, con su empujón propio, lo hace explorar hacia adelante.';
-    }
-    $('estado').textContent = estado;
-    $('porque').textContent = porque + ` Ritmo: ${e.frec.toFixed(1)} pasos por segundo.`;
+  // ---------- Explorar con memoria (como arana.py explorar) ----------
+  const cu = $('cuarto'), cc = cu.getContext('2d');
+  const ANCHO = 5000, ALTO = 3000, K = cu.width / ANCHO, CUADRO = 250;
+  const CAJAS = [[1500, 1300, 600, 450], [3000, 0, 450, 800], [3200, 1950, 1000, 400], [500, 2150, 550, 400], [4300, 900, 350, 350]];
+  const MM_S = 110, GR_S = 55, ACELERA = 3, TOTAL = 90, RADIO = 115;
+  const rad = g => g * Math.PI / 180;
+  const frente = r => [Math.sin(rad(r)), Math.cos(rad(r))];
+  const celda = (x, y) => Math.floor(x / CUADRO + 0.5) + ',' + Math.floor(y / CUADRO + 0.5);
+  const ocupado = (x, y) => x < 0 || y < 0 || x > ANCHO || y > ALTO || CAJAS.some(([bx, by, bw, bh]) => x >= bx && x <= bx + bw && y >= by && y <= by + bh);
+  const choca = (x, y) => { for (let i = 0; i < 16; i++) { const a = i / 16 * 2 * Math.PI; if (ocupado(x + Math.cos(a) * RADIO, y + Math.sin(a) * RADIO)) return true; } return false; };
+  function rayo(x, y, r) { const [dx, dy] = frente(r); for (let d = 0; d <= 1200; d += 10) if (ocupado(x + dx * d, y + dy * d)) return d; return -1; }
+  let X;
+  function reiniciar() {
+    X = { x: 700, y: 500, rumbo: 0, t: 0, modo: 'decidir', resta: 0, giroDir: 1, visitas: {}, obst: {}, rastro: [[700, 500]], tramos: 0, giros: 0, esquives: 0, acum: 0, msg: 'Empieza a explorar', pausa: false };
+    X.visitas[celda(700, 500)] = 1;
+    leerSensores();
   }
+  function leerSensores() {
+    const [fx, fy] = frente(X.rumbo);
+    const ox = X.x + fx * 100, oy = X.y + fy * 100;
+    X.dI = rayo(ox, oy, X.rumbo - 12); X.dD = rayo(ox, oy, X.rumbo + 12);
+  }
+  const cerca = () => { const v = [X.dI, X.dD].filter(d => d >= 0); return v.length ? Math.min(...v) : 9999; };
+  function mirar() {
+    leerSensores();
+    const [fx, fy] = frente(X.rumbo);
+    for (const [d, a] of [[X.dI, -12], [X.dD, 12]]) {
+      if (d >= 0 && d <= 900) {
+        const [dx, dy] = frente(X.rumbo + a);
+        const c = celda(X.x + fx * 100 + dx * (d + 40), X.y + fy * 100 + dy * (d + 40));
+        X.obst[c] = (X.obst[c] || 0) + 1;
+      }
+    }
+  }
+  function puntaje(rel) {
+    const [dx, dy] = frente(X.rumbo + rel);
+    let p = Math.abs(rel) / 90 * 0.6 + Math.random() * 0.2;
+    [300, 600, 900, 1200].forEach((dist, k) => {
+      const c = celda(X.x + dx * dist, X.y + dy * dist);
+      p += (X.visitas[c] || 0) / (k + 1) + (X.obst[c] || 0) * (k < 2 ? 6 : 2);
+    });
+    if (rel === 0 && cerca() < 350) p += 100;
+    return p;
+  }
+  function avanzarOEsquivar() {
+    const d = cerca();
+    if (d < 300) { X.esquives++; X.msg = 'Algo enfrente: busca otro camino'; X.modo = 'decidir'; return; }
+    X.resta = d < 9999 ? Math.max(0.4, Math.min(1.5, (d - 250) / MM_S)) : 1.5;
+    X.modo = 'avanzar'; X.msg = 'Avanza a un lugar nuevo';
+  }
+  function pasoSim(dt) {
+    if (X.modo === 'fin') return;
+    X.t += dt;
+    if (X.t >= TOTAL) { X.modo = 'fin'; X.msg = 'Terminó de explorar'; return; }
+    if (X.modo === 'decidir') {
+      mirar();
+      const pts = [0, -45, 45, -90, 90, -135, 135, 180].map(r => [puntaje(r), r]);
+      const rel = pts.reduce((m, q) => q[0] < m[0] ? q : m)[1];
+      if (rel !== 0) { X.modo = 'girar'; X.resta = Math.abs(rel); X.giroDir = Math.sign(rel); X.giros++; X.msg = `Gira ${Math.abs(rel)}° hacia lo que no conoce`; }
+      else avanzarOEsquivar();
+    } else if (X.modo === 'girar') {
+      const g = Math.min(X.resta, GR_S * dt);
+      X.rumbo = (X.rumbo + X.giroDir * g + 360) % 360; X.resta -= g;
+      leerSensores();
+      if (X.resta <= 0.01) { mirar(); avanzarOEsquivar(); }
+    } else if (X.modo === 'avanzar') {
+      const paso = MM_S * Math.min(dt, X.resta);
+      const [fx, fy] = frente(X.rumbo);
+      const nx = X.x + fx * paso, ny = X.y + fy * paso;
+      leerSensores();
+      const freno = cerca() < 90;
+      if (choca(nx, ny) || freno) {
+        const c = celda(X.x + fx * 250, X.y + fy * 250);
+        X.obst[c] = (X.obst[c] || 0) + 3;
+        X.esquives++; X.tramos++;
+        X.msg = freno ? 'Freno de la ESP32: algo muy cerca' : 'Rozó una caja con la esquina del cuerpo';
+        mirar(); X.modo = 'decidir'; return;
+      }
+      X.x = nx; X.y = ny; X.resta -= dt; X.acum += paso;
+      if (X.acum >= 80) { X.acum = 0; const c = celda(X.x, X.y); X.visitas[c] = (X.visitas[c] || 0) + 1; X.rastro.push([X.x, X.y]); }
+      if (X.resta <= 0) { X.tramos++; mirar(); X.modo = 'decidir'; }
+    }
+  }
+  const px = x => x * K, py = y => (ALTO - y) * K;
+  function dibujarCuarto() {
+    const w = cu.width, h = cu.height, c = CUADRO * K;
+    cc.clearRect(0, 0, w, h);
+    cc.strokeStyle = 'rgba(232,239,230,0.05)'; cc.lineWidth = 1;
+    for (let gx = -0.5; gx * CUADRO <= ANCHO; gx++) { cc.beginPath(); cc.moveTo(px(gx * CUADRO), 0); cc.lineTo(px(gx * CUADRO), h); cc.stroke(); }
+    for (let gy = -0.5; gy * CUADRO <= ALTO; gy++) { cc.beginPath(); cc.moveTo(0, py(gy * CUADRO)); cc.lineTo(w, py(gy * CUADRO)); cc.stroke(); }
+    for (const k in X.visitas) {
+      const [i, j] = k.split(',').map(Number);
+      cc.fillStyle = `rgba(182,255,59,${Math.min(0.5, 0.14 + 0.06 * X.visitas[k]).toFixed(2)})`;
+      cc.fillRect(px(i * CUADRO) - c / 2, py(j * CUADRO) - c / 2, c, c);
+    }
+    for (const k in X.obst) {
+      if (X.obst[k] < 2 || X.visitas[k]) continue;
+      const [i, j] = k.split(',').map(Number);
+      cc.fillStyle = 'rgba(255,107,107,0.55)';
+      cc.fillRect(px(i * CUADRO) - c / 2 + 1, py(j * CUADRO) - c / 2 + 1, c - 2, c - 2);
+    }
+    cc.strokeStyle = '#6b766b'; cc.setLineDash([5, 4]); cc.lineWidth = 1.5;
+    for (const [bx, by, bw, bh] of CAJAS) cc.strokeRect(px(bx), py(by + bh), bw * K, bh * K);
+    cc.setLineDash([]);
+    cc.strokeStyle = 'rgba(182,255,59,0.75)'; cc.lineWidth = 2;
+    cc.beginPath(); X.rastro.forEach(([x, y], i) => i ? cc.lineTo(px(x), py(y)) : cc.moveTo(px(x), py(y))); cc.lineTo(px(X.x), py(X.y)); cc.stroke();
+    cc.strokeStyle = '#e8efe6'; cc.lineWidth = 1.5; cc.beginPath(); cc.arc(px(700), py(500), 6, 0, 7); cc.stroke();
+    // rayos
+    const [fx, fy] = frente(X.rumbo);
+    const ox = X.x + fx * 100, oy = X.y + fy * 100;
+    for (const [d, a] of [[X.dI, -12], [X.dD, 12]]) {
+      const [dx, dy] = frente(X.rumbo + a), L = d >= 0 ? d : 1200;
+      cc.strokeStyle = d >= 0 ? 'rgba(255,107,107,0.8)' : 'rgba(182,255,59,0.25)';
+      cc.lineWidth = 1.5; cc.beginPath(); cc.moveTo(px(ox), py(oy)); cc.lineTo(px(ox + dx * L), py(oy + dy * L)); cc.stroke();
+    }
+    // araña
+    cc.save(); cc.translate(px(X.x), py(X.y)); cc.rotate(rad(X.rumbo));
+    cc.strokeStyle = '#4a6cf7'; cc.lineWidth = 2.5; cc.lineCap = 'round';
+    for (let i = 0; i < 6; i++) {
+      const a = rad(ALFA[i]), mx = EJES[i][0] * K, my = -EJES[i][1] * K;
+      cc.beginPath(); cc.moveTo(mx, my); cc.lineTo(mx + Math.cos(a) * 68 * K, my - Math.sin(a) * 68 * K); cc.stroke();
+    }
+    cc.fillStyle = '#3653d4'; cc.fillRect(-56 * K, -69 * K, 112 * K, 138 * K);
+    cc.fillStyle = '#b6ff3b'; cc.fillRect(-4, -69 * K, 8, 3);
+    cc.restore();
+    if (X.modo === 'fin') {
+      cc.fillStyle = 'rgba(7,10,8,0.6)'; cc.fillRect(0, h / 2 - 26, w, 52);
+      cc.fillStyle = '#b6ff3b'; cc.font = '600 20px "Chakra Petch", sans-serif'; cc.textAlign = 'center';
+      cc.fillText(`Recorrió ${Object.keys(X.visitas).length} cuadros de 25 cm en 90 s`, w / 2, h / 2 + 7);
+    }
+    $('cuenta').innerHTML = `<b>${Math.min(TOTAL, X.t).toFixed(0)} s</b> de ${TOTAL} s<br>${X.msg}<br>
+      Tramos: <b>${X.tramos}</b> · Giros: <b>${X.giros}</b> · Esquives: <b>${X.esquives}</b><br>
+      Cuadros recorridos: <b>${Object.keys(X.visitas).length}</b>`;
+  }
+  reiniciar();
+  $('b-explorar').addEventListener('click', () => { reiniciar(); $('b-pausa').textContent = 'Pausa'; });
+  $('b-pausa').addEventListener('click', () => { X.pausa = !X.pausa; $('b-pausa').textContent = X.pausa ? 'Seguir' : 'Pausa'; });
 
   // ---------- Animación (solo cuando la sección se ve) ----------
-  let visible = false, ultimo = performance.now(), cuenta = 0;
-  new IntersectionObserver(ent => { visible = ent[0].isIntersecting; }, { threshold: 0.05 }).observe(document.getElementById('cerebro'));
-  for (let i = 0; i < 60; i++) paso(1 / 60);
+  let visible = false, ultimo = performance.now();
+  new IntersectionObserver(ent => { visible = ent[0].isIntersecting; }, { threshold: 0.05 }).observe($('cerebro'));
   function cuadro(t) {
     const dt = Math.min(0.05, (t - ultimo) / 1000); ultimo = t;
     if (visible) {
-      paso(dt);
-      const act = {
-        antenas: Math.max(S.ant_izq, S.ant_der), ojos: Math.max(S.vis_izq, S.vis_der), tacto: Math.max(S.mec_izq, S.mec_der),
-        pfl: Math.max(e.pfl_l, e.pfl_r), dna: Math.max(e.dna_l, e.dna_r), dnp: e.dnp, mdn: e.mdn,
-        cpg: e.frec / F_MAX, patas: (e.frec / F_MAX) * (0.5 + 0.5 * Math.abs(Math.sin(e.fase)))
-      };
-      for (const id in brillo) brillo[id].setAttribute('opacity', (0.05 + 0.35 * act[id]).toFixed(2));
-      for (const b of barras) { const x = Math.max(0, Math.min(1, e[b.k])); b.i.style.width = (x * 100).toFixed(0) + '%'; b.n.textContent = x.toFixed(2); }
-      dibujar();
-      if (++cuenta % 10 === 0) explicar();
+      for (const c of caminos) {
+        const q = c.p.getPointAtLength(((t / 1600 + c.desfase) % 1) * c.largo);
+        c.punto.setAttribute('cx', q.x); c.punto.setAttribute('cy', q.y);
+      }
+      dibujarVista(dt);
+      if (!X.pausa) { const n = 4, sub = dt * ACELERA / n; for (let i = 0; i < n; i++) pasoSim(sub); }
+      dibujarCuarto();
     }
     requestAnimationFrame(cuadro);
   }
-  explicar();
+  dibujarVista(0); dibujarCuarto();
   requestAnimationFrame(cuadro);
 })();
 </script>
@@ -1088,7 +1223,7 @@ const pcaI = pieza(modelo, crearPCA(-1), [-21.5, 43.8, 14], [-48, 152, 0], [0, 0
 for (const x of [-30, 30]) for (const z of [-12, 12]) pieza(modelo, malla(new THREE.Group(), cil(2.8, 20, 6), mat.laton), [x, 29, z], [0, 52, 0]);
 
 etiqueta(cubierta, 'Cubierta · PLA+');
-etiqueta(esp32, 'ESP32 · el cerebro');
+etiqueta(esp32, 'ESP32 · la médula');
 etiqueta(pcaD, 'PCA9685 · lado derecho');
 etiqueta(placaSup, 'Placa superior');
 etiqueta(bateria, 'Pila LiPo 7.4 V');
