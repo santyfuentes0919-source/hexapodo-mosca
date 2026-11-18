@@ -367,15 +367,15 @@
     <div class="paso">
       <div class="panel">
         <div class="numero">2</div>
-        <h2>Sensores láser VL53L0X</h2>
-        <p>Van al frente, abajo, uno <strong>un poco a la izquierda</strong> y otro <strong>un poco a la derecha</strong>. Miden la distancia con un rayo de luz infrarroja. Si algo está cerca, la araña se frena, gira hacia el lado con más espacio y sigue: <strong>esquiva sola</strong>.</p>
+        <h2>Sensores ultrasónicos HC-SR04</h2>
+        <p>Van al frente, abajo, uno <strong>un poco a la izquierda</strong> y otro <strong>un poco a la derecha</strong>. Miden la distancia como los murciélagos: mandan un sonido tan agudo que no lo oímos y cuentan cuánto tarda el eco en regresar. Si algo está cerca, la araña se frena, gira hacia el lado con más espacio y sigue: <strong>esquiva sola</strong>.</p>
       </div>
     </div>
     <div class="paso">
       <div class="panel">
         <div class="numero">1</div>
         <h2>Todo en una protoboard</h2>
-        <p>Toda la electrónica va en una <strong>protoboard</strong>, hasta arriba del robot: la ESP32 al centro, el <strong>LM7805</strong> con sus capacitores, el LED de encendido, el medidor de pila y el bus que va a las <strong>PCA9685</strong> y a los <strong>sensores</strong>. Así podemos cambiar cualquier conexión sin soldar.</p>
+        <p>Toda la electrónica va en una <strong>protoboard</strong>, hasta arriba del robot: la ESP32 al centro, el <strong>LM7805</strong> con sus capacitores, el LED de encendido, el medidor de pila, el bus que va a las <strong>PCA9685</strong> y los cables de los <strong>dos sensores</strong>, cada uno con un divisor que baja su señal de 5 V a 3.3 V para cuidar a la ESP32. Así podemos cambiar cualquier conexión sin soldar.</p>
       </div>
     </div>
   </section>
@@ -416,7 +416,7 @@
         <li><strong>Cinemática inversa:</strong> decide dónde poner cada pie y calcula los ángulos con la ley de cosenos.</li>
         <li><strong>Control desde el celular</strong> por WiFi, con una pantalla tipo control de Xbox.</li>
         <li><strong>4 velocidades</strong> y una marcha lenta de onda, una pata a la vez.</li>
-        <li><strong>Modo AUTO:</strong> camina sola y esquiva obstáculos con los 2 sensores VL53L0X.</li>
+        <li><strong>Modo AUTO:</strong> camina sola y esquiva obstáculos con los 2 sensores ultrasónicos.</li>
         <li><strong>Modo SUBIDA</strong> para rampas: pasos más cortos y el cuerpo más bajo para no voltearse.</li>
         <li><strong>Seguridad:</strong> si pierde la señal 0.6 s, se frena sola; si la pila baja de 6.4 V, se sienta, y el <strong>alto total</strong> la detiene al instante.</li>
       </ul>
@@ -451,7 +451,7 @@
         <div><b>27 de octubre</b> · Primera pata completa</div>
         <div><b>30 de octubre</b> · Un lado caminando</div>
         <div><b>31 de octubre</b> · Prueba del robot completo</div>
-        <div><b>12 al 15 de noviembre</b> · Sensores láser y electrónica en protoboard</div>
+        <div><b>12 al 15 de noviembre</b> · Sensores ultrasónicos y electrónica en protoboard</div>
         <div><b>16 de noviembre</b> · Esquiva obstáculos sola y Perry se vuelve el cerebro</div>
       </div>
     </div>
@@ -625,10 +625,10 @@
       como: 'Tiene reflejos: si algo está a menos de 20 cm se detiene y gira, y a menos de 10 cm primero retrocede. Lo hace sin esperar a Perry, igual que cuando quitas la mano de algo caliente.'
     },
     sensores: {
-      x: 670, y: 120, nombre: 'Sensores', sub: '2 láser', tipo: 'Sentidos · entrada',
-      que: 'Dos sensores láser VL53L0X al frente, girados unos 12° hacia cada lado.',
+      x: 670, y: 120, nombre: 'Sensores', sub: '2 ultrasónicos', tipo: 'Sentidos · entrada',
+      que: 'Dos sensores ultrasónicos HC-SR04 al frente, girados unos 12° hacia cada lado.',
       robot: 'Miden la distancia a paredes y cajas hasta 1.2 metros. La ESP32 los usa para sus reflejos y Perry para decidir hacia dónde ir.',
-      como: 'Lanzan un rayo de luz infrarroja invisible y miden cuánto tarda en rebotar. Solo ven hacia adelante: por eso la araña gira, avanza y vuelve a girar en vez de caminar de lado.'
+      como: 'Mandan un sonido que no se oye y miden cuánto tarda el eco en regresar. Solo ven hacia adelante: por eso la araña gira, avanza y vuelve a girar en vez de caminar de lado.'
     },
     patas: {
       x: 670, y: 330, nombre: 'Patas', sub: '18 servos', tipo: 'Salida · músculos',
@@ -1097,6 +1097,7 @@ const mat = {
   gris:  std(0x9aa0aa, 0.5),
   naranja: std(0xf08a24, 0.55),
   azul:  std(0x2f6fd6, 0.55),
+  verde: std(0x2fbf5a, 0.55),
 };
 const filo = {
   pla:   new THREE.LineBasicMaterial({ color: 0x16226a, transparent: true, opacity: 0.85 }),
@@ -1239,18 +1240,22 @@ function crearESP32() {
   return g;
 }
 function crearSensor(lado) {
-  // VL53L0X (tarjeta morada GY-530 de 25 × 10.7 mm) en el soporte de los planos,
-  // girado unos 15° hacia su lado y 12° hacia arriba, como pide el programa
+  // HC-SR04 (tarjeta azul de 45 × 20 mm con sus 2 bocinas de ultrasonido) en su soporte,
+  // girado unos 9° hacia su lado y 12° hacia arriba
   const g = new THREE.Group();
   malla(g, caja(14, 3, 17), mat.pla, 0, 1.5, -0.5);                // base sobre la placa inferior
   const cara = new THREE.Group();
   cara.position.set(0, 3, -8);
-  cara.rotation.set(0.21, -lado * 0.26, 0);
+  cara.rotation.set(0.21, -lado * 0.15, 0);
   g.add(cara);
-  malla(cara, caja(26, 25, 3), mat.pla, 0, 12.5, 1.5);             // pared del soporte
-  malla(cara, caja(10.7, 25, 1.6), mat.morado, 0, 13.4, -0.8);    // tarjeta del sensor
-  malla(cara, caja(4.4, 2.4, 1), mat.chip, 0, 18.4, -2.1);         // el sensor (emisor y receptor)
-  for (const x of [-1.1, 1.1]) malla(cara, caja(0.9, 0.9, 0.3), mat.vidrio, x, 18.4, -2.7);
+  malla(cara, caja(48, 24, 3), mat.pla, 0, 12, 1.5);               // pared del soporte
+  malla(cara, caja(45, 20, 1.6), mat.xl, 0, 12, -0.8);             // tarjeta del sensor
+  for (const x of [-13, 13]) {                                     // emisor y receptor
+    malla(cara, cil(8, 12, 28), mat.metal, x, 12, -7.6).rotation.x = Math.PI / 2;
+    malla(cara, cil(6.8, 0.4, 28), mat.hoyo, x, 12, -13.7).rotation.x = Math.PI / 2;
+  }
+  malla(cara, caja(10, 3.5, 3), mat.metal, 0, 18.5, -3.1);         // cristal
+  pines(cara, [-3.81, -1.27, 1.27, 3.81].map((x) => [x, 4]), 6, 4.6); // VCC, TRIG, ECHO, GND
   return g;
 }
 function crearProtoboard() {
@@ -1308,10 +1313,10 @@ function crearProtoboard() {
   malla(g, caja(10, 6.5, 1.3), mat.metal, X(23), T + 14.2, fila.H + 1.6);
   pines(g, [[X(22), fila.H], [X(23), fila.H], [X(24), fila.H]], 2.6, T + 0.8);
   capacitor(X(20), fila.F);                                          // a la entrada del LM7805
-  capacitor(X(29), (riel.m5 + riel.p5) / 2);                        // a la salida, entre los rieles de 5 V
+  capacitor(X(3), (riel.m5 + riel.p5) / 2);                         // a la salida, entre los rieles de 5 V
   jumper([[X(22), fila.J], [X(22), riel.p74]], mat.rojo);            // 7.4 V → entrada
   jumper([[X(23), fila.J], [X(23), riel.gnd]], mat.negro);           // tierra
-  jumper([[X(24), fila.F], [X(24), riel.p5]], mat.naranja, 5);       // salida → riel de 5 V del frente
+  jumper([[X(24), fila.F], [X(24), riel.p5]], mat.naranja, 9);       // salida → riel de 5 V del frente
   // La ESP32 toma 5 V del riel del frente (VIN y GND, columnas 0 y 1)
   jumper([[X(0), riel.p5], [X(0), fila.A]], mat.naranja);
   jumper([[X(1), fila.A], [X(1), riel.m5]], mat.negro);
@@ -1321,13 +1326,24 @@ function crearProtoboard() {
   resistencia([X(22), fila.B], [X(22), riel.m5]);
   jumper([[X(22), fila.A], [X(11), fila.A]], mat.azul, 1.6);
   // LED de encendido con su resistencia, en el riel de 5 V
-  malla(g, cil(1.5, 4, 12), mat.led, (X(25) + X(26)) / 2, T + 4, fila.C);
-  malla(g, new THREE.SphereGeometry(1.5, 12, 8), mat.led, (X(25) + X(26)) / 2, T + 6, fila.C);
-  pines(g, [[X(25), fila.C], [X(26), fila.C]], 2.4, T + 0.9);
-  resistencia([X(25), fila.A], [X(25), riel.p5]);
-  jumper([[X(26), fila.A], [X(26), riel.m5]], mat.negro);
+  malla(g, cil(1.5, 4, 12), mat.led, (X(24) + X(25)) / 2, T + 4, fila.C);
+  malla(g, new THREE.SphereGeometry(1.5, 12, 8), mat.led, (X(24) + X(25)) / 2, T + 6, fila.C);
+  pines(g, [[X(24), fila.C], [X(25), fila.C]], 2.4, T + 0.9);
+  resistencia([X(24), fila.A], [X(24), riel.p5]);
+  jumper([[X(25), fila.A], [X(25), riel.m5]], mat.negro);
+  // ECHO de cada HC-SR04 (5 V) → resistencia de 1k → punto medio → 2k a tierra; del punto medio
+  // sale el ECHO ya en 3.3 V a la ESP32: izquierdo al GPIO 14 (columna 4), derecho al GPIO 26 (columna 6)
+  const paradaR = (c, fil) => {                                     // resistencia parada entre 2 columnas
+    malla(g, new THREE.CapsuleGeometry(1.1, 4, 4, 10), mat.resistencia, X(c), T + 5, fil);
+    jumper([[X(c), fil], [X(c + 1), fil]], mat.metal, 9.5);
+  };
+  [[26, 4], [28, 6]].forEach(([c, pin]) => {
+    paradaR(c, fila.C);                                             // 1k
+    resistencia([X(c + 1), fila.A], [X(c + 1), riel.m5]);           // 2k
+    jumper([[X(c + 1), fila.B], [X(c + 1) - 1, fila.A - 1.6], [X(pin) + 1, fila.A - 1.6], [X(pin), fila.A]], mat.verde, 6 + (c - 26));
+  });
   // Bus I2C (GND, SCL, SDA, 3.3 V) en las columnas 26 a 29: la ESP32 entra por la fila J
-  // y las 2 PCA9685 y los 2 sensores se conectan en las filas F, G, H e I
+  // y las 2 PCA9685 se conectan en las filas F y G
   const bus = [mat.negro, mat.lima, mat.amarillo, mat.rojo];
   [1, 13, 10, 0].forEach((c, j) => {
     const lane = 15.1 + j * 1.15;
@@ -1352,8 +1368,8 @@ const cubierta = piezaCad(modelo, cuerpo.placaElec, [0, 105, 0], [0, 0.4, 0]);
 
 // Abajo: la pila en su cuna y los 2 sensores al frente, en los barrenos de la placa inferior (X ±16 y ±24, 64 mm al frente)
 const bateria = pieza(modelo, crearBateria(), [0, 9.3, 0], [0, -52, 20], [0, 0, 0], [0, -0.3, 0]);
-const sensI = pieza(modelo, crearSensor(-1), [-20, 3, -67.5], [-30, -40, -70], [0, 0, 0], [0, 0.4, 0]);
-const sensD = pieza(modelo, crearSensor(1), [20, 3, -67.5], [30, -40, -70], [0, 0, 0], [0, -0.4, 0]);
+const sensI = pieza(modelo, crearSensor(-1), [-23.5, 3, -73.5], [-30, -40, -70], [0, 0, 0], [0, 0.4, 0]);
+const sensD = pieza(modelo, crearSensor(1), [23.5, 3, -73.5], [30, -40, -70], [0, 0, 0], [0, -0.4, 0]);
 
 // Entre la placa superior y la de electrónica: las 2 PCA9685, una por lado, cerca de los servos de su lado
 const pcaD = pieza(modelo, crearPCA(1), [13, 22, 0], [70, 62, 0], [0, 0, 0], [0, 0, -0.3]);
@@ -1374,8 +1390,8 @@ const esp32 = pieza(modelo, crearESP32(), [-15.55, 71.1, 0], [0, 200, 0], [0, -M
 // Cables (solo se ven con el robot armado). La cara de arriba de la protoboard queda en Y = 67.8
 const bus = [mat.negro, mat.lima, mat.amarillo, mat.rojo];        // GND, SCL, SDA, 3.3 V
 const colBus = (j) => 29.21 + j * 2.54;                            // columnas 26 a 29 del bus I2C
-// Del bus salen 4 juegos de cables: PCA DER (fila F), PCA IZQ (G), sensor izquierdo (H) y sensor derecho (I).
-// Van por la orilla derecha de la base hacia el frente y de ahí bajan como antes
+// Del bus salen 2 juegos de cables: PCA DER (fila F) y PCA IZQ (fila G).
+// Van por la orilla derecha de la base hacia el frente y de ahí bajan
 const salida = (x, z, j, k) => [[x, 67, z], [x, 70.6 + k * 0.7, z], [x + 4, 71 + k * 0.7, z - 1],
   [44.2 + j * 1.3, 62.2 + k * 1.3, z - 5], [44.2 + j * 1.3, 61 + k * 1.3, -26], [42 + j * 1.3, 61.5 + k * 1.3, -42 - k]];
 // → PCA DER y PCA IZQ: bajan por el frente, pasan entre los dos XL4015
@@ -1385,11 +1401,17 @@ const salida = (x, z, j, k) => [[x, 67, z], [x, 70.6 + k * 0.7, z], [x + 4, 71 +
   cable([...salida(colBus(j), 3.81 + k * 2.54, j, k), [18 - k * 3, 55 + h, -45 - h], [dx, 52, -38], [dx + lado * 1.5, 50, 0],
          [dx + lado * 2, 44, 16], [dx + lado * 2, 36, 16], [lado * 8 + dx, 33, -10], [lado * 11 + dx * 0.6, 31, -29.4]], m, 0.6);
 }));
-// → sensores: también por el frente, y bajan por delante de la placa superior hasta atrás de cada sensor
-[-1, 1].forEach((lado, i) => bus.forEach((m, j) => {
-  const k = i + 2, dx = (j - 1.5) * 1.5, h = i * 2;
-  cable([...salida(colBus(j), 3.81 + k * 2.54, j, k), [lado * 22 + dx, 48 + h, -56], [lado * 21 + dx, 36, -66], [lado * 20 + dx * 0.6, 30, -71]], m, 0.6);
-}));
+// HC-SR04 → protoboard (4 cables cada uno): VCC al riel de 5 V, GND al riel de tierra del frente,
+// TRIG directo al pin de la ESP32 (izq GPIO 27, der GPIO 25) y ECHO a su divisor.
+// Suben por el frente del robot y entran por la orilla de enfrente de la protoboard
+const col = (c) => (c - 14.5) * 2.54;
+[[-1, -16.51, -13.97, col(5), col(26)], [1, 6.35, 8.89, col(7), col(28)]].forEach(([lado, xv, xg, xt, xe], i) => {
+  [[mat.rojo, xv, -22.23], [mat.negro, xg, -19.69], [mat.amarillo, xt, -13.97], [mat.lima, xe, -3.81]].forEach(([m, x, z], j) => {
+    const dx = (j - 1.5) * 1.4, h = i * 1.5;
+    cable([[x, 67, z], [x, 70.5 + h, z - 0.5], [x * 0.7 + lado * 4, 70 + h, -31], [lado * 22 + dx, 62 + h, -44 - h],
+           [lado * 24 + dx, 48 + h, -62], [lado * 24 + dx, 34, -74], [lado * 24 + dx * 0.6, 27.5, -77]], m, 0.6);
+  });
+});
 // Pila → fusible → interruptor → riel de 7.4 V de atrás (cable rojo y negro): sale por atrás de la cuna y sube por el lado izquierdo
 for (const [dx, m, x, z] of [[-2.5, mat.rojo, -31.75, 22.23], [2.5, mat.negro, -29.21, 19.69]]) {
   cable([[dx, 9.3, 58], [dx, 14, 74], [-25 + dx, 40, 64], [-57 + dx * 0.3, 60, 30], [-47, 70, 27 + dx * 0.4], [x, 71, z + 1.5], [x, 67, z]], m, 1.1);
@@ -1413,7 +1435,7 @@ etiqueta(pcaD, 'PCA9685 · lado derecho');
 etiqueta(cubierta, 'Placa de electrónica');
 etiqueta(placaSup, 'Placa superior');
 etiqueta(bateria, 'Pila LiPo 7.4 V · 1200 mAh');
-etiqueta(sensD, 'Sensor VL53L0X');
+etiqueta(sensD, 'Sensor ultrasónico HC-SR04');
 etiqueta(placaInf, 'Placa inferior');
 
 // ---------- Patas ----------
